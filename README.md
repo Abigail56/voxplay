@@ -159,14 +159,14 @@ docker compose up -d api      # liveness back on
 docker compose run --rm api pytest -v
 ```
 
-There are 120 tests:
+There are 117 tests:
 - `test_matching.py`: cosine similarity, centroids, ranking, threshold/"unknown" decisions, margin rule, EER
 - `test_audio.py`: resampling, silence trimming, rejecting garbage and too-short audio
 - `test_voice_map.py`: PCA keeps similar voices close, voice twins, consistency
 - `test_liveness.py`: random digit phrases, the ways Whisper writes digits, wrong order and old recordings fail,
   phrases expire and work once (in memory and in the real Redis)
 - `test_api.py`, `test_demo.py`: full HTTP flows against a real pgvector database (`voiceid_test`): enroll → identify → delete,
-  liveness pass / replay fails / phrase reused, verify ("is this Ada?"), voice map,
+  liveness pass / replay fails / phrase reused, voice map,
   demo limits.
 - `test_fun.py`: daily phrase, score and streaks, badges, Guess Who (the speaker stays secret, the clip is
   deleted at the reveal, scoring), speed bonus and time-outs, wins, country and weekly leaderboards, reactions.
@@ -217,7 +217,6 @@ docker compose down -v     # stop AND delete the database + model cache volumes
 | | **Voice lab** | |
 | `GET` | `/challenge` | A fresh 6-digit phrase to say (valid 2 minutes, one use) |
 | `POST` | `/identify` | Form fields `file`, `challenge_id` → best match or `"unknown"` |
-| `POST` | `/speakers/{id}/verify` | Form fields `file`, `challenge_id` → how much the clip sounds like this one person ("is this Ada?") |
 | `GET` | `/health` | Model loaded? threshold? number of speakers |
 
 Example:
@@ -386,7 +385,7 @@ voice-id/
 │   │   ├── schemas.py          # Pydantic response models
 │   │   └── routers/
 │   │       ├── speakers.py     # enroll, add samples, list, get, delete, voice map
-│   │       ├── identify.py     # GET /challenge, liveness check, identify (pgvector + decide()), verify
+│   │       ├── identify.py     # GET /challenge, liveness check, identify (pgvector + decide())
 │   │       ├── accounts.py     # sign up / in, my voice, my location, delete me
 │   │       ├── rooms.py        # create / join / start / turn
 │   │       ├── game.py         # dashboard + the /ws live-updates WebSocket
@@ -469,5 +468,5 @@ runs, which suits a demo with 24-hour enrollments.
 - **Speed and memory.** The API uses about 610 MB of RAM with both models loaded. On a 4-core laptop
   (CPU only, 2 PyTorch threads) one `/identify` call with the liveness check takes about 2 s. Raise `TORCH_THREADS` if you have more cores.
 - **Ideas:** an anti-spoofing model against voice clones, Alembic migrations, auth (JWT),
-  a stricter threshold for verify when it guards something real, live "who's talking now" from the
+  a stricter threshold when a match guards something real, live "who's talking now" from the
   microphone, and showcasing it on your portfolio site.

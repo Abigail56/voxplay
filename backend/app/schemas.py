@@ -47,16 +47,6 @@ class IdentifyOut(BaseModel):
     liveness: LivenessOut | None = None  # None when no phrase was checked
 
 
-class VerifyOut(BaseModel):
-    speaker_id: int
-    name: str
-    score: float  # cosine similarity between the clip and this speaker's voiceprint
-    threshold: float
-    is_match: bool  # score >= threshold
-    reason: str
-    liveness: LivenessOut | None = None
-
-
 class TwinOut(BaseModel):
     speaker_id: int
     name: str

@@ -1,17 +1,15 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile, status
-from sqlmodel import select
+from fastapi import APIRouter, Depends, File, Form, Request, UploadFile
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from ..config import Settings, get_settings
 from ..db import get_session
-from ..demo import is_active, rate_limit
+from ..demo import rate_limit
 from ..embedding import Embedder
 from ..liveness import ChallengeStore
-from ..matching import UNKNOWN_LABEL, cosine_similarity, decide
-from ..models import Speaker
-from ..schemas import CandidateOut, ChallengeOut, IdentifyOut, VerifyOut
+from ..matching import UNKNOWN_LABEL, decide
+from ..schemas import CandidateOut, ChallengeOut, IdentifyOut
 from ..services import failed_liveness_reason, get_challenges, get_embedder, live_clip, nearest_speakers
 
 router = APIRouter(tags=["identify"])
@@ -25,7 +23,7 @@ ChallengeIdForm = Annotated[str | None, Form(description="From GET /challenge. T
 
 @router.get("/challenge", response_model=ChallengeOut)
 async def new_challenge(challenges: ChallengesDep) -> ChallengeOut:
-    """A fresh phrase to say in the next /identify or /verify clip. It works once, for a short time."""
+    """A fresh phrase to say in the next /identify clip or game turn. It works once, for a short time."""
     c = await challenges.issue()
     return ChallengeOut(challenge_id=c.id, phrase=c.phrase, expires_in_seconds=c.expires_in_seconds)
 
@@ -73,50 +71,3 @@ async def identify(
         liveness=liveness,
     )
 
-
-@router.post("/speakers/{speaker_id}/verify", response_model=VerifyOut, dependencies=[Depends(rate_limit)])
-async def verify(
-    speaker_id: int,
-    request: Request,
-    session: SessionDep,
-    embedder: EmbedderDep,
-    settings: SettingsDep,
-    challenges: ChallengesDep,
-    file: Annotated[UploadFile, File(description="The recording to compare with this speaker.")],
-    challenge_id: ChallengeIdForm = None,
-) -> VerifyOut:
-    """How much does this clip sound like one particular person? ("Is this Ada?")
-
-    Used by the voice game, both for "be yourself" turns and for impersonation turns.
-    """
-    speaker = (await session.exec(select(Speaker).where(Speaker.id == speaker_id, is_active()))).first()
-    if speaker is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Speaker not found.")
-
-    clip, liveness = await live_clip(request, file, challenge_id, embedder, settings, challenges)
-    if liveness and not liveness.passed:
-        return VerifyOut(
-            speaker_id=speaker.id,
-            name=speaker.name,
-            score=0.0,
-            threshold=settings.match_threshold,
-            is_match=False,
-            reason=failed_liveness_reason(liveness),
-            liveness=liveness,
-        )
-
-    score = round(cosine_similarity(clip.vector, speaker.embedding), 4)
-    is_match = score >= settings.match_threshold
-    return VerifyOut(
-        speaker_id=speaker.id,
-        name=speaker.name,
-        score=score,
-        threshold=settings.match_threshold,
-        is_match=is_match,
-        reason=(
-            f"Sounds like {speaker.name}: {score:.3f} is above the threshold {settings.match_threshold:.2f}."
-            if is_match
-            else f"Doesn't sound enough like {speaker.name}: {score:.3f} is below {settings.match_threshold:.2f}."
-        ),
-        liveness=liveness,
-    )
