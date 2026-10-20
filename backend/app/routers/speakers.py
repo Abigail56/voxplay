@@ -11,9 +11,8 @@ from ..demo import delete_expired, is_active, rate_limit
 from ..embedding import Embedder
 from ..matching import compute_centroid
 from ..models import Speaker, User, VoiceSample
-from ..schemas import MapSampleOut, MapSpeakerOut, SpeakerOut, TwinOut, VoiceMapOut
+from ..schemas import SpeakerOut
 from ..services import embed_uploads, get_embedder
-from ..voice_map import voice_map
 
 router = APIRouter(prefix="/speakers", tags=["speakers"])
 
@@ -145,43 +144,6 @@ async def list_speakers(session: SessionDep) -> list[SpeakerOut]:
         .order_by(Speaker.created_at.desc(), Speaker.id.desc())
     )
     return [_out(speaker, count) for speaker, count in rows.all()]
-
-
-# Declared before /{speaker_id} so that "map" isn't read as a speaker id.
-@router.get("/map", response_model=VoiceMapOut)
-async def get_voice_map(session: SessionDep) -> VoiceMapOut:
-    """Who sounds like whom: every speaker (and each of their clips) as a point on a 2D map.
-
-    Only map positions and similarity scores are returned, never the voiceprints themselves.
-    """
-    speakers = (
-        await session.exec(select(Speaker.id, Speaker.name, Speaker.embedding, Speaker.is_sample).where(is_active()))
-    ).all()
-    samples = (
-        await session.exec(
-            select(VoiceSample.speaker_id, VoiceSample.embedding)
-            .join(Speaker)
-            .where(is_active())
-            .order_by(VoiceSample.id)
-        )
-    ).all()
-    is_sample = {sid: flag for sid, _, _, flag in speakers}
-    points, dots = voice_map([(sid, name, emb) for sid, name, emb, _ in speakers], samples)
-    return VoiceMapOut(
-        speakers=[
-            MapSpeakerOut(
-                speaker_id=p.speaker_id,
-                name=p.name,
-                is_sample=is_sample[p.speaker_id],
-                x=p.x,
-                y=p.y,
-                consistency=p.consistency,
-                twin=TwinOut(speaker_id=p.twin.speaker_id, name=p.twin.name, score=p.twin.score) if p.twin else None,
-            )
-            for p in points
-        ],
-        samples=[MapSampleOut(speaker_id=d.speaker_id, x=d.x, y=d.y) for d in dots],
-    )
 
 
 @router.get("/{speaker_id}", response_model=SpeakerOut)

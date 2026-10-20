@@ -17,7 +17,7 @@ finds the closest enrolled speaker by cosine similarity.
 
 - **Liveness check:** `/identify` needs a fresh 6-digit phrase from `GET /challenge`, read out in the clip
   (checked with Whisper), so old recordings can't be replayed.
-- **Voice map:** `GET /speakers/map` shows who sounds like whom.
+- **Voice twins:** `GET /voice-twins` shows players who sounds like whom.
 
 - Interactive API docs: open `/docs` on this Space.
 - Try it with a microphone on the portfolio's live demo page.

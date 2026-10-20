@@ -25,9 +25,9 @@ where they play, every game, every turn and every cheat attempt.
 they were really said, so a recording of someone can't be played back. **The server works out every
 score**; the browser only sends the recording.
 
-The **🔬 Voice lab** (`/lab`) has two party tricks: **🔮 Mystery voice** (anyone reads the digits; the AI reveals
-which player it is) and **👯 Voice twins** (who sounds like whom). The older separate-enrollment tool is no longer on
-screen; its API endpoints still work for scripts.
+**👯 Voice twins** on the game page puts every player's voice on a map and tells you who sounds most like you
+(handy for picking who to impersonate). The older voice-lab API (`/speakers`, `/identify`) has no page in the
+game any more; it still works for scripts and the portfolio's demo page.
 
 Tech:
 
@@ -109,8 +109,8 @@ browser mic ──► FFmpeg (16 kHz mono) ──► trim silence ──► ECAP
                           or "unknown"
 ```
 
-**Voice map** (`GET /speakers/map`, [backend/app/voice_map.py](backend/app/voice_map.py)): PCA squeezes the
-192-number voiceprints onto the 2 directions in which the enrolled voices differ most. The "voice twin"
+**Voice twins** (`GET /voice-twins`, [backend/app/voice_map.py](backend/app/voice_map.py)): PCA squeezes the
+192-number voiceprints onto the 2 directions in which the players' voices differ most. The "voice twin"
 is computed on all 192 numbers, so it is exact even where the 2D picture is rough. Only map positions
 and scores leave the server, never the voiceprints.
 
@@ -136,7 +136,6 @@ Then open:
 
 - **Game:** http://localhost:3010. Create a player, record your voice, then create a game and share its code.
   To play against yourself on one computer, open a second browser (or a private window) as a second player.
-- **Voice lab:** http://localhost:3010/lab (mystery voice, voice twins).
 - **API docs (Swagger):** http://localhost:8010/docs
 
 > The microphone only works on `localhost` or HTTPS, because browsers block it on plain-HTTP remote hosts.
@@ -207,6 +206,7 @@ docker compose down -v     # stop AND delete the database + model cache volumes
 | `POST` | `/rooms/{code}/join`, `/leave`, `/start` | Join, leave (the host role passes on), start or rematch (host) |
 | `POST` | `/rooms/{code}/turn` | Form `file`, `challenge_id` → your turn, scored by the server |
 | `GET` | `/dashboard` | Players (online, city if shared, game, points), open games, latest turns |
+| `GET` | `/voice-twins` | Every player's voice on a 2D map, their voice twin, and which dot is you |
 | `POST` | `/rooms/{code}/vote`, `/advance`, `/react` | Guess Who vote; move on when time's up (the server checks the clock); send an emoji |
 | `GET` | `/rooms/{code}/clip` | Guess Who: the secret speaker's clip (players in the game only, deleted at the reveal) |
 | `GET` / `POST` | `/daily` | Today's tongue-twister, your tries, streak and leaderboard / send a try |
@@ -217,7 +217,6 @@ docker compose down -v     # stop AND delete the database + model cache volumes
 | | **Voice lab** | |
 | `GET` | `/challenge` | A fresh 6-digit phrase to say (valid 2 minutes, one use) |
 | `POST` | `/identify` | Form fields `file`, `challenge_id` → best match or `"unknown"` |
-| `GET` | `/speakers/map` | 2D positions, voice twins and consistency of everyone enrolled |
 | `POST` | `/speakers/{id}/verify` | Form fields `file`, `challenge_id` → how much the clip sounds like this one person ("is this Ada?") |
 | `GET` | `/health` | Model loaded? threshold? number of speakers |
 
@@ -399,23 +398,19 @@ voice-id/
 │   └── tests/                  # pytest: matching, audio, voice map, liveness, API
 └── frontend/
     ├── Dockerfile              # node:22-alpine multi-stage, Next.js standalone
-    ├── app/                    # layout.tsx, page.tsx (the game), lab/ (Voice lab), admin/ (admin page), globals.css
+    ├── app/                    # layout.tsx, page.tsx (the game), admin/ (admin page), globals.css
     ├── components/
     │   ├── ClipInput.tsx       # record (MediaRecorder) or upload audio
-    │   ├── EnrollForm.tsx      # name + samples + consent checkbox
-    │   ├── IdentifyPanel.tsx   # digit phrase + countdown, live check, confidence bar, candidates
-    │   ├── VoiceMap.tsx        # SVG map of voices, twins table
     │   ├── game/               # Welcome, VoiceSetup, PlayerCard, Lobby, RoomPanel, World (map, leaderboard,
-    │   │                       #   feed), GameHome, Avatar, PlayersMapLeaflet, LocationPicker, Invite
+    │   │                       #   feed), GameHome, Avatar, PlayersMapLeaflet, LocationPicker, Invite, VoiceTwins
     │   ├── admin/AdminDashboard.tsx # the admin page
-    │   ├── Phrase.tsx          # the digits to read out + countdown (lib/useChallenge.ts fetches them)
-    │   └── SpeakerList.tsx     # enrolled people + delete
+    │   └── Phrase.tsx          # the digits to read out + countdown (lib/useChallenge.ts fetches them)
     ├── lib/api.ts              # typed fetch wrapper for the backend
-    ├── lib/colors.ts           # colour-blind-safe speaker colours, in a fixed order
     ├── lib/game.ts             # levels, avatars, sound effects, spoken announcer
     ├── lib/countries.ts        # country list, names and flags (from the browser's Intl API)
     ├── lib/useLive.ts          # WebSocket live updates with reconnect + ping
-    └── store/                  # Zustand: signed-in player (useAuthStore), speaker list
+    ├── lib/useChallenge.ts     # fetches the digits to read out and counts down
+    └── store/                  # Zustand: signed-in player (useAuthStore)
 ```
 
 ## Configuration

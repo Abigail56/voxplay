@@ -13,6 +13,7 @@ import { Lobby } from "./Lobby";
 import { PlayerCard } from "./PlayerCard";
 import { RoomPanel, type Reaction } from "./RoomPanel";
 import { VoiceSetup } from "./VoiceSetup";
+import { VoiceTwins } from "./VoiceTwins";
 import { Welcome } from "./Welcome";
 import { World } from "./World";
 
@@ -173,6 +174,7 @@ export function GameHome() {
       </div>
 
       <Leaderboards refreshKey={refreshKey} />
+      <VoiceTwins refreshKey={refreshKey} />
       {dashboard && <World dashboard={dashboard} />}
 
       <footer>

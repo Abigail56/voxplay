@@ -12,7 +12,7 @@
   --ok: #2f7d32;
   --warn: #b35c00;
   /* Speaker colours: a colour-blind-safe categorical set, checked against --card in both
-     themes. Slots are handed out in this order (lib/colors.ts); don't reorder them. */
+     themes. Keep them in this order. */
   --series-1: #2a78d6;
   --series-2: #eb6834;
   --series-3: #1baf7a;
@@ -158,16 +158,6 @@ details summary { cursor: pointer; margin-bottom: 6px; }
 .liveness.ok strong { color: var(--ok); }
 .liveness.bad strong { color: var(--danger); }
 
-/* --- Shared tooltip --- */
-.tooltip {
-  position: absolute; z-index: 2; transform: translate(-50%, calc(-100% - 10px));
-  display: flex; flex-direction: column; gap: 2px; white-space: nowrap; pointer-events: none;
-  background: var(--card); color: var(--text); border: 1px solid var(--border);
-  border-radius: 8px; padding: 6px 10px; font-size: 13px; box-shadow: 0 4px 14px rgb(0 0 0 / 0.12);
-}
-.tooltip-row { display: flex; align-items: center; gap: 6px; }
-.line-key { width: 12px; height: 2px; border-radius: 1px; }
-
 /* --- Voice map --- */
 .map-wrap { position: relative; }
 .voice-map { width: 100%; height: auto; display: block; overflow: visible; }
@@ -179,7 +169,8 @@ details summary { cursor: pointer; margin-bottom: 6px; }
 .map-point.dim { opacity: 0.3; }
 .map-point .hit { fill: transparent; }
 .map-dot { fill: var(--series-1); stroke: var(--card); stroke-width: 2; }
-.map-dot.builtin { fill: var(--series-other); }
+.map-dot.me { fill: var(--primary); }
+.map-point.me text { font-weight: 700; }
 .map-point.active .map-dot, .map-point:focus-visible .map-dot { stroke: var(--text); }
 .map-point text { font-size: 11px; fill: var(--text); paint-order: stroke; stroke: var(--bg); stroke-width: 3px; }
 .twin-line { stroke: var(--text); stroke-width: 1.5; stroke-dasharray: 4 3; opacity: 0.6; }
@@ -213,9 +204,8 @@ details summary { cursor: pointer; margin-bottom: 6px; }
 .nav { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
 .nav a { color: var(--text); text-decoration: none; }
 .nav .brand { display: inline-flex; align-items: center; gap: 10px; font-family: var(--font-display), Georgia, serif; font-size: 22px; font-weight: 600; }
-.nav .row { gap: 18px; }
-.nav .lab-link { font-size: 14px; color: var(--muted); text-underline-offset: 3px; }
-.nav .lab-link:hover { color: var(--text); text-decoration: underline; }
+.nav .nav-link { font-size: 14px; color: var(--muted); text-underline-offset: 3px; }
+.nav .nav-link:hover { color: var(--text); text-decoration: underline; }
 .on-air { width: 10px; height: 10px; border-radius: 50%; background: var(--primary); flex: none;
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 22%, transparent); }
 
@@ -421,13 +411,6 @@ h3 { margin: 6px 0 0; font-size: 15px; }
 @keyframes float-up { to { transform: translateY(-340px) scale(1.4); opacity: 0; } }
 .result-card { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; }
 .result-preview { width: min(280px, 100%); border-radius: 14px; box-shadow: 0 6px 24px rgb(0 0 0 / 0.25); }
-
-/* Voice lab */
-.drumroll { margin: 0; font-size: 18px; font-weight: 700; text-align: center; animation: pulse 0.9s infinite; }
-.reveal { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 18px; border-radius: 14px; background: var(--bg);
-  border: 2px solid var(--border); animation: pop 0.5s cubic-bezier(0.2, 1.6, 0.4, 1); text-align: center; }
-.reveal.match { border-color: var(--ok); }
-.reveal-name { font-family: var(--font-display), Georgia, serif; font-size: 28px; font-weight: 600; }
 
 /* Voice setup takes */
 .takes li { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 4px 10px; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--border); }

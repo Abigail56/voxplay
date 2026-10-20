@@ -1,4 +1,4 @@
-"""The players' dashboard and its live updates."""
+"""The players' dashboard, voice twins and live updates."""
 
 import asyncio
 import json
@@ -13,8 +13,18 @@ from ..auth import CurrentUser, user_id_from_token
 from ..config import Settings, get_settings
 from ..db import get_session
 from ..demo import is_active
-from ..models import GamePlay, Speaker, User
-from ..schemas import DashboardOut, DashboardPlay, DashboardPlayer, DashboardRoom
+from ..models import GamePlay, Speaker, User, VoiceSample
+from ..schemas import (
+    DashboardOut,
+    DashboardPlay,
+    DashboardPlayer,
+    DashboardRoom,
+    MapSampleOut,
+    MapSpeakerOut,
+    TwinOut,
+    VoiceMapOut,
+)
+from ..voice_map import voice_map
 from .accounts import on_map
 from .rooms import RoomsDep
 
@@ -102,6 +112,42 @@ async def dashboard(user: CurrentUser, session: SessionDep, settings: SettingsDe
             DashboardPlay(username=name, room_code=p.room_code, mode=p.mode, points=p.points, created_at=p.created_at)
             for p, name in plays
         ],
+    )
+
+
+@router.get("/voice-twins", response_model=VoiceMapOut)
+async def voice_twins(user: CurrentUser, session: SessionDep) -> VoiceMapOut:
+    """Who sounds like whom: every player's voice (and each of their clips) as a point on a 2D map.
+
+    Players only, not the voice-lab speakers. Only map positions and similarity scores
+    are returned, never the voiceprints themselves.
+    """
+    players = (
+        await session.exec(
+            select(Speaker.id, User.username, Speaker.embedding).join(User, User.speaker_id == Speaker.id).where(is_active())
+        )
+    ).all()
+    ids = [sid for sid, _, _ in players]
+    samples = (
+        await session.exec(
+            select(VoiceSample.speaker_id, VoiceSample.embedding).where(VoiceSample.speaker_id.in_(ids)).order_by(VoiceSample.id)
+        )
+    ).all()
+    points, dots = voice_map(players, samples)
+    return VoiceMapOut(
+        me=user.speaker_id if user.speaker_id in ids else None,
+        speakers=[
+            MapSpeakerOut(
+                speaker_id=p.speaker_id,
+                name=p.name,
+                x=p.x,
+                y=p.y,
+                consistency=p.consistency,
+                twin=TwinOut(speaker_id=p.twin.speaker_id, name=p.twin.name, score=p.twin.score) if p.twin else None,
+            )
+            for p in points
+        ],
+        samples=[MapSampleOut(speaker_id=d.speaker_id, x=d.x, y=d.y) for d in dots],
     )
 
 

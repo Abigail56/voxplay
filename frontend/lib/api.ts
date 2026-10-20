@@ -2,35 +2,11 @@
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8010";
 
-export type Candidate = { speaker_id: number; name: string; score: number };
-
 export type Liveness = {
   passed: boolean;
   phrase: string; // what they were asked to say
   heard: string; // what speech-to-text heard
   match: number; // share of the phrase heard in order (0..1)
-};
-
-export type IdentifyResult = {
-  label: string; // speaker name or "unknown"
-  is_match: boolean;
-  speaker_id: number | null;
-  score: number;
-  threshold: number;
-  reason: string;
-  speech_seconds: number;
-  candidates: Candidate[];
-  liveness: Liveness | null;
-};
-
-export type VerifyResult = {
-  speaker_id: number;
-  name: string;
-  score: number; // how much the clip sounds like this person (cosine similarity)
-  threshold: number;
-  is_match: boolean;
-  reason: string;
-  liveness: Liveness | null;
 };
 
 // ---------- voice game ----------
@@ -241,14 +217,17 @@ export type Health = {
 export type MapSpeaker = {
   speaker_id: number;
   name: string;
-  is_sample: boolean;
   x: number; // [-1, 1]
   y: number;
   twin: { speaker_id: number; name: string; score: number } | null;
   consistency: number | null;
 };
 
-export type VoiceMap = { speakers: MapSpeaker[]; samples: { speaker_id: number; x: number; y: number }[] };
+export type VoiceMap = {
+  me: number | null; // your speaker_id
+  speakers: MapSpeaker[];
+  samples: { speaker_id: number; x: number; y: number }[];
+};
 
 /** A recorded or uploaded clip waiting to be sent. */
 export type Clip = { id: string; blob: Blob; filename: string; url: string };
@@ -291,22 +270,6 @@ export const api = {
 
   challenge: () => request<Challenge>("/challenge"),
 
-  identify(clip: Clip, challengeId?: string) {
-    const form = new FormData();
-    form.append("file", clip.blob, clip.filename);
-    if (challengeId) form.append("challenge_id", challengeId);
-    return request<IdentifyResult>("/identify", { method: "POST", body: form });
-  },
-
-  verify(speakerId: number, clip: Clip, challengeId: string) {
-    const form = new FormData();
-    form.append("file", clip.blob, clip.filename);
-    form.append("challenge_id", challengeId);
-    return request<VerifyResult>(`/speakers/${speakerId}/verify`, { method: "POST", body: form });
-  },
-
-  voiceMap: () => request<VoiceMap>("/speakers/map"),
-
   // ---------- voice game ----------
   signup: (username: string, password: string, country: string, place: string) =>
     request<{ token: string; user: Me }>("/auth/signup", { method: "POST", ...json({ username, password, country, place }) }),
@@ -332,6 +295,7 @@ export const api = {
   deleteMe: () => request<void>("/me", { method: "DELETE" }),
 
   dashboard: () => request<Dashboard>("/dashboard"),
+  voiceTwins: () => request<VoiceMap>("/voice-twins"),
   createRoom: (mode: GameMode, rounds: number, speed: boolean) =>
     request<Room>("/rooms", { method: "POST", ...json({ mode, rounds, speed }) }),
   room: (code: string) => request<Room>(`/rooms/${encodeURIComponent(code)}`),

@@ -24,22 +24,11 @@ export function Nav() {
         <span className="on-air" aria-hidden />
         Who&apos;s Talking?
       </Link>
-      <span className="row">
-        {me?.is_admin && (
-          <Link href="/admin" className="lab-link">
-            Admin
-          </Link>
-        )}
-        {path === "/" ? (
-          <Link href="/lab" className="lab-link">
-            Voice lab
-          </Link>
-        ) : (
-          <Link href="/" className="lab-link">
-            ← Back to the game
-          </Link>
-        )}
-      </span>
+      {me?.is_admin && (
+        <Link href="/admin" className="nav-link">
+          Admin
+        </Link>
+      )}
     </nav>
   );
 }

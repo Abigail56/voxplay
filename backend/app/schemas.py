@@ -66,7 +66,6 @@ class TwinOut(BaseModel):
 class MapSpeakerOut(BaseModel):
     speaker_id: int
     name: str
-    is_sample: bool
     x: float  # map position in [-1, 1]
     y: float
     twin: TwinOut | None  # the enrolled voice most similar to this one
@@ -80,6 +79,7 @@ class MapSampleOut(BaseModel):
 
 
 class VoiceMapOut(BaseModel):
+    me: int | None  # your speaker_id, so the game can highlight you
     speakers: list[MapSpeakerOut]
     samples: list[MapSampleOut]  # one dot per enrollment clip
 

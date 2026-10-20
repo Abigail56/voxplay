@@ -180,31 +180,6 @@ async def test_unknown_challenge_is_rejected(live_client):
     assert r.status_code == 422
 
 
-# ---------- voice map ----------
-
-
-async def test_voice_map(client):
-    ada = (await enroll(client, "Ada", 200, 210)).json()
-    await enroll(client, "Ada's sister", 205)
-    await enroll(client, "Bayo", 900)
-
-    body = (await client.get("/speakers/map")).json()
-    by_name = {s["name"]: s for s in body["speakers"]}
-    assert set(by_name) == {"Ada", "Ada's sister", "Bayo"}
-    assert by_name["Ada"]["twin"]["name"] == "Ada's sister"
-    assert all(-1 <= s["x"] <= 1 and -1 <= s["y"] <= 1 for s in body["speakers"])
-    assert len(body["samples"]) == 4
-    assert "embedding" not in by_name["Ada"]  # positions only, never the voiceprint
-
-    await client.delete(f"/speakers/{ada['id']}")
-    body = (await client.get("/speakers/map")).json()
-    assert len(body["speakers"]) == 2 and len(body["samples"]) == 2
-
-
-async def test_voice_map_empty(client):
-    assert (await client.get("/speakers/map")).json() == {"speakers": [], "samples": []}
-
-
 # ---------- verify: "is this Ada?" (used by the voice game) ----------
 
 

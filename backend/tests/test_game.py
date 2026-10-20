@@ -419,3 +419,28 @@ async def test_admin_actions(client):
     assert (await client.delete(f"/admin/players/{ids['bayo']}", headers=boss)).status_code == 204
     assert (await client.get("/me", headers=bayo)).status_code == 401
     assert "bayo" not in [s["name"] for s in (await client.get("/speakers")).json()]
+
+
+@needs_db
+async def test_voice_twins(client):
+    ada = await with_voice(client, "ada", ADA)
+    await with_voice(client, "sis", ADA + 5)  # sounds almost like ada
+    await with_voice(client, "bayo", BAYO)
+    lab = await client.post("/speakers", data={"name": "Lab", "consent": "true"}, files=takes(CHI, 2))
+    assert lab.status_code == 201, lab.text
+
+    assert (await client.get("/voice-twins")).status_code == 401
+    body = (await client.get("/voice-twins", headers=ada)).json()
+    by_name = {s["name"]: s for s in body["speakers"]}
+    assert set(by_name) == {"ada", "sis", "bayo"}  # players only, not voice-lab speakers
+    assert body["me"] == by_name["ada"]["speaker_id"]
+    assert by_name["ada"]["twin"]["name"] == "sis"
+    assert all(-1 <= s["x"] <= 1 and -1 <= s["y"] <= 1 for s in body["speakers"])
+    assert len(body["samples"]) == 9  # 3 takes each
+    assert "embedding" not in by_name["ada"]  # positions only, never the voiceprint
+
+
+@needs_db
+async def test_voice_twins_before_you_record(client):
+    h = await signup(client, "newbie")
+    assert (await client.get("/voice-twins", headers=h)).json() == {"me": None, "speakers": [], "samples": []}
