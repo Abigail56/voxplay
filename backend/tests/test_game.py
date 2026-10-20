@@ -392,7 +392,9 @@ async def test_admin_sees_everything(client):
     assert o["games_total"] == 1 and o["games_live"] == 0  # the game finished
 
     players = {p["username"]: p for p in (await client.get("/admin/players", headers=boss)).json()}
-    assert players["bayo"]["place"] == "Westlands, Nairobi"  # admins see hidden pins too
+    assert players["bayo"]["place"] == "Westlands, Nairobi"  # admins see the place name in the table
+    assert players["bayo"]["lat"] is None and players["bayo"]["lon"] is None  # but a hidden pin stays off the map
+    assert players["ada"]["lat"] is not None
     assert players["bayo"]["cheat_attempts"] == 1 and players["ada"]["total_points"] > 0
     cheats = (await client.get("/admin/plays", headers=boss, params={"cheats_only": True})).json()
     assert [(c["username"], c["live_passed"]) for c in cheats] == [("bayo", False)]

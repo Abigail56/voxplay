@@ -69,7 +69,7 @@ Tech:
 7. **Dashboard** (`GET /dashboard`): everyone's online status, place (unless hidden), current game, total points,
    open games and the latest turns.
 8. **Admin** (`/admin`, [routers/admin.py](backend/app/routers/admin.py)), for the player names in
-   `ADMIN_USERNAMES`: headline numbers, a map of every player (hidden pins included), all players with place,
+   `ADMIN_USERNAMES`: headline numbers, a map of the players who share their location, all players with place,
    status, points, turns, cheat attempts, join date and last seen, all games, every turn (filter: cheat attempts
    only), and actions to delete a player or end a stuck game.
 
@@ -173,7 +173,7 @@ There are 120 tests:
   deleted at the reveal, scoring), speed bonus and time-outs, wins, country and weekly leaderboards, reactions.
 - `test_game.py`: accounts (passwords never stored, no hint which of name/password was wrong), voice
   enrollment, places at sign-up (unknown places refused, GPS snaps to the area, move and hide your pin),
-  admin (players get 403, admins see hidden pins and cheat attempts, delete a player, end a game), full games in both modes, cheating gets 0,
+  admin (players get 403, admins see hidden place names but not hidden pins, cheat attempts, delete a player, end a game), full games in both modes, cheating gets 0,
   only the current player can play, hosts hand over, leaving mid-game, deleting your player, the live WebSocket.
   They use a tiny fake embedder and transcriber, so they run in seconds without PyTorch.
 
@@ -347,7 +347,8 @@ and Illinois' BIPA, it needs explicit consent and careful handling. This project
   any player can hide theirs (admins still see it), and turns forget where they were played after 30 days
   (`LOCATION_RETENTION_DAYS`). Place names typed at sign-up are sent to OpenStreetMap's Nominatim to find them on
   the map, and viewing the map loads tiles from OpenStreetMap's servers. No IP-address lookups.
-- **Admins** (`ADMIN_USERNAMES`) see every player's place, including hidden ones, so keep that list short.
+- **Admins** (`ADMIN_USERNAMES`) see every player's place name in the players table, including hidden ones, so keep that list short.
+  Hidden pins stay off the admin map: their coordinates never leave the server.
 - **Accounts.** Passwords are stored only as salted scrypt hashes. "Delete player" removes the account, the
   voiceprint, every turn and the location. Players' voices can't be changed or deleted from the Voice lab.
 - **Phrases and rate limits are short-lived.** Redis keeps them for at most a few minutes and never writes them to disk.

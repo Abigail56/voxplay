@@ -85,11 +85,11 @@ export function AdminDashboard() {
   const places = useMemo<Place[]>(() => {
     const map = new Map<string, Place>();
     for (const p of data?.players ?? []) {
-      if (p.lat === null || p.lon === null) continue;
+      if (!p.share_location || p.lat === null || p.lon === null) continue;
       const key = `${p.lat},${p.lon}`;
       const label = `${p.place ?? ""}${p.country ? `, ${countryName(p.country)}` : ""}`;
       const place = map.get(key) ?? { key, label, lat: p.lat, lon: p.lon, online: false, players: [] };
-      place.players.push({ name: p.share_location ? p.username : `${p.username} (hidden)`, online: p.online, points: p.total_points, room: p.room_code });
+      place.players.push({ name: p.username, online: p.online, points: p.total_points, room: p.room_code });
       place.online ||= p.online;
       map.set(key, place);
     }
@@ -222,7 +222,7 @@ export function AdminDashboard() {
           <section className="adm-panel">
             <div className="adm-panel-head">
               <h2>Player locations</h2>
-              <span className="adm-muted">Includes players who hid their pin from other players.</span>
+              <span className="adm-muted">Only players who share their location.</span>
             </div>
             <PlayersMapLeaflet places={places} />
           </section>

@@ -1,7 +1,8 @@
 """The admin page: everything about players, games and turns, and a few clean-up actions.
 
-Only players named in ADMIN_USERNAMES get in. Admins see every player's place,
-including the ones hidden from other players, so keep that list short.
+Only players named in ADMIN_USERNAMES get in. Admins see every player's place name,
+including the ones hidden from other players, so keep that list short. The map
+only gets the coordinates of players who share their location.
 """
 
 from datetime import datetime, timedelta, timezone
@@ -18,7 +19,7 @@ from ..demo import is_active
 from .. import accuracy
 from ..models import AppSetting, GamePlay, ScoreSample, Speaker, User, VoiceSample
 from ..schemas import AccuracyOut, AdminOverview, AdminPlay, AdminPlayer, AdminRoom, RatesOut, ThresholdIn
-from .accounts import is_admin
+from .accounts import is_admin, on_map
 from .rooms import RoomsDep
 
 SessionDep = Annotated[AsyncSession, Depends(get_session)]
@@ -101,8 +102,9 @@ async def players(session: SessionDep, settings: SettingsDep, rooms: RoomsDep) -
             has_voice=u.speaker_id in voiced,
             country=u.country,
             place=u.place,
-            lat=u.lat,
-            lon=u.lon,
+            # Only pins the player shares go on the admin map; a hidden one's coordinates stay on the server.
+            lat=u.lat if on_map(u) else None,
+            lon=u.lon if on_map(u) else None,
             share_location=u.share_location,
             room_code=room_of.get(u.id),
             total_points=stats.get(u.id, (0, 0, 0))[0],
