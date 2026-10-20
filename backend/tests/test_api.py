@@ -13,7 +13,7 @@ from sqlalchemy import text
 from app.config import Settings
 from app.main import create_app
 
-from .helpers import FakeEmbedder, FakeGeocoder, FakeTranscriber, to_wav, tone_sequence, tone_wav
+from .helpers import FakeEmbedder, FakeGeocoder, FakeTranscriber, tone_wav
 
 TEST_DB = os.getenv("TEST_DATABASE_URL")
 pytestmark = pytest.mark.skipif(not TEST_DB, reason="TEST_DATABASE_URL not set")
@@ -178,34 +178,6 @@ async def test_phrase_works_only_once(live_client):
 async def test_unknown_challenge_is_rejected(live_client):
     r = await identify_live(live_client, "anything", challenge_id="not-a-real-id")
     assert r.status_code == 422
-
-
-# ---------- who spoke when ----------
-
-
-async def test_diarize_labels_who_spoke_when(client):
-    await enroll(client, "Ada", 200, 205)
-    await enroll(client, "Bayo", 600)
-    audio = to_wav(tone_sequence((200, 4.0), (600, 4.0), (1500, 3.0), (200, 3.0)))
-
-    r = await client.post("/diarize", files={"file": ("chat.wav", audio, "audio/wav")})
-    body = r.json()
-    assert r.status_code == 200, r.text
-    assert [s["label"] for s in body["segments"]] == ["Ada", "Bayo", "Unknown 1", "Ada"]
-    assert body["duration_seconds"] == pytest.approx(16.0, abs=0.1)
-
-    talk = {t["label"]: t for t in body["talk_time"]}
-    assert body["talk_time"][0]["label"] == "Ada"  # talked the most (7 s)
-    assert talk["Ada"]["seconds"] == pytest.approx(7.0, abs=1.0) and talk["Ada"]["is_match"]
-    assert talk["Unknown 1"]["speaker_id"] is None
-    assert sum(t["share"] for t in body["talk_time"]) == pytest.approx(1.0, abs=0.01)
-
-
-async def test_diarize_rejects_too_long_recordings(client):
-    audio = to_wav(tone_sequence((200, 3.0)))
-    async for c in make_client(max_diarize_seconds=2):
-        r = await c.post("/diarize", files={"file": ("long.wav", audio, "audio/wav")})
-        assert r.status_code == 422 and "maximum" in r.json()["detail"]
 
 
 # ---------- voice map ----------

@@ -142,7 +142,6 @@ export function AdminDashboard() {
   if (!data) return <div className="adm"><p className="adm-muted">{error ?? "Loading…"}</p></div>;
 
   const o = data.overview;
-  const live = data.rooms.filter((r) => r.status !== "finished");
   const kpis: { label: string; value: number; note?: string; tone?: "warn" }[] = [
     { label: "Players", value: o.players, note: `${o.with_voice} with voice` },
     { label: "Online now", value: o.online },
@@ -197,65 +196,28 @@ export function AdminDashboard() {
             ))}
           </div>
 
-          <div className="adm-cols">
-            <section className="adm-panel">
-              <div className="adm-panel-head">
-                <h2>Live games</h2>
-                <button className="adm-link" onClick={() => show("games")}>
-                  All games
-                </button>
-              </div>
-              {live.length === 0 ? (
-                <p className="adm-muted">No games in progress.</p>
-              ) : (
-                <table className="adm-table">
-                  <thead>
-                    <tr>
-                      <th>Code</th>
-                      <th>Mode</th>
-                      <th>Status</th>
-                      <th className="num">Progress</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {live.slice(0, 6).map((r) => (
-                      <tr key={r.code}>
-                        <td className="mono">{r.code}</td>
-                        <td>{MODE[r.mode] ?? r.mode}</td>
-                        <td>{r.status === "playing" ? <Pill tone="ok">Playing</Pill> : <Pill tone="info">Waiting</Pill>}</td>
-                        <td className="num">
-                          {r.turn}/{r.turns_total || "—"}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </section>
-
-            <section className="adm-panel">
-              <div className="adm-panel-head">
-                <h2>Players by country</h2>
-              </div>
-              {byCountry.length === 0 ? (
-                <p className="adm-muted">No players yet.</p>
-              ) : (
-                <ul className="adm-bars">
-                  {byCountry.slice(0, 8).map(([code, n]) => (
-                    <li key={code}>
-                      <span className="adm-bar-label">
-                        <span className="mono adm-cc">{code}</span> {countryName(code)}
-                      </span>
-                      <span className="adm-bar-track">
-                        <span className="adm-bar-fill" style={{ width: `${(n / byCountry[0][1]) * 100}%` }} />
-                      </span>
-                      <span className="num">{n}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
-          </div>
+          <section className="adm-panel">
+            <div className="adm-panel-head">
+              <h2>Players by country</h2>
+            </div>
+            {byCountry.length === 0 ? (
+              <p className="adm-muted">No players yet.</p>
+            ) : (
+              <ul className="adm-bars">
+                {byCountry.slice(0, 8).map(([code, n]) => (
+                  <li key={code}>
+                    <span className="adm-bar-label">
+                      <span className="mono adm-cc">{code}</span> {countryName(code)}
+                    </span>
+                    <span className="adm-bar-track">
+                      <span className="adm-bar-fill" style={{ width: `${(n / byCountry[0][1]) * 100}%` }} />
+                    </span>
+                    <span className="num">{n}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
 
           <section className="adm-panel">
             <div className="adm-panel-head">
@@ -263,16 +225,6 @@ export function AdminDashboard() {
               <span className="adm-muted">Includes players who hid their pin from other players.</span>
             </div>
             <PlayersMapLeaflet places={places} />
-          </section>
-
-          <section className="adm-panel">
-            <div className="adm-panel-head">
-              <h2>Recent turns</h2>
-              <button className="adm-link" onClick={() => show("turns")}>
-                All turns
-              </button>
-            </div>
-            <TurnsTable plays={data.plays.slice(0, 8)} empty="No turns played yet." />
           </section>
         </div>
       )}

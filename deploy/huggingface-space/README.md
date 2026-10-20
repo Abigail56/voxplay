@@ -17,7 +17,6 @@ finds the closest enrolled speaker by cosine similarity.
 
 - **Liveness check:** `/identify` needs a fresh 6-digit phrase from `GET /challenge`, read out in the clip
   (checked with Whisper), so old recordings can't be replayed.
-- **Who spoke when:** `POST /diarize` labels each part of a conversation with a speaker.
 - **Voice map:** `GET /speakers/map` shows who sounds like whom.
 
 - Interactive API docs: open `/docs` on this Space.

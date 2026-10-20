@@ -57,30 +57,6 @@ class VerifyOut(BaseModel):
     liveness: LivenessOut | None = None
 
 
-class SegmentOut(BaseModel):
-    start: float  # seconds from the start of the recording
-    end: float
-    label: str  # speaker name, or "Unknown 1", "Unknown 2", ...
-    speaker_id: int | None
-    is_match: bool
-    score: float
-
-
-class TalkTimeOut(BaseModel):
-    label: str
-    speaker_id: int | None
-    is_match: bool
-    seconds: float
-    share: float  # of all labelled speech (0..1)
-
-
-class DiarizeOut(BaseModel):
-    duration_seconds: float
-    threshold: float
-    segments: list[SegmentOut]
-    talk_time: list[TalkTimeOut]  # most talkative first
-
-
 class TwinOut(BaseModel):
     speaker_id: int
     name: str

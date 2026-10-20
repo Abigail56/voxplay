@@ -26,8 +26,8 @@ they were really said, so a recording of someone can't be played back. **The ser
 score**; the browser only sends the recording.
 
 The **🔬 Voice lab** (`/lab`) has two party tricks: **🔮 Mystery voice** (anyone reads the digits; the AI reveals
-which player it is) and **👯 Voice twins** (who sounds like whom). The older lab tools (separate enrollment,
-"who spoke when") are no longer on screen; their API endpoints still work for scripts.
+which player it is) and **👯 Voice twins** (who sounds like whom). The older separate-enrollment tool is no longer on
+screen; its API endpoints still work for scripts.
 
 Tech:
 
@@ -109,12 +109,6 @@ browser mic ──► FFmpeg (16 kHz mono) ──► trim silence ──► ECAP
                           or "unknown"
 ```
 
-**Who spoke when** (`POST /diarize`, [backend/app/diarization.py](backend/app/diarization.py)): a 2-second
-window slides over the recording 1 second at a time. Each window's speech becomes a voiceprint
-and is matched against everyone enrolled; windows that match nobody are grouped into "Unknown 1",
-"Unknown 2", …. One-window blips (A A **B** A A) are smoothed away, and each stretch of speech takes the
-label of the nearest window, so segment edges land on real pauses.
-
 **Voice map** (`GET /speakers/map`, [backend/app/voice_map.py](backend/app/voice_map.py)): PCA squeezes the
 192-number voiceprints onto the 2 directions in which the enrolled voices differ most. The "voice twin"
 is computed on all 192 numbers, so it is exact even where the 2D picture is rough. Only map positions
@@ -142,7 +136,7 @@ Then open:
 
 - **Game:** http://localhost:3010. Create a player, record your voice, then create a game and share its code.
   To play against yourself on one computer, open a second browser (or a private window) as a second player.
-- **Voice lab:** http://localhost:3010/lab (identify, who spoke when, voice map).
+- **Voice lab:** http://localhost:3010/lab (mystery voice, voice twins).
 - **API docs (Swagger):** http://localhost:8010/docs
 
 > The microphone only works on `localhost` or HTTPS, because browsers block it on plain-HTTP remote hosts.
@@ -166,15 +160,14 @@ docker compose up -d api      # liveness back on
 docker compose run --rm api pytest -v
 ```
 
-There are 114 tests:
+There are 120 tests:
 - `test_matching.py`: cosine similarity, centroids, ranking, threshold/"unknown" decisions, margin rule, EER
 - `test_audio.py`: resampling, silence trimming, rejecting garbage and too-short audio
-- `test_diarization.py`: windows skip silence, two enrolled speakers + a stranger, two strangers told apart, smoothing
 - `test_voice_map.py`: PCA keeps similar voices close, voice twins, consistency
 - `test_liveness.py`: random digit phrases, the ways Whisper writes digits, wrong order and old recordings fail,
   phrases expire and work once (in memory and in the real Redis)
 - `test_api.py`, `test_demo.py`: full HTTP flows against a real pgvector database (`voiceid_test`): enroll → identify → delete,
-  liveness pass / replay fails / phrase reused, verify ("is this Ada?"), who spoke when, voice map,
+  liveness pass / replay fails / phrase reused, verify ("is this Ada?"), voice map,
   demo limits.
 - `test_fun.py`: daily phrase, score and streaks, badges, Guess Who (the speaker stays secret, the clip is
   deleted at the reveal, scoring), speed bonus and time-outs, wins, country and weekly leaderboards, reactions.
@@ -224,7 +217,6 @@ docker compose down -v     # stop AND delete the database + model cache volumes
 | | **Voice lab** | |
 | `GET` | `/challenge` | A fresh 6-digit phrase to say (valid 2 minutes, one use) |
 | `POST` | `/identify` | Form fields `file`, `challenge_id` → best match or `"unknown"` |
-| `POST` | `/diarize` | Form field `file` (up to 3 min) → who spoke when + talk time |
 | `GET` | `/speakers/map` | 2D positions, voice twins and consistency of everyone enrolled |
 | `POST` | `/speakers/{id}/verify` | Form fields `file`, `challenge_id` → how much the clip sounds like this one person ("is this Ada?") |
 | `GET` | `/health` | Model loaded? threshold? number of speakers |
@@ -311,26 +303,6 @@ with only 0.8 s of speech was rejected with a clear 422 error, which is the inte
 
 ---
 
-## Who spoke when: how well it works
-
-`scripts/eval_diarize.py` builds conversations out of real LibriSpeech clips: turns of 3–8 s, random
-loudness, 0.4 s pauses, two enrolled speakers plus one stranger. It then measures how much of the talk
-time gets the right label (the stranger counts as right when they get one consistent "Unknown N").
-Full output: [docs/diarize-eval.txt](docs/diarize-eval.txt).
-
-| window | threshold 0.25 | **0.30** | 0.35 | 0.40 |
-|---|---|---|---|---|
-| 1.5 s | 89.3 % | 91.8 % | 90.8 % | 89.4 % |
-| **2.0 s** | 89.0 % | **91.8 % (worst conversation 78.7 %)** | 90.3 % | 89.5 % |
-| 3.0 s | 84.0 % | 87.2 % | 88.5 % | 88.7 % |
-
-**Why 0.30 and not 0.40 like `/identify`:** a 2-second window holds much less voice than a whole clip,
-so even the right speaker scores lower. Through the real API a 19 s, 3-person test conversation came back
-with all five turns labelled correctly and edges within about half a second.
-
-**Limits:** it takes about 22 s of CPU work per minute of audio with the default 2 threads (so a 3-minute recording, the cap, takes about a minute), two people
-talking *at the same time* get one label, and turns shorter than about 1 s can be missed.
-
 ## Liveness check: what it stops, and what it doesn't
 
 **It stops replays.** A recording made before the phrase existed can't contain it, and each phrase works
@@ -348,9 +320,6 @@ Unrelated sentences never matched more than 40 % of any phrase, far below the 80
 digits within the 2 minutes. Catching that needs an anti-spoofing model trained to tell real from
 synthetic speech (for example AASIST, trained on the ASVspoof challenge data). That's the next step
 if this is ever used for anything that matters.
-
-`/diarize` labels whatever recording you give it and can't check liveness, so its answers mean "sounds
-like Ada", not "Ada was here". The UI says so.
 
 ---
 
@@ -394,8 +363,7 @@ voice-id/
 ├── README.md
 ├── docs/
 │   ├── threshold-tuning.txt    # output of scripts/tune_threshold.py
-│   ├── e2e-demo-output.txt     # output of scripts/e2e_demo.py
-│   └── diarize-eval.txt        # output of scripts/eval_diarize.py
+│   └── e2e-demo-output.txt     # output of scripts/e2e_demo.py
 ├── data/                       # sample voices land in data/samples/<speaker>/ (git-ignored)
 ├── backend/
 │   ├── Dockerfile              # python:3.11-slim + ffmpeg + CPU-only PyTorch + both models baked in
@@ -407,7 +375,6 @@ voice-id/
 │   │   ├── audio.py            # FFmpeg decode → 16 kHz mono, voice activity / silence trimming, validation
 │   │   ├── embedding.py        # ECAPA-TDNN wrapper (SpeechBrain), batched embedding
 │   │   ├── matching.py         # cosine similarity, centroids, decide() → name / unknown
-│   │   ├── diarization.py      # who spoke when: windows → labels → smoothing → segments
 │   │   ├── voice_map.py        # PCA to 2D, voice twins, consistency
 │   │   ├── liveness.py         # digit phrases, Whisper wrapper, phrase matching, one-time challenges
 │   │   ├── store.py            # Redis (or in-memory): phrases, rate limits, rooms, locks, pub/sub
@@ -420,7 +387,6 @@ voice-id/
 │   │   └── routers/
 │   │       ├── speakers.py     # enroll, add samples, list, get, delete, voice map
 │   │       ├── identify.py     # GET /challenge, liveness check, identify (pgvector + decide()), verify
-│   │       ├── diarize.py      # POST /diarize
 │   │       ├── accounts.py     # sign up / in, my voice, my location, delete me
 │   │       ├── rooms.py        # create / join / start / turn
 │   │       ├── game.py         # dashboard + the /ws live-updates WebSocket
@@ -428,9 +394,8 @@ voice-id/
 │   ├── scripts/
 │   │   ├── fetch_samples.py    # download LibriSpeech test voices
 │   │   ├── tune_threshold.py   # genuine/impostor scores, EER, threshold sweep
-│   │   ├── e2e_demo.py         # enroll + identify via the running API
-│   │   └── eval_diarize.py     # who-spoke-when accuracy on made-up conversations
-│   └── tests/                  # pytest: matching, audio, diarization, voice map, liveness, API
+│   │   └── e2e_demo.py         # enroll + identify via the running API
+│   └── tests/                  # pytest: matching, audio, voice map, liveness, API
 └── frontend/
     ├── Dockerfile              # node:22-alpine multi-stage, Next.js standalone
     ├── app/                    # layout.tsx, page.tsx (the game), lab/ (Voice lab), admin/ (admin page), globals.css
@@ -438,7 +403,6 @@ voice-id/
     │   ├── ClipInput.tsx       # record (MediaRecorder) or upload audio
     │   ├── EnrollForm.tsx      # name + samples + consent checkbox
     │   ├── IdentifyPanel.tsx   # digit phrase + countdown, live check, confidence bar, candidates
-    │   ├── DiarizePanel.tsx    # timeline, talk time, segment table
     │   ├── VoiceMap.tsx        # SVG map of voices, twins table
     │   ├── game/               # Welcome, VoiceSetup, PlayerCard, Lobby, RoomPanel, World (map, leaderboard,
     │   │                       #   feed), GameHome, Avatar, PlayersMapLeaflet, LocationPicker, Invite
@@ -463,9 +427,6 @@ voice-id/
 | `CHALLENGE_TTL_SECONDS` | `120` | How long a phrase stays valid |
 | `LIVENESS_MIN_MATCH` | `0.8` | Share of the digits that must be heard, in order |
 | `ASR_MODEL` | `base.en` | faster-whisper model (`small.en` is more accurate, ~3x slower) |
-| `DIARIZE_THRESHOLD` | `0.30` | Match threshold for the 2 s windows of `/diarize` |
-| `DIARIZE_WINDOW_SECONDS` | `2.0` | Window length for `/diarize` |
-| `MAX_DIARIZE_SECONDS` | `180` | Longest recording `/diarize` accepts |
 | `JWT_SECRET` | *(random per start)* | Signs sign-in tokens. **Set a long random value in production**, or everyone is signed out on every restart |
 | `TOKEN_DAYS` | `7` | How long a sign-in lasts |
 | `ROOM_TTL_HOURS` | `6` | Games are deleted this long after their last change |
@@ -510,8 +471,7 @@ runs, which suits a demo with 24-hour enrollments.
 - **Versions.** `huggingface_hub` is pinned to `0.25.2` because SpeechBrain 1.0.3 calls
   `hf_hub_download(use_auth_token=...)`, which newer versions removed.
 - **Speed and memory.** The API uses about 610 MB of RAM with both models loaded. On a 4-core laptop
-  (CPU only, 2 PyTorch threads) one `/identify` call with the liveness check takes about 2 s,
-  and `/diarize` about 8 s for a 20 s recording. Raise `TORCH_THREADS` if you have more cores.
+  (CPU only, 2 PyTorch threads) one `/identify` call with the liveness check takes about 2 s. Raise `TORCH_THREADS` if you have more cores.
 - **Ideas:** an anti-spoofing model against voice clones, Alembic migrations, auth (JWT),
   a stricter threshold for verify when it guards something real, live "who's talking now" from the
   microphone, and showcasing it on your portfolio site.

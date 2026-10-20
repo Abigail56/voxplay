@@ -43,13 +43,6 @@ class Settings(BaseSettings):
     min_margin: float = 0.0
     top_k: int = 3
 
-    # --- Who spoke when (POST /diarize) ---
-    # Short windows give lower scores than whole clips, so this is lower than match_threshold.
-    # Chosen with real voices; see README "Who spoke when".
-    diarize_threshold: float = 0.30
-    diarize_window_seconds: float = 2.0
-    max_diarize_seconds: float = 180.0
-
     # --- Liveness: "say this phrase" so a recording can't be replayed ---
     # When true, /identify only answers clips that say a fresh phrase from GET /challenge.
     require_liveness: bool = True

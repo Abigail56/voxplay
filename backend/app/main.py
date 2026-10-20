@@ -21,7 +21,7 @@ from .embedding import EcapaEmbedder, Embedder
 from .geocode import Geocoder, NominatimGeocoder
 from .liveness import ChallengeStore, Transcriber, WhisperTranscriber
 from .models import AppSetting, Speaker
-from .routers import accounts, admin, daily, diarize, game, identify, rooms, speakers
+from .routers import accounts, admin, daily, game, identify, rooms, speakers
 from .schemas import HealthOut
 from .rooms import RoomStore
 from .store import make_store
@@ -111,7 +111,6 @@ def create_app(
     app.dependency_overrides[get_settings] = lambda: settings
     app.include_router(speakers.router)
     app.include_router(identify.router)
-    app.include_router(diarize.router)
     app.include_router(accounts.router)
     app.include_router(rooms.router)
     app.include_router(game.router)

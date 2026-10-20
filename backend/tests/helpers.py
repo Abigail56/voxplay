@@ -43,26 +43,6 @@ class FakeEmbedder:
         return l2_normalize(np.exp(-0.5 * ((x - centre) / 1.5) ** 2) + 1e-6)
 
 
-def tone_sequence(*parts: tuple[float, float], gap: float = 0.5) -> np.ndarray:
-    """A fake conversation at 16 kHz: (pitch Hz, seconds) turns with silence between them."""
-    sr = 16_000
-    pieces = []
-    for freq, seconds in parts:
-        t = np.arange(int(seconds * sr)) / sr
-        pieces += [0.5 * np.sin(2 * np.pi * freq * t), np.zeros(int(gap * sr))]
-    return np.concatenate(pieces).astype(np.float32)
-
-
-def to_wav(samples: np.ndarray, sample_rate: int = 16_000) -> bytes:
-    buf = io.BytesIO()
-    with wave.open(buf, "wb") as w:
-        w.setnchannels(1)
-        w.setsampwidth(2)
-        w.setframerate(sample_rate)
-        w.writeframes((samples * 32767).astype(np.int16).tobytes())
-    return buf.getvalue()
-
-
 class FakeTranscriber:
     """Speech-to-text stand-in: 'hears' whatever the test puts in .text."""
 
