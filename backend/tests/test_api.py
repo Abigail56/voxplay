@@ -13,21 +13,38 @@ from sqlalchemy import text
 from app.config import Settings
 from app.main import create_app
 
-from .helpers import FakeEmbedder, tone_wav
+from .helpers import FakeEmbedder, FakeGeocoder, FakeTranscriber, to_wav, tone_sequence, tone_wav
 
 TEST_DB = os.getenv("TEST_DATABASE_URL")
 pytestmark = pytest.mark.skipif(not TEST_DB, reason="TEST_DATABASE_URL not set")
 
 
-@pytest.fixture
-async def client():
-    app = create_app(Settings(database_url=TEST_DB, match_threshold=0.5), embedder=FakeEmbedder())
+async def make_client(**overrides):
+    settings = Settings(
+        database_url=TEST_DB, match_threshold=0.5, **{"require_liveness": False, "redis_url": "", **overrides}
+    )
+    app = create_app(settings, embedder=FakeEmbedder(), transcriber=FakeTranscriber(), geocoder=FakeGeocoder())
     async with app.router.lifespan_context(app):
         async with app.state.sessionmaker() as s:
-            await s.execute(text("TRUNCATE speakers, voice_samples RESTART IDENTITY CASCADE"))
+            await s.exec(text("TRUNCATE speakers, voice_samples, game_plays, users, score_samples, app_settings RESTART IDENTITY CASCADE"))
             await s.commit()
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
+            c.transcriber = app.state.transcriber
+            c.app = app
             yield c
+
+
+@pytest.fixture
+async def client():
+    async for c in make_client():
+        yield c
+
+
+@pytest.fixture
+async def live_client():
+    """Liveness on, as in production."""
+    async for c in make_client(require_liveness=True):
+        yield c
 
 
 def wav(name, freq, **kw):
@@ -102,3 +119,161 @@ async def test_identify_with_no_speakers(client):
 async def test_health(client):
     body = (await client.get("/health")).json()
     assert body["status"] == "ok" and body["model_loaded"] is True and body["threshold"] == 0.5
+
+
+async def test_health_reports_liveness(live_client):
+    assert (await live_client.get("/health")).json()["liveness_required"] is True
+
+
+# ---------- liveness: "say this phrase" ----------
+
+
+async def identify_live(client, phrase_said, challenge_id=None, freq=200):
+    if challenge_id is None:
+        challenge_id = (await client.get("/challenge")).json()["challenge_id"]
+    client.transcriber.text = phrase_said
+    return await client.post(
+        "/identify",
+        data={"challenge_id": challenge_id},
+        files={"file": ("q.wav", tone_wav(freq), "audio/wav")},
+    )
+
+
+async def test_liveness_required_without_phrase(live_client):
+    await enroll(live_client, "Ada", 200)
+    r = await live_client.post("/identify", files={"file": ("q.wav", tone_wav(200), "audio/wav")})
+    assert r.status_code == 422 and "/challenge" in r.json()["detail"]
+
+
+async def test_saying_the_phrase_passes(live_client):
+    await enroll(live_client, "Ada", 200)
+    challenge = (await live_client.get("/challenge")).json()
+    assert len(challenge["phrase"].split()) == 6 and challenge["expires_in_seconds"] > 0
+
+    r = await identify_live(live_client, challenge["phrase"].capitalize() + ".", challenge["challenge_id"])
+    body = r.json()
+    assert r.status_code == 200, r.text
+    assert body["label"] == "Ada" and body["is_match"] is True
+    assert body["liveness"]["passed"] is True and body["liveness"]["match"] == 1.0
+
+
+async def test_replayed_recording_fails_and_reveals_nothing(live_client):
+    await enroll(live_client, "Ada", 200)
+    # Ada's voice, but saying something recorded earlier instead of the phrase.
+    body = (await identify_live(live_client, "hi it's Ada, call me back")).json()
+    assert body["label"] == "unknown" and body["is_match"] is False
+    assert body["liveness"]["passed"] is False
+    assert "Liveness check failed" in body["reason"]
+    assert body["candidates"] == [] and body["score"] == 0.0  # no hints for an attacker
+
+
+async def test_phrase_works_only_once(live_client):
+    await enroll(live_client, "Ada", 200)
+    challenge = (await live_client.get("/challenge")).json()
+    assert (await identify_live(live_client, challenge["phrase"], challenge["challenge_id"])).status_code == 200
+    again = await identify_live(live_client, challenge["phrase"], challenge["challenge_id"])
+    assert again.status_code == 422 and "already used" in again.json()["detail"]
+
+
+async def test_unknown_challenge_is_rejected(live_client):
+    r = await identify_live(live_client, "anything", challenge_id="not-a-real-id")
+    assert r.status_code == 422
+
+
+# ---------- who spoke when ----------
+
+
+async def test_diarize_labels_who_spoke_when(client):
+    await enroll(client, "Ada", 200, 205)
+    await enroll(client, "Bayo", 600)
+    audio = to_wav(tone_sequence((200, 4.0), (600, 4.0), (1500, 3.0), (200, 3.0)))
+
+    r = await client.post("/diarize", files={"file": ("chat.wav", audio, "audio/wav")})
+    body = r.json()
+    assert r.status_code == 200, r.text
+    assert [s["label"] for s in body["segments"]] == ["Ada", "Bayo", "Unknown 1", "Ada"]
+    assert body["duration_seconds"] == pytest.approx(16.0, abs=0.1)
+
+    talk = {t["label"]: t for t in body["talk_time"]}
+    assert body["talk_time"][0]["label"] == "Ada"  # talked the most (7 s)
+    assert talk["Ada"]["seconds"] == pytest.approx(7.0, abs=1.0) and talk["Ada"]["is_match"]
+    assert talk["Unknown 1"]["speaker_id"] is None
+    assert sum(t["share"] for t in body["talk_time"]) == pytest.approx(1.0, abs=0.01)
+
+
+async def test_diarize_rejects_too_long_recordings(client):
+    audio = to_wav(tone_sequence((200, 3.0)))
+    async for c in make_client(max_diarize_seconds=2):
+        r = await c.post("/diarize", files={"file": ("long.wav", audio, "audio/wav")})
+        assert r.status_code == 422 and "maximum" in r.json()["detail"]
+
+
+# ---------- voice map ----------
+
+
+async def test_voice_map(client):
+    ada = (await enroll(client, "Ada", 200, 210)).json()
+    await enroll(client, "Ada's sister", 205)
+    await enroll(client, "Bayo", 900)
+
+    body = (await client.get("/speakers/map")).json()
+    by_name = {s["name"]: s for s in body["speakers"]}
+    assert set(by_name) == {"Ada", "Ada's sister", "Bayo"}
+    assert by_name["Ada"]["twin"]["name"] == "Ada's sister"
+    assert all(-1 <= s["x"] <= 1 and -1 <= s["y"] <= 1 for s in body["speakers"])
+    assert len(body["samples"]) == 4
+    assert "embedding" not in by_name["Ada"]  # positions only, never the voiceprint
+
+    await client.delete(f"/speakers/{ada['id']}")
+    body = (await client.get("/speakers/map")).json()
+    assert len(body["speakers"]) == 2 and len(body["samples"]) == 2
+
+
+async def test_voice_map_empty(client):
+    assert (await client.get("/speakers/map")).json() == {"speakers": [], "samples": []}
+
+
+# ---------- verify: "is this Ada?" (used by the voice game) ----------
+
+
+async def verify(client, speaker_id, freq, phrase_said=None):
+    data = {}
+    if phrase_said is not None:
+        data["challenge_id"] = (await client.get("/challenge")).json()["challenge_id"]
+        client.transcriber.text = phrase_said
+    return await client.post(
+        f"/speakers/{speaker_id}/verify", data=data, files={"file": ("q.wav", tone_wav(freq), "audio/wav")}
+    )
+
+
+async def test_verify_scores_against_one_speaker(client):
+    ada = (await enroll(client, "Ada", 200)).json()
+    await enroll(client, "Bayo", 600)
+
+    me = (await verify(client, ada["id"], 200)).json()
+    assert me["name"] == "Ada" and me["is_match"] is True and me["score"] > 0.9
+
+    # Bayo's voice trying to pass as Ada: scored against Ada, not identified as Bayo.
+    impostor = (await verify(client, ada["id"], 600)).json()
+    assert impostor["name"] == "Ada" and impostor["is_match"] is False and impostor["score"] < 0.5
+
+
+async def test_verify_unknown_speaker(client):
+    assert (await verify(client, 999, 200)).status_code == 404
+
+
+async def test_verify_checks_liveness(live_client):
+    ada = (await enroll(live_client, "Ada", 200)).json()
+    assert (await verify(live_client, ada["id"], 200)).status_code == 422  # no phrase
+
+    challenge = (await live_client.get("/challenge")).json()
+    live_client.transcriber.text = challenge["phrase"]
+    ok = await live_client.post(
+        f"/speakers/{ada['id']}/verify",
+        data={"challenge_id": challenge["challenge_id"]},
+        files={"file": ("q.wav", tone_wav(200), "audio/wav")},
+    )
+    assert ok.json()["is_match"] is True and ok.json()["liveness"]["passed"] is True
+
+    replay = (await verify(live_client, ada["id"], 200, phrase_said="hi it's Ada")).json()
+    assert replay["is_match"] is False and replay["score"] == 0.0 and replay["liveness"]["passed"] is False

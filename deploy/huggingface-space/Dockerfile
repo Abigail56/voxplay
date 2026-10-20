@@ -24,16 +24,17 @@ RUN pip install --no-cache-dir --extra-index-url https://download.pytorch.org/wh
 
 ENV MODEL_DIR=/models/spkrec-ecapa-voxceleb
 
-# Bake the pretrained model into the image (no download at start-up).
+# Bake the pretrained models into the image (no download at start-up).
 RUN python -c "from speechbrain.inference.speaker import EncoderClassifier; \
 EncoderClassifier.from_hparams(source='speechbrain/spkrec-ecapa-voxceleb', savedir='/models/spkrec-ecapa-voxceleb')" \
+    && python -c "from faster_whisper import WhisperModel; WhisperModel('base.en', device='cpu', compute_type='int8', download_root='/models/whisper')" \
     && chmod -R a+rwX /models
 
 # --- Space-specific from here on ---
 
-# A private PostgreSQL with the pgvector extension.
+# A private PostgreSQL with the pgvector extension, and a private Redis.
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends postgresql postgresql-17-pgvector \
+    && apt-get install -y --no-install-recommends postgresql postgresql-17-pgvector redis-server \
     && rm -rf /var/lib/apt/lists/*
 
 # Hugging Face runs the container as user 1000.

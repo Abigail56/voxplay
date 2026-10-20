@@ -52,3 +52,28 @@ class EcapaEmbedder:
         with self._lock, self._torch.inference_mode():
             emb = self._model.encode_batch(wav)  # shape (1, 1, 192)
         return l2_normalize(emb.squeeze().cpu().numpy())
+
+    def embed_many(self, clips: list[np.ndarray], batch_size: int = 16) -> list[np.ndarray]:
+        """Embed many short clips at once (much faster than one by one on a CPU).
+
+        Clips in a batch are zero-padded to the longest one; `wav_lens` tells the
+        model how much of each row is real audio, so the padding is ignored.
+        """
+        out: list[np.ndarray] = []
+        for i in range(0, len(clips), batch_size):
+            batch = clips[i : i + batch_size]
+            longest = max(c.size for c in batch)
+            wavs = np.zeros((len(batch), longest), dtype=np.float32)
+            for row, clip in enumerate(batch):
+                wavs[row, : clip.size] = clip
+            lens = self._torch.tensor([c.size / longest for c in batch], dtype=self._torch.float32)
+            with self._lock, self._torch.inference_mode():
+                emb = self._model.encode_batch(self._torch.from_numpy(wavs), lens)  # (batch, 1, 192)
+            out.extend(l2_normalize(e) for e in emb.squeeze(1).cpu().numpy())
+        return out
+
+
+def embed_all(embedder: Embedder, clips: list[np.ndarray]) -> list[np.ndarray]:
+    """Use the embedder's batched path when it has one (the fake test embedder doesn't)."""
+    many = getattr(embedder, "embed_many", None)
+    return many(clips) if many else [embedder.embed(c) for c in clips]

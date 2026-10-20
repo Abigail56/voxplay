@@ -1,5 +1,5 @@
-# Ports are shifted (5442, 8010, 3010) so they do not clash with a local
-# PostgreSQL on 5432 or other apps on 8000/3000.
+# Ports are shifted (5442, 6389, 8010, 3010) so they do not clash with a local
+# PostgreSQL on 5432, Redis on 6379 or other apps on 8000/3000.
 name: voice-id
 
 services:
@@ -20,12 +20,33 @@ services:
       timeout: 3s
       retries: 20
 
+  # Liveness phrases (expire, single use) and rate limits. Nothing here needs to survive
+  # a restart, so persistence is off.
+  redis:
+    image: redis:7.4-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    ports:
+      - "6389:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
   api:
     build: ./backend
     environment:
       DATABASE_URL: postgresql+asyncpg://voiceid:voiceid@db:5432/voiceid
       TEST_DATABASE_URL: postgresql+asyncpg://voiceid:voiceid@db:5432/voiceid_test
+      REDIS_URL: redis://redis:6379/0
+      TEST_REDIS_URL: redis://redis:6379/1
       MATCH_THRESHOLD: ${MATCH_THRESHOLD:-0.40}
+      # Set to false to send /identify plain recordings without a spoken phrase (e.g. scripts/e2e_demo.py).
+      REQUIRE_LIVENESS: ${REQUIRE_LIVENESS:-true}
+      # Signs game sign-in tokens. Put a long random value in .env for anything beyond your own laptop.
+      JWT_SECRET: ${JWT_SECRET:-dev-only-secret-change-me}
+      # Player names who can open /admin, comma-separated (e.g. "chi,rita"). Set it in .env.
+      ADMIN_USERNAMES: ${ADMIN_USERNAMES:-}
       # The Voice ID UI (3010) and the portfolio demo page (3001) may call this API.
       CORS_ORIGINS: http://localhost:3010,http://localhost:3001
     ports:
@@ -35,6 +56,8 @@ services:
       - ./data:/data            # sample voices for scripts/ (optional)
     depends_on:
       db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
 
   web:

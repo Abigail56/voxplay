@@ -2,7 +2,8 @@
 
 - Visitors' enrollments expire (DEMO_RETENTION_HOURS) and are deleted by a background job.
 - Built-in sample voices (LibriSpeech readers) are always there to match against.
-- A simple per-IP rate limit (RATE_LIMIT_PER_MINUTE) stops one visitor hammering the model.
+- A simple per-IP rate limit (RATE_LIMIT_PER_MINUTE, counted in Redis) stops one visitor
+  hammering the model.
 
 Everything here is switched off by default, so local development behaves as before.
 """
@@ -11,15 +12,15 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import threading
 import time
-from collections import defaultdict, deque
 from datetime import datetime, timezone
 from pathlib import Path
 
 from fastapi import HTTPException, Request, status
-from sqlalchemy import delete, or_, select
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from sqlalchemy import delete, or_
+from sqlalchemy.ext.asyncio import async_sessionmaker
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 from starlette.concurrency import run_in_threadpool
 
 from .audio import AudioError, preprocess
@@ -27,6 +28,7 @@ from .config import Settings
 from .embedding import Embedder
 from .matching import compute_centroid
 from .models import Speaker, VoiceSample
+from .store import Store
 
 log = logging.getLogger("voiceid.demo")
 
@@ -44,7 +46,7 @@ def is_active():
 
 async def delete_expired(session: AsyncSession) -> int:
     """Delete every expired enrollment (their voice samples go with them). Returns how many."""
-    result = await session.execute(
+    result = await session.exec(
         delete(Speaker).where(Speaker.expires_at.is_not(None), Speaker.expires_at <= now())
     )
     await session.commit()
@@ -65,30 +67,23 @@ async def cleanup_loop(sessionmaker: async_sessionmaker[AsyncSession], every_sec
 
 
 class RateLimiter:
-    """Allow at most `limit` requests per client IP in any 60-second window (in memory).
+    """Allow at most `limit` requests per client IP per minute.
 
-    Good enough for a single-instance demo. Several instances would share the count
-    in Redis instead, like the portfolio API's contact form does.
+    The counters live in the shared store (Redis when configured), so the limit
+    holds across all API instances. It counts per clock minute, which is
+    simple and good enough to stop one visitor hammering the model.
     """
 
-    def __init__(self, limit: int, window_seconds: float = 60.0) -> None:
+    def __init__(self, store: Store, limit: int, window_seconds: int = 60) -> None:
+        self.store = store
         self.limit = limit
         self.window = window_seconds
-        self._hits: dict[str, deque[float]] = defaultdict(deque)
-        self._lock = threading.Lock()
 
-    def allow(self, key: str) -> bool:
+    async def allow(self, key: str) -> bool:
         if self.limit <= 0:
             return True
-        cutoff = time.monotonic() - self.window
-        with self._lock:
-            hits = self._hits[key]
-            while hits and hits[0] < cutoff:
-                hits.popleft()
-            if len(hits) >= self.limit:
-                return False
-            hits.append(time.monotonic())
-            return True
+        bucket = int(time.time() // self.window)
+        return await self.store.incr(f"rate:{key}:{bucket}", self.window) <= self.limit
 
 
 def client_ip(request: Request, trust_proxy_headers: bool) -> str:
@@ -99,11 +94,11 @@ def client_ip(request: Request, trust_proxy_headers: bool) -> str:
     return request.client.host if request.client else "unknown"
 
 
-def rate_limit(request: Request) -> None:
+async def rate_limit(request: Request) -> None:
     """FastAPI dependency for the expensive endpoints (enroll, add samples, identify)."""
     settings: Settings = request.app.state.settings
     limiter: RateLimiter = request.app.state.rate_limiter
-    if not limiter.allow(client_ip(request, settings.trust_proxy_headers)):
+    if not await limiter.allow(client_ip(request, settings.trust_proxy_headers)):
         raise HTTPException(
             status.HTTP_429_TOO_MANY_REQUESTS,
             "Too many requests from you in the last minute. Please wait a moment and try again.",
@@ -124,7 +119,7 @@ async def seed_sample_voices(
     added = 0
     async with sessionmaker() as session:
         for person in sorted(p for p in folder.iterdir() if p.is_dir()):
-            if await session.scalar(select(Speaker.id).where(Speaker.name == person.name)):
+            if (await session.exec(select(Speaker.id).where(Speaker.name == person.name))).first():
                 continue
             vectors, seconds = [], []
             for clip in sorted(f for f in person.iterdir() if f.suffix.lower() in AUDIO_EXT):

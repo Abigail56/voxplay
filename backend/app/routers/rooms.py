@@ -1,0 +1,398 @@
+import base64
+import json
+import secrets
+import time
+from datetime import datetime, timezone
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, Response, UploadFile, status
+from pydantic import Field
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
+
+from ..adaptation import learn, record_scores
+from ..auth import CurrentUser
+from ..config import Settings, get_settings
+from ..db import get_session
+from ..demo import rate_limit
+from ..embedding import Embedder
+from ..liveness import ChallengeStore
+from ..matching import cosine_similarity, decide
+from ..models import GamePlay, GameResult, Speaker, User
+from ..rooms import (
+    MAX_PLAYERS,
+    REACTIONS,
+    Room,
+    RoomPlayer,
+    RoomStore,
+    Turn,
+    apply_turn,
+    everyone_voted,
+    failed_liveness,
+    open_voting,
+    ranks,
+    reveal,
+    score_impersonation,
+    score_yourself,
+    speed_bonus,
+    start_game,
+    timed_out,
+    winners,
+)
+from ..schemas import LivenessOut, ReactIn, RoomCreateIn, VoteIn
+from ..services import get_challenges, get_embedder, live_clip, nearest_speakers
+from .accounts import active_speaker, on_map
+
+router = APIRouter(prefix="/rooms", tags=["rooms"])
+
+SessionDep = Annotated[AsyncSession, Depends(get_session)]
+SettingsDep = Annotated[Settings, Depends(get_settings)]
+CLIP_SECONDS = 15 * 60  # a Guess Who clip is deleted at the reveal, or after this at the latest
+
+
+def get_rooms(request: Request) -> RoomStore:
+    return request.app.state.rooms
+
+
+RoomsDep = Annotated[RoomStore, Depends(get_rooms)]
+
+
+class RoomOut(Room):
+    # Never sent: the turn order and Guess Who's secrets would give the speaker away.
+    plan: list[Turn] = Field(default=[], exclude=True)
+    votes: dict[int, int] = Field(default={}, exclude=True)
+    clip_key: str | None = Field(default=None, exclude=True)
+    ai_guess: str | None = Field(default=None, exclude=True)
+    pending_liveness: LivenessOut | None = Field(default=None, exclude=True)
+
+    current_turn: Turn | None = None  # hidden from everyone but the speaker in Guess Who
+    turns_total: int = 0
+    you_speak: bool = False  # Guess Who: you're the secret speaker this turn
+    voted: list[int] = []  # who has voted (not for whom)
+    my_vote: int | None = None
+    has_clip: bool = False
+    deadline: str | None = None  # ISO time the turn runs out (speed rounds, voting)
+    winner_ids: list[int] = []
+
+
+def out(room: Room, viewer_id: int) -> RoomOut:
+    """The room as one player may see it. In Guess Who the speaker stays secret until the reveal."""
+    turn = room.active_turn()
+    secret = room.mode == "guess" and turn is not None
+    deadline = room.turn_deadline()
+    data = room.model_dump(exclude={"plan", "votes", "clip_key", "ai_guess", "pending_liveness"})
+    return RoomOut(
+        **data,
+        current_turn=None if secret and turn.player_id != viewer_id else turn,
+        turns_total=len(room.plan),
+        you_speak=bool(secret and turn.player_id == viewer_id),
+        voted=list(room.votes),
+        my_vote=room.votes.get(viewer_id),
+        has_clip=room.clip_key is not None,
+        deadline=deadline.isoformat() if deadline else None,
+        winner_ids=[w.user_id for w in winners(room)] if room.status == "finished" else [],
+    )
+
+
+async def as_player(session: AsyncSession, user: User) -> RoomPlayer:
+    speaker = await active_speaker(session, user)
+    if speaker is None:
+        raise HTTPException(status.HTTP_409_CONFLICT, "Enroll your voice first, so the game can recognise you.")
+    return RoomPlayer(user_id=user.id, username=user.username, speaker_id=speaker.id, country=user.country)
+
+
+async def get_or_404(rooms: RoomStore, code: str) -> Room:
+    room = await rooms.get(code)
+    if room is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, f"No game with the code {code.upper()}. Check the code and try again.")
+    return room
+
+
+def member(room: Room, user: User) -> None:
+    if room.player(user.id) is None:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Join this game first.")
+
+
+async def leave_other_rooms(rooms: RoomStore, user_id: int, keep: str | None = None) -> None:
+    """You can be in one game at a time: joining a new one leaves the old one."""
+    other = await rooms.room_of(user_id)
+    if other and other.code != keep:
+        await rooms.leave(other.code, user_id)
+
+
+async def improve_voice(session: AsyncSession, settings: Settings, speaker_id: int, clip, candidates, source: str) -> None:
+    """A real turn (live check passed): keep its scores for tuning, and learn from it if it was clearly you."""
+    own = (await session.exec(select(Speaker.embedding).where(Speaker.id == speaker_id))).first()
+    if own is None:
+        return
+    genuine = cosine_similarity(clip.vector, own)
+    impostor = next((c.score for c in candidates if c.speaker_id != speaker_id), None)
+    record_scores(session, genuine, impostor, source)  # before learning, so the score isn't flattered
+    if genuine >= settings.learn_min_score and (impostor is None or genuine > impostor):
+        await learn(session, speaker_id, clip.vector, clip.speech_seconds, settings.max_learned_samples)
+
+
+def record_results(session: AsyncSession, room: Room) -> None:
+    """A game just finished: keep everyone's final place (wins, badges, the weekly cup)."""
+    places = ranks(room)
+    for p in room.players:
+        session.add(
+            GameResult(
+                user_id=p.user_id,
+                room_code=room.code,
+                game_no=room.game_no,
+                mode=room.mode,
+                speed=room.speed,
+                rank=places[p.user_id],
+                points=p.points,
+                players=len(room.players),
+            )
+        )
+
+
+def play_row(user_id: int, speaker_id: int, room: Room, mode: str, points: int, user: User | None, live: bool | None) -> GamePlay:
+    shared = user is not None and on_map(user)
+    return GamePlay(
+        speaker_id=speaker_id,
+        user_id=user_id,
+        room_code=room.code,
+        mode=mode,
+        points=points,
+        live_passed=live,
+        lat=user.lat if shared else None,
+        lon=user.lon if shared else None,
+    )
+
+
+async def finish_reveal(session: AsyncSession, rooms: RoomStore, room: Room) -> None:
+    """Guess Who: reveal under the room lock, delete the clip, and book everyone's points."""
+    speaker_id = room.active_turn().player_id
+    votes = dict(room.votes)
+    clip_key = room.clip_key
+    live = room.pending_liveness.passed if room.pending_liveness else None
+    points = reveal(room)
+    await rooms.save(room)
+    if clip_key:
+        await rooms.store.delete(clip_key)
+    users = {u.id: u for u in (await session.exec(select(User).where(User.id.in_([p.user_id for p in room.players])))).all()}
+    for p in room.players:
+        if p.user_id == speaker_id:
+            session.add(play_row(p.user_id, p.speaker_id, room, "guess", points.get(p.user_id, 0), users.get(p.user_id), live))
+        elif p.user_id in votes:
+            session.add(play_row(p.user_id, p.speaker_id, room, "guess_vote", points.get(p.user_id, 0), users.get(p.user_id), None))
+    if room.status == "finished":
+        record_results(session, room)
+    await session.commit()
+
+
+@router.post("", response_model=RoomOut, status_code=status.HTTP_201_CREATED, dependencies=[Depends(rate_limit)])
+async def create_room(body: RoomCreateIn, user: CurrentUser, session: SessionDep, rooms: RoomsDep) -> RoomOut:
+    """Start a new game. Share its code (e.g. TIGER-42) so friends can join from their phones."""
+    host = await as_player(session, user)
+    await leave_other_rooms(rooms, user.id)
+    return out(await rooms.create(host, body.mode, body.rounds, body.speed), user.id)
+
+
+@router.get("/{code}", response_model=RoomOut)
+async def get_room(code: str, user: CurrentUser, rooms: RoomsDep) -> RoomOut:
+    return out(await get_or_404(rooms, code), user.id)
+
+
+@router.post("/{code}/join", response_model=RoomOut, dependencies=[Depends(rate_limit)])
+async def join_room(code: str, user: CurrentUser, session: SessionDep, rooms: RoomsDep) -> RoomOut:
+    player = await as_player(session, user)
+    room = await get_or_404(rooms, code)
+    await leave_other_rooms(rooms, user.id, keep=room.code)
+    async with rooms.lock(room.code):
+        room = await get_or_404(rooms, code)
+        if room.player(user.id):
+            return out(room, user.id)  # already in
+        if room.status == "playing":
+            raise HTTPException(status.HTTP_409_CONFLICT, "This game has already started. Join the next one!")
+        if len(room.players) >= MAX_PLAYERS:
+            raise HTTPException(status.HTTP_409_CONFLICT, f"This game is full ({MAX_PLAYERS} players).")
+        room.players.append(player)
+        await rooms.save(room)
+    return out(room, user.id)
+
+
+@router.post("/{code}/leave", response_model=RoomOut | None)
+async def leave_room(code: str, user: CurrentUser, rooms: RoomsDep) -> RoomOut | None:
+    room = await rooms.leave(code, user.id)
+    return out(room, user.id) if room else None
+
+
+@router.patch("/{code}", response_model=RoomOut)
+async def change_room(code: str, body: RoomCreateIn, user: CurrentUser, rooms: RoomsDep) -> RoomOut:
+    """The host picks the game type, rounds and speed before starting."""
+    async with rooms.lock(code):
+        room = await get_or_404(rooms, code)
+        if room.host_id != user.id:
+            raise HTTPException(status.HTTP_403_FORBIDDEN, "Only the host can change the game.")
+        if room.status == "playing":
+            raise HTTPException(status.HTTP_409_CONFLICT, "The game is already running.")
+        room.mode, room.rounds, room.speed = body.mode, body.rounds, body.speed
+        await rooms.save(room)
+    return out(room, user.id)
+
+
+@router.post("/{code}/start", response_model=RoomOut)
+async def start_room(code: str, user: CurrentUser, rooms: RoomsDep) -> RoomOut:
+    """The host starts the game (or a rematch with the same players)."""
+    async with rooms.lock(code):
+        room = await get_or_404(rooms, code)
+        if room.host_id != user.id:
+            raise HTTPException(status.HTTP_403_FORBIDDEN, "Only the host can start the game.")
+        if room.status == "playing":
+            raise HTTPException(status.HTTP_409_CONFLICT, "The game is already running.")
+        need = 3 if room.mode == "guess" else 2
+        if len(room.players) < need:
+            raise HTTPException(
+                status.HTTP_409_CONFLICT,
+                f"You need at least {need} players{' for Guess Who' if need == 3 else ''}. Share the code with friends!",
+            )
+        start_game(room)
+        await rooms.save(room)
+    return out(room, user.id)
+
+
+@router.post("/{code}/turn", response_model=RoomOut, dependencies=[Depends(rate_limit)])
+async def take_turn(
+    code: str,
+    request: Request,
+    user: CurrentUser,
+    session: SessionDep,
+    settings: SettingsDep,
+    rooms: RoomsDep,
+    embedder: Annotated[Embedder, Depends(get_embedder)],
+    challenges: Annotated[ChallengeStore, Depends(get_challenges)],
+    file: Annotated[UploadFile, File(description="You, saying the digits from GET /challenge.")],
+    challenge_id: Annotated[str, Form(description="From GET /challenge. Game turns always need the phrase.")],
+) -> RoomOut:
+    """Your turn: send your recording. The server checks the phrase and the voice and scores it."""
+    room = await get_or_404(rooms, code)
+    turn = room.active_turn()
+    if turn is None:
+        raise HTTPException(status.HTTP_409_CONFLICT, "The game isn't running.")
+    if turn.player_id != user.id:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "It's not your turn yet.")
+    if room.mode == "guess" and room.phase != "speak":
+        raise HTTPException(status.HTTP_409_CONFLICT, "You've already recorded. Now the others are guessing!")
+    turn_index, received = room.turn_index, time.time()
+    player, target = room.player(turn.player_id), room.player(turn.target_id)
+
+    # The slow part (speech-to-text + voice model) runs without holding the room lock.
+    clip, liveness = await live_clip(request, file, challenge_id, embedder, settings, challenges)
+    failed = liveness is not None and not liveness.passed
+
+    if room.mode == "guess" and not failed:
+        # The AI guesses too: which player in the room does the clip sound most like?
+        voices = dict((await session.exec(select(Speaker.id, Speaker.embedding).where(Speaker.id.in_([p.speaker_id for p in room.players])))).all())
+        scored = [(cosine_similarity(clip.vector, voices[p.speaker_id]), p.username) for p in room.players if p.speaker_id in voices]
+        best = max(scored, default=(0.0, None))
+        ai_guess = best[1] if best[0] >= settings.match_threshold else None
+        await file.seek(0)
+        audio = await file.read()
+        clip_key = f"clip:{room.code}:{room.game_no}:{turn_index}:{secrets.token_hex(4)}"
+        await rooms.store.put(clip_key, base64.b64encode(audio).decode(), CLIP_SECONDS)
+        async with rooms.lock(room.code):
+            room = await get_or_404(rooms, code)
+            if room.status != "playing" or room.turn_index != turn_index:
+                await rooms.store.delete(clip_key)
+                raise HTTPException(status.HTTP_409_CONFLICT, "The game moved on while you were recording.")
+            open_voting(room, clip_key, file.content_type or "audio/webm", ai_guess, liveness)
+            await rooms.save(room)
+        return out(room, user.id)
+
+    if failed:
+        points, message = failed_liveness(player.username)
+    elif room.mode == "yourself":
+        candidates = await nearest_speakers(session, clip.vector, settings.top_k)
+        decision = decide(candidates, settings.match_threshold, settings.min_margin)
+        points, message = score_yourself(player.username, player.speaker_id, decision.speaker_id, decision.label, decision.score)
+        await improve_voice(session, settings, player.speaker_id, clip, candidates, "game")
+    else:
+        target_voice = (await session.exec(select(Speaker.embedding).where(Speaker.id == target.speaker_id))).first()
+        score = cosine_similarity(clip.vector, target_voice) if target_voice is not None else 0.0
+        points, message = score_impersonation(player.username, target.username, score, score >= settings.match_threshold)
+
+    async with rooms.lock(room.code):
+        room = await get_or_404(rooms, code)
+        if room.status != "playing" or room.turn_index != turn_index:
+            raise HTTPException(status.HTTP_409_CONFLICT, "The game moved on while you were recording.")
+        # The clock stops when the recording arrives, not when the AI has finished listening.
+        bonus = speed_bonus(room, points, datetime.fromtimestamp(received, timezone.utc))
+        apply_turn(room, points, message, liveness, bonus)
+        await rooms.save(room)
+
+    session.add(play_row(user.id, player.speaker_id, room, room.mode, points + bonus, user, liveness.passed if liveness else None))
+    if room.status == "finished":
+        record_results(session, room)
+    await session.commit()
+    return out(room, user.id)
+
+
+@router.get("/{code}/clip")
+async def get_clip(code: str, user: CurrentUser, rooms: RoomsDep) -> Response:
+    """Guess Who: the secret speaker's clip, for the players to listen to while they vote."""
+    room = await get_or_404(rooms, code)
+    member(room, user)
+    raw = await rooms.store.get(room.clip_key) if room.clip_key else None
+    if raw is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "There's no clip to listen to right now.")
+    return Response(base64.b64decode(raw), media_type=room.clip_type, headers={"Cache-Control": "no-store"})
+
+
+@router.post("/{code}/vote", response_model=RoomOut)
+async def vote(code: str, body: VoteIn, user: CurrentUser, session: SessionDep, rooms: RoomsDep) -> RoomOut:
+    """Guess Who: name the player you think spoke. You can change your mind until everyone has voted."""
+    async with rooms.lock(code):
+        room = await get_or_404(rooms, code)
+        member(room, user)
+        turn = room.active_turn()
+        if room.mode != "guess" or turn is None or room.phase != "vote":
+            raise HTTPException(status.HTTP_409_CONFLICT, "There's nothing to vote on right now.")
+        if user.id == turn.player_id:
+            raise HTTPException(status.HTTP_409_CONFLICT, "You're the speaker. Keep a straight face!")
+        if room.player(body.suspect_id) is None or body.suspect_id == user.id:
+            raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "Vote for another player in this game.")
+        room.votes[user.id] = body.suspect_id
+        if everyone_voted(room):
+            await finish_reveal(session, rooms, room)
+        else:
+            await rooms.save(room)
+    return out(room, user.id)
+
+
+@router.post("/{code}/advance", response_model=RoomOut)
+async def advance(code: str, user: CurrentUser, session: SessionDep, rooms: RoomsDep) -> RoomOut:
+    """Time's up: any player's screen calls this when the countdown ends. The server checks the clock."""
+    async with rooms.lock(code):
+        room = await get_or_404(rooms, code)
+        member(room, user)
+        turn = room.active_turn()
+        if turn is None or not timed_out(room):
+            raise HTTPException(status.HTTP_409_CONFLICT, "Not yet!")
+        if room.mode == "guess" and room.phase == "vote":
+            await finish_reveal(session, rooms, room)
+            return out(room, user.id)
+        name = room.player(turn.player_id).username
+        apply_turn(room, 0, f"Time's up! {name} ran out of time. No points.", None)
+        await rooms.save(room)
+        if room.status == "finished":
+            record_results(session, room)
+            await session.commit()
+    return out(room, user.id)
+
+
+@router.post("/{code}/react", status_code=status.HTTP_204_NO_CONTENT)
+async def react(code: str, body: ReactIn, user: CurrentUser, rooms: RoomsDep) -> Response:
+    """Send an emoji that floats across everyone's screen."""
+    room = await get_or_404(rooms, code)
+    member(room, user)
+    if body.emoji not in REACTIONS:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, f"Pick one of {' '.join(REACTIONS)}")
+    if await rooms.store.incr(f"react:{user.id}:{int(time.time() // 10)}", 10) > 8:
+        raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, "Easy there! Too many reactions.")
+    await rooms.store.publish(f"room:{room.code}", json.dumps({"reaction": body.emoji, "from": user.username}))
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

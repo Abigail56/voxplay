@@ -6,14 +6,16 @@ from pathlib import Path
 
 import pytest
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy import select, text, update
+from sqlalchemy import text, update
+from sqlmodel import select
 
 from app.config import Settings, normalize_database_url
 from app.demo import RateLimiter, delete_expired, seed_sample_voices
 from app.main import create_app
 from app.models import Speaker, VoiceSample
+from app.store import MemoryStore
 
-from .helpers import FakeEmbedder, tone_wav
+from .helpers import FakeEmbedder, FakeGeocoder, FakeTranscriber, tone_wav
 
 TEST_DB = os.getenv("TEST_DATABASE_URL")
 needs_db = pytest.mark.skipif(not TEST_DB, reason="TEST_DATABASE_URL not set")
@@ -41,31 +43,32 @@ def test_normalize_database_url(given, expected):
     assert Settings(database_url=given).database_url == expected
 
 
-def test_rate_limiter_allows_up_to_limit_per_key():
-    limiter = RateLimiter(limit=2)
-    assert limiter.allow("a") and limiter.allow("a")
-    assert not limiter.allow("a")
-    assert limiter.allow("b")  # other visitors are not affected
+async def test_rate_limiter_allows_up_to_limit_per_key():
+    limiter = RateLimiter(MemoryStore(), limit=2)
+    assert await limiter.allow("a") and await limiter.allow("a")
+    assert not await limiter.allow("a")
+    assert await limiter.allow("b")  # other visitors are not affected
 
 
-def test_rate_limiter_zero_means_off():
-    limiter = RateLimiter(limit=0)
-    assert all(limiter.allow("a") for _ in range(100))
+async def test_rate_limiter_zero_means_off():
+    limiter = RateLimiter(MemoryStore(), limit=0)
+    assert all([await limiter.allow("a") for _ in range(100)])
 
 
 # ---------- API with a real database ----------
 
 
 def make_client(**overrides):
-    settings = Settings(database_url=TEST_DB, match_threshold=0.5, **overrides)
-    return create_app(settings, embedder=FakeEmbedder())
+    # redis_url="": never share rate-limit counters with a running API through the real Redis.
+    settings = Settings(database_url=TEST_DB, match_threshold=0.5, require_liveness=False, redis_url="", **overrides)
+    return create_app(settings, embedder=FakeEmbedder(), transcriber=FakeTranscriber(), geocoder=FakeGeocoder())
 
 
 async def started(app):
     ctx = app.router.lifespan_context(app)
     await ctx.__aenter__()
     async with app.state.sessionmaker() as s:
-        await s.execute(text("TRUNCATE speakers, voice_samples RESTART IDENTITY CASCADE"))
+        await s.exec(text("TRUNCATE speakers, voice_samples, game_plays, users, score_samples, app_settings RESTART IDENTITY CASCADE"))
         await s.commit()
     return ctx
 
@@ -87,7 +90,7 @@ async def test_enrollment_expires_and_is_cleaned_up():
 
             # Pretend 24 hours have passed.
             async with app.state.sessionmaker() as s:
-                await s.execute(
+                await s.exec(
                     update(Speaker).values(expires_at=datetime.now(timezone.utc) - timedelta(minutes=1))
                 )
                 await s.commit()
@@ -105,10 +108,10 @@ async def test_enrollment_expires_and_is_cleaned_up():
 
         # The cleanup job deletes expired rows and their voice samples for good.
         async with app.state.sessionmaker() as s:
-            await s.execute(update(Speaker).values(expires_at=datetime.now(timezone.utc) - timedelta(minutes=1)))
+            await s.exec(update(Speaker).values(expires_at=datetime.now(timezone.utc) - timedelta(minutes=1)))
             await s.commit()
             assert await delete_expired(s) == 1
-            assert (await s.scalars(select(VoiceSample.id))).all() == []
+            assert (await s.exec(select(VoiceSample.id))).all() == []
     finally:
         await ctx.__aexit__(None, None, None)
 

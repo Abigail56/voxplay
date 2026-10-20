@@ -28,10 +28,11 @@ type Props = {
   onClip: (clip: Clip) => void;
   multiple?: boolean;
   disabled?: boolean;
+  allowUpload?: boolean; // false: microphone only (the liveness check wants a live voice)
 };
 
 /** Record from the microphone or pick audio files. Calls onClip for each clip. */
-export function ClipInput({ onClip, multiple = false, disabled = false }: Props) {
+export function ClipInput({ onClip, multiple = false, disabled = false, allowUpload = true }: Props) {
   const [recording, setRecording] = useState(false);
   const [seconds, setSeconds] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -94,13 +95,15 @@ export function ClipInput({ onClip, multiple = false, disabled = false }: Props)
         </button>
       ) : (
         <button type="button" className="btn" onClick={start} disabled={disabled}>
-          🎙 Record
+          Record
         </button>
       )}
-      <label className={`btn ghost ${disabled || recording ? "disabled" : ""}`}>
-        Upload file{multiple ? "s" : ""}
-        <input type="file" accept="audio/*,.wav,.mp3,.webm,.ogg,.m4a,.flac" multiple={multiple} onChange={onFiles} hidden disabled={disabled || recording} />
-      </label>
+      {allowUpload && (
+        <label className={`btn ghost ${disabled || recording ? "disabled" : ""}`}>
+          Upload file{multiple ? "s" : ""}
+          <input type="file" accept="audio/*,.wav,.mp3,.webm,.ogg,.m4a,.flac" multiple={multiple} onChange={onFiles} hidden disabled={disabled || recording} />
+        </label>
+      )}
       {error && <p className="error">{error}</p>}
     </div>
   );

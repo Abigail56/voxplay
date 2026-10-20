@@ -3,11 +3,17 @@ fastapi==0.115.6
 uvicorn[standard]==0.32.1
 python-multipart==0.0.20
 pydantic-settings==2.7.0
+pyjwt==2.10.1  # sign-in tokens for the voice game
+httpx==0.28.1  # looks up players' places on OpenStreetMap (Nominatim)
 
-# Database: PostgreSQL + pgvector
+# Database: PostgreSQL + pgvector, tables defined with SQLModel (built on SQLAlchemy)
+sqlmodel==0.0.24
 sqlalchemy[asyncio]==2.0.36
 asyncpg==0.30.0
 pgvector==0.3.6
+
+# Redis: liveness phrases (expire, single use) and rate limits, shared by all API instances
+redis==5.2.1
 
 # Audio + ML (CPU-only PyTorch wheels come from the extra index in the Dockerfile)
 numpy==2.1.3
@@ -17,3 +23,4 @@ speechbrain==1.0.3
 huggingface_hub==0.25.2  # speechbrain 1.0.3 breaks with >=0.26 (use_auth_token removed)
 requests==2.32.3   # used by speechbrain to download the model
 soundfile==0.12.1  # silences speechbrain's "no torchaudio backend" warning
+faster-whisper==1.1.1  # speech-to-text for the "say this phrase" liveness check

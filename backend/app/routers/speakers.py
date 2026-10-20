@@ -2,17 +2,18 @@ from datetime import datetime, timedelta, timezone
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Response, UploadFile, status
-from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import func, select
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from ..config import Settings, get_settings
 from ..db import get_session
 from ..demo import delete_expired, is_active, rate_limit
 from ..embedding import Embedder
 from ..matching import compute_centroid
-from ..models import Speaker, VoiceSample
-from ..schemas import SpeakerOut
+from ..models import Speaker, User, VoiceSample
+from ..schemas import MapSampleOut, MapSpeakerOut, SpeakerOut, TwinOut, VoiceMapOut
 from ..services import embed_uploads, get_embedder
+from ..voice_map import voice_map
 
 router = APIRouter(prefix="/speakers", tags=["speakers"])
 
@@ -22,7 +23,7 @@ SettingsDep = Annotated[Settings, Depends(get_settings)]
 
 
 async def _sample_count(session: AsyncSession, speaker_id: int) -> int:
-    return await session.scalar(select(func.count()).where(VoiceSample.speaker_id == speaker_id)) or 0
+    return (await session.exec(select(func.count()).where(VoiceSample.speaker_id == speaker_id))).one()
 
 
 def _out(speaker: Speaker, count: int) -> SpeakerOut:
@@ -38,15 +39,19 @@ def _out(speaker: Speaker, count: int) -> SpeakerOut:
 
 
 async def _get_or_404(session: AsyncSession, speaker_id: int) -> Speaker:
-    speaker = await session.scalar(select(Speaker).where(Speaker.id == speaker_id, is_active()))
+    speaker = (await session.exec(select(Speaker).where(Speaker.id == speaker_id, is_active()))).first()
     if speaker is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Speaker not found.")
     return speaker
 
 
-def _forbid_sample(speaker: Speaker) -> None:
+async def _forbid_protected(session: AsyncSession, speaker: Speaker) -> None:
     if speaker.is_sample:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Built-in sample voices can't be changed or deleted.")
+    if (await session.exec(select(User.id).where(User.speaker_id == speaker.id))).first():
+        raise HTTPException(
+            status.HTTP_403_FORBIDDEN, "This voice belongs to a game account. Its owner can change or delete it there."
+        )
 
 
 @router.post(
@@ -74,16 +79,20 @@ async def enroll_speaker(
         # Free up names (and space) held by enrollments that have already expired.
         await delete_expired(session)
     if settings.max_active_enrollments > 0:
-        visitors = await session.scalar(
-            select(func.count()).select_from(Speaker).where(Speaker.is_sample.is_(False), is_active())
-        )
-        if (visitors or 0) >= settings.max_active_enrollments:
+        visitors = (
+            await session.exec(
+                select(func.count()).select_from(Speaker).where(Speaker.is_sample.is_(False), is_active())
+            )
+        ).one()
+        if visitors >= settings.max_active_enrollments:
             raise HTTPException(
                 status.HTTP_503_SERVICE_UNAVAILABLE,
                 "The demo is full right now. Enrollments are deleted automatically, so please try again later.",
             )
-    if await session.scalar(select(Speaker.id).where(func.lower(Speaker.name) == name.lower())):
+    if (await session.exec(select(Speaker.id).where(func.lower(Speaker.name) == name.lower()))).first():
         raise HTTPException(status.HTTP_409_CONFLICT, f"A speaker called '{name}' already exists.")
+    if (await session.exec(select(User.id).where(User.username == name.lower()))).first():
+        raise HTTPException(status.HTTP_409_CONFLICT, f"'{name}' is a game player's name. Pick another one.")
 
     clips = await embed_uploads(files, embedder, settings)
 
@@ -113,14 +122,14 @@ async def add_samples(
 ) -> SpeakerOut:
     """Add more samples to an existing speaker (improves accuracy)."""
     speaker = await _get_or_404(session, speaker_id)
-    _forbid_sample(speaker)
+    await _forbid_protected(session, speaker)
     clips = await embed_uploads(files, embedder, settings)
 
     for c in clips:
         session.add(VoiceSample(speaker_id=speaker.id, embedding=c.vector.tolist(), speech_seconds=c.speech_seconds))
     await session.flush()
 
-    all_vectors = (await session.scalars(select(VoiceSample.embedding).where(VoiceSample.speaker_id == speaker.id))).all()
+    all_vectors = (await session.exec(select(VoiceSample.embedding).where(VoiceSample.speaker_id == speaker.id))).all()
     speaker.embedding = compute_centroid(all_vectors).tolist()
     await session.commit()
     return _out(speaker, len(all_vectors))
@@ -128,7 +137,7 @@ async def add_samples(
 
 @router.get("", response_model=list[SpeakerOut])
 async def list_speakers(session: SessionDep) -> list[SpeakerOut]:
-    rows = await session.execute(
+    rows = await session.exec(
         select(Speaker, func.count(VoiceSample.id))
         .outerjoin(VoiceSample)
         .where(is_active())
@@ -136,6 +145,43 @@ async def list_speakers(session: SessionDep) -> list[SpeakerOut]:
         .order_by(Speaker.created_at.desc(), Speaker.id.desc())
     )
     return [_out(speaker, count) for speaker, count in rows.all()]
+
+
+# Declared before /{speaker_id} so that "map" isn't read as a speaker id.
+@router.get("/map", response_model=VoiceMapOut)
+async def get_voice_map(session: SessionDep) -> VoiceMapOut:
+    """Who sounds like whom: every speaker (and each of their clips) as a point on a 2D map.
+
+    Only map positions and similarity scores are returned, never the voiceprints themselves.
+    """
+    speakers = (
+        await session.exec(select(Speaker.id, Speaker.name, Speaker.embedding, Speaker.is_sample).where(is_active()))
+    ).all()
+    samples = (
+        await session.exec(
+            select(VoiceSample.speaker_id, VoiceSample.embedding)
+            .join(Speaker)
+            .where(is_active())
+            .order_by(VoiceSample.id)
+        )
+    ).all()
+    is_sample = {sid: flag for sid, _, _, flag in speakers}
+    points, dots = voice_map([(sid, name, emb) for sid, name, emb, _ in speakers], samples)
+    return VoiceMapOut(
+        speakers=[
+            MapSpeakerOut(
+                speaker_id=p.speaker_id,
+                name=p.name,
+                is_sample=is_sample[p.speaker_id],
+                x=p.x,
+                y=p.y,
+                consistency=p.consistency,
+                twin=TwinOut(speaker_id=p.twin.speaker_id, name=p.twin.name, score=p.twin.score) if p.twin else None,
+            )
+            for p in points
+        ],
+        samples=[MapSampleOut(speaker_id=d.speaker_id, x=d.x, y=d.y) for d in dots],
+    )
 
 
 @router.get("/{speaker_id}", response_model=SpeakerOut)
@@ -148,7 +194,7 @@ async def get_speaker(speaker_id: int, session: SessionDep) -> SpeakerOut:
 async def delete_speaker(speaker_id: int, session: SessionDep) -> Response:
     """Permanently delete a speaker and all their voiceprints (right to be forgotten)."""
     speaker = await _get_or_404(session, speaker_id)
-    _forbid_sample(speaker)
+    await _forbid_protected(session, speaker)
     await session.delete(speaker)
     await session.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)

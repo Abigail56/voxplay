@@ -1,0 +1,156 @@
+"""The players' dashboard and its live updates."""
+
+import asyncio
+import json
+from datetime import datetime, timedelta, timezone
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, WebSocket
+from sqlmodel import func, select, update
+from sqlmodel.ext.asyncio.session import AsyncSession
+
+from ..auth import CurrentUser, user_id_from_token
+from ..config import Settings, get_settings
+from ..db import get_session
+from ..demo import is_active
+from ..models import GamePlay, Speaker, User
+from ..schemas import DashboardOut, DashboardPlay, DashboardPlayer, DashboardRoom
+from .accounts import on_map
+from .rooms import RoomsDep
+
+router = APIRouter(tags=["game"])
+
+SessionDep = Annotated[AsyncSession, Depends(get_session)]
+SettingsDep = Annotated[Settings, Depends(get_settings)]
+
+
+async def forget_old_locations(session: AsyncSession, settings: Settings) -> None:
+    """Where each turn was played from is deleted after LOCATION_RETENTION_DAYS."""
+    cutoff = datetime.now(timezone.utc) - timedelta(days=settings.location_retention_days)
+    await session.exec(update(GamePlay).where(GamePlay.created_at < cutoff).values(lat=None, lon=None))
+    await session.commit()
+
+
+@router.get("/dashboard", response_model=DashboardOut)
+async def dashboard(user: CurrentUser, session: SessionDep, settings: SettingsDep, rooms: RoomsDep) -> DashboardOut:
+    """Everyone who plays: who's online, where (if they share it), their games and scores."""
+    await forget_old_locations(session, settings)
+
+    users = (await session.exec(select(User).order_by(User.username))).all()
+    voiced = set((await session.exec(select(Speaker.id).where(is_active()))).all())
+    totals = {
+        uid: (int(points), int(turns))
+        for uid, points, turns in (
+            await session.exec(
+                select(GamePlay.user_id, func.sum(GamePlay.points), func.count()).group_by(GamePlay.user_id)
+            )
+        ).all()
+    }
+    live_rooms = [r for r in await rooms.all() if r.status != "finished"]
+    room_of = {p.user_id: r for r in live_rooms for p in r.players}
+    online_since = datetime.now(timezone.utc) - timedelta(seconds=settings.online_seconds)
+
+    players = []
+    for u in users:
+        shared = on_map(u)
+        room = room_of.get(u.id)
+        points, turns = totals.get(u.id, (0, 0))
+        players.append(
+            DashboardPlayer(
+                user_id=u.id,
+                username=u.username,
+                online=bool(u.last_seen_at and u.last_seen_at > online_since),
+                has_voice=u.speaker_id in voiced,
+                country=u.country,
+                place=u.place if shared else None,
+                lat=u.lat if shared else None,
+                lon=u.lon if shared else None,
+                room_code=room.code if room else None,
+                room_status=room.status if room else None,
+                total_points=points,
+                turns=turns,
+            )
+        )
+    players.sort(key=lambda p: (not p.online, -p.total_points, p.username))
+
+    names = {u.id: u.username for u in users}
+    plays = (
+        await session.exec(
+            select(GamePlay, User.username)
+            .join(User, GamePlay.user_id == User.id)
+            .order_by(GamePlay.created_at.desc(), GamePlay.id.desc())
+            .limit(20)
+        )
+    ).all()
+    return DashboardOut(
+        me=user.id,
+        online=sum(p.online for p in players),
+        players=players,
+        rooms=[
+            DashboardRoom(
+                code=r.code,
+                host=names.get(r.host_id, "?"),
+                mode=r.mode,
+                status=r.status,
+                players=[p.username for p in r.players],
+                turn=r.turn_index,
+                turns_total=len(r.plan),
+            )
+            for r in live_rooms
+        ],
+        recent_plays=[
+            DashboardPlay(username=name, room_code=p.room_code, mode=p.mode, points=p.points, created_at=p.created_at)
+            for p, name in plays
+        ],
+    )
+
+
+async def mark_seen(websocket: WebSocket, user_id: int) -> None:
+    async with websocket.app.state.sessionmaker() as session:
+        await session.exec(update(User).where(User.id == user_id).values(last_seen_at=datetime.now(timezone.utc)))
+        await session.commit()
+
+
+@router.websocket("/ws")
+async def live(websocket: WebSocket, token: str = "", room: str | None = None) -> None:
+    """Live updates for the dashboard and (optionally) one room.
+
+    The server only says *what* changed ({"type": "dashboard"} or {"type": "room"});
+    the browser then fetches the new state over plain HTTP. Emoji reactions come
+    through as they are: {"type": "reaction", "reaction": "🔥", "from": "ada"}. Messages come through
+    the shared store's pub/sub, so a change made on any API instance arrives here.
+    The browser sends {"type": "ping"} every 15 s, which keeps the player "online".
+    """
+    user_id = user_id_from_token(token, websocket.app.state.jwt_secret)
+    if user_id is None:
+        await websocket.close(code=4401)  # 4401: "please sign in again"
+        return
+    await websocket.accept()
+    store = websocket.app.state.store
+    channels = ["dashboard"] + ([f"room:{room.upper()}"] if room else [])
+
+    async def forward(events) -> None:
+        async for channel, message in events:
+            if message.startswith("{"):  # an emoji reaction: pass it on as it is
+                await websocket.send_json({"type": "reaction", **json.loads(message)})
+            else:
+                await websocket.send_json({"type": "room" if channel.startswith("room:") else "dashboard"})
+
+    async def receive() -> None:
+        while True:
+            message = await websocket.receive_json()
+            if message.get("type") == "ping":
+                await mark_seen(websocket, user_id)
+
+    # Listen first, then say we're here, so no update can slip through in between.
+    async with store.subscribe(*channels) as events:
+        await mark_seen(websocket, user_id)
+        await store.publish("dashboard", "changed")  # someone came online
+        tasks = [asyncio.create_task(forward(events)), asyncio.create_task(receive())]
+        try:
+            # Ends when the browser goes away (receive fails) or sending fails.
+            await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
+        finally:
+            for t in tasks:
+                t.cancel()
+            await asyncio.gather(*tasks, return_exceptions=True)

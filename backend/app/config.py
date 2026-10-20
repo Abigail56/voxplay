@@ -32,6 +32,9 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     database_url: str = "postgresql+asyncpg://voiceid:voiceid@localhost:5442/voiceid"
+    # Liveness phrases and rate limits live here. Empty = keep them in this process's
+    # memory (fine for tests and a single instance).
+    redis_url: str = ""
 
     # Cosine-similarity cut-off between "same person" and "unknown".
     # Chosen with scripts/tune_threshold.py; see README "How the threshold was chosen".
@@ -39,6 +42,53 @@ class Settings(BaseSettings):
     # Optional: require the winner to beat the runner-up by this much (0 = off).
     min_margin: float = 0.0
     top_k: int = 3
+
+    # --- Who spoke when (POST /diarize) ---
+    # Short windows give lower scores than whole clips, so this is lower than match_threshold.
+    # Chosen with real voices; see README "Who spoke when".
+    diarize_threshold: float = 0.30
+    diarize_window_seconds: float = 2.0
+    max_diarize_seconds: float = 180.0
+
+    # --- Liveness: "say this phrase" so a recording can't be replayed ---
+    # When true, /identify only answers clips that say a fresh phrase from GET /challenge.
+    require_liveness: bool = True
+    challenge_ttl_seconds: int = 120
+    # Share of the phrase's digits that must be heard, in order (0.8 = 5 of 6).
+    liveness_min_match: float = 0.8
+    # faster-whisper model. "small.en" hears digits even better but is ~3x slower on a CPU.
+    asr_model: str = "base.en"
+    asr_dir: str = "/models/whisper"
+
+    # --- Voice game: accounts and rooms ---
+    # Signs the sign-in tokens. Set a long random value in production. Empty = a random one
+    # per start, which signs everyone out whenever the API restarts (fine for development).
+    jwt_secret: str = ""
+    token_days: float = 7
+    # Rooms are deleted this long after their last change.
+    room_ttl_hours: float = 6
+    # A player counts as "online" if their dashboard pinged this recently.
+    online_seconds: int = 90
+
+    # Comma-separated player names who may open the admin page, e.g. "chi,rita".
+    admin_usernames: str = ""
+
+    # --- Recognition accuracy ---
+    # Players record this many takes of their voice, each checked for quality.
+    min_enroll_clips: int = 3
+    # Each take must sound like the others at least this much (catches a different person or heavy noise).
+    enroll_consistency: float = 0.40
+    # Turns recognised at least this confidently are added to the player's voiceprint...
+    learn_min_score: float = 0.55
+    # ...keeping this many of the most recent ones (enrollment clips are always kept).
+    max_learned_samples: int = 20
+
+    # --- Voice game map ---
+    # Places are looked up with OpenStreetMap's Nominatim, whose policy asks for a User-Agent
+    # that names the app. Add a contact (URL or email) here for anything beyond a demo.
+    geocoder_user_agent: str = "WhosTalking-VoiceGame/1.0"
+    # Where each turn was played from is forgotten after this many days.
+    location_retention_days: float = 30
 
     # --- Public demo safety (all off by default; turned on in the cloud) ---
     # Visitors' enrollments are deleted after this many hours (0 = keep forever).
@@ -68,6 +118,10 @@ class Settings(BaseSettings):
     @classmethod
     def _normalize_db_url(cls, v: str) -> str:
         return normalize_database_url(v)
+
+    @property
+    def admin_names(self) -> set[str]:
+        return {n.strip().lower() for n in self.admin_usernames.split(",") if n.strip()}
 
     @property
     def cors_origin_list(self) -> list[str]:

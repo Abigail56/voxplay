@@ -18,11 +18,12 @@ RUN pip install --no-cache-dir --extra-index-url https://download.pytorch.org/wh
 
 ENV MODEL_DIR=/models/spkrec-ecapa-voxceleb
 
-# Download the pretrained model (~80 MB) into the image, so the app starts without
+# Download the pretrained models (speaker model ~80 MB, Whisper base.en ~140 MB) into the image, so the app starts without
 # waiting for a download. Readable and writable by any user: Hugging Face Spaces
 # run the container as user 1000, not root.
 RUN python -c "from speechbrain.inference.speaker import EncoderClassifier; \
 EncoderClassifier.from_hparams(source='speechbrain/spkrec-ecapa-voxceleb', savedir='/models/spkrec-ecapa-voxceleb')" \
+    && python -c "from faster_whisper import WhisperModel; WhisperModel('base.en', device='cpu', compute_type='int8', download_root='/models/whisper')" \
     && chmod -R a+rwX /models
 
 COPY . .
