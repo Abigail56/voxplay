@@ -162,22 +162,6 @@ export type AdminPlay = {
 
 export type TakeCheck = { ok: boolean; speech_seconds: number; loudness_db: number; snr_db: number; problems: string[] };
 
-export type Rates = { threshold: number; far: number; frr: number; recognition: number; wrong: number };
-
-export type Accuracy = {
-  genuine_count: number;
-  impostor_count: number;
-  current: Rates;
-  recommended: Rates | null;
-  eer: number | null;
-  eer_threshold: number | null;
-  enough_data: boolean;
-  min_samples: number;
-  target_far: number;
-  histogram: [number, number, number][]; // [bin start, genuine, impostor]
-  learned_samples: number;
-};
-
 export type AdminRoom = {
   code: string;
   host: string;
@@ -332,9 +316,6 @@ export const api = {
     rooms: () => request<AdminRoom[]>("/admin/rooms"),
     endRoom: (code: string) => request<AdminRoom>(`/admin/rooms/${encodeURIComponent(code)}/end`, { method: "POST" }),
     deletePlayer: (id: number) => request<void>(`/admin/players/${id}`, { method: "DELETE" }),
-    accuracy: () => request<Accuracy>("/admin/accuracy"),
-    setThreshold: (threshold: number) =>
-      request<Accuracy>("/admin/accuracy/threshold", { method: "POST", ...json({ threshold }) }),
   },
   takeTurn(code: string, clip: Clip, challengeId: string) {
     const form = new FormData();

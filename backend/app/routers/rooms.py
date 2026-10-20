@@ -10,7 +10,7 @@ from pydantic import Field
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from ..adaptation import learn, record_scores
+from ..adaptation import learn
 from ..auth import CurrentUser
 from ..config import Settings, get_settings
 from ..db import get_session
@@ -121,13 +121,12 @@ async def leave_other_rooms(rooms: RoomStore, user_id: int, keep: str | None = N
 
 
 async def improve_voice(session: AsyncSession, settings: Settings, speaker_id: int, clip, candidates, source: str) -> None:
-    """A real turn (live check passed): keep its scores for tuning, and learn from it if it was clearly you."""
+    """A real turn (live check passed): learn from it if it was clearly you."""
     own = (await session.exec(select(Speaker.embedding).where(Speaker.id == speaker_id))).first()
     if own is None:
         return
     genuine = cosine_similarity(clip.vector, own)
     impostor = next((c.score for c in candidates if c.speaker_id != speaker_id), None)
-    record_scores(session, genuine, impostor, source)  # before learning, so the score isn't flattered
     if genuine >= settings.learn_min_score and (impostor is None or genuine > impostor):
         await learn(session, speaker_id, clip.vector, clip.speech_seconds, settings.max_learned_samples)
 

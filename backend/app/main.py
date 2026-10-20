@@ -20,7 +20,7 @@ from .demo import RateLimiter, cleanup_loop, is_active, seed_sample_voices
 from .embedding import EcapaEmbedder, Embedder
 from .geocode import Geocoder, NominatimGeocoder
 from .liveness import ChallengeStore, Transcriber, WhisperTranscriber
-from .models import AppSetting, Speaker
+from .models import Speaker
 from .routers import accounts, admin, daily, game, identify, rooms, speakers
 from .schemas import HealthOut
 from .rooms import RoomStore
@@ -43,12 +43,6 @@ def create_app(
         engine, sessionmaker = create_engine(settings.database_url)
         await init_db(engine)
         app.state.sessionmaker = sessionmaker
-        # A threshold an admin chose on the accuracy page wins over MATCH_THRESHOLD.
-        async with sessionmaker() as session:
-            saved = await session.get(AppSetting, "match_threshold")
-            if saved:
-                settings.match_threshold = float(saved.value)
-                log.info("Using the match threshold set by an admin: %.2f", settings.match_threshold)
         app.state.settings = settings
         store = make_store(settings.redis_url)
         app.state.store = store

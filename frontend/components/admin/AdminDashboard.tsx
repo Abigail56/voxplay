@@ -10,7 +10,6 @@ import { useLive } from "@/lib/useLive";
 import { useAuthStore } from "@/store/useAuthStore";
 
 import type { Place } from "../game/PlayersMapLeaflet";
-import { AccuracyPanel } from "./AccuracyPanel";
 
 const PlayersMapLeaflet = dynamic(() => import("../game/PlayersMapLeaflet"), {
   ssr: false,
@@ -18,8 +17,8 @@ const PlayersMapLeaflet = dynamic(() => import("../game/PlayersMapLeaflet"), {
 });
 
 type Data = { overview: AdminOverview; players: AdminPlayer[]; rooms: AdminRoom[]; plays: AdminPlay[] };
-type Tab = "overview" | "players" | "games" | "turns" | "recognition";
-const TABS: Tab[] = ["overview", "players", "games", "turns", "recognition"];
+type Tab = "overview" | "players" | "games" | "turns";
+const TABS: Tab[] = ["overview", "players", "games", "turns"];
 const MODE: Record<string, string> = { yourself: "Be yourself", impersonate: "Impersonate", guess: "Guess Who" };
 
 function when(iso: string | null): string {
@@ -31,7 +30,7 @@ function Pill({ tone, children }: { tone: "ok" | "warn" | "bad" | "info" | "neut
   return <span className={`adm-pill ${tone}`}>{children}</span>;
 }
 
-/** The admin console: overview, players, games, turns and recognition accuracy, in tabs. */
+/** The admin console: overview, players, games and turns, in tabs. */
 export function AdminDashboard() {
   const { token, me, ready, signOut } = useAuthStore();
   const [data, setData] = useState<Data | null>(null);
@@ -40,7 +39,6 @@ export function AdminDashboard() {
   const [search, setSearch] = useState("");
   const [playerFilter, setPlayerFilter] = useState<"all" | "online" | "flagged">("all");
   const [error, setError] = useState<string | null>(null);
-  const [refreshKey, setRefreshKey] = useState(0);
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
 
   // Open the tab named in the address (#players), and keep it there when switching.
@@ -62,7 +60,6 @@ export function AdminDashboard() {
         api.admin.plays(failedOnly),
       ]);
       setData({ overview, players, rooms, plays });
-      setRefreshKey((k) => k + 1);
       setUpdatedAt(new Date());
       setError(null);
     } catch (e) {
@@ -152,7 +149,7 @@ export function AdminDashboard() {
     { label: "Points scored", value: o.points_total },
     { label: "Lab voices", value: o.lab_speakers, note: "not players" },
   ];
-  const counts: Record<Tab, number | null> = { overview: null, players: data.players.length, games: data.rooms.length, turns: null, recognition: null };
+  const counts: Record<Tab, number | null> = { overview: null, players: data.players.length, games: data.rooms.length, turns: null };
 
   return (
     <div className="adm">
@@ -374,7 +371,6 @@ export function AdminDashboard() {
         </section>
       )}
 
-      {tab === "recognition" && <AccuracyPanel refreshKey={refreshKey} />}
     </div>
   );
 }

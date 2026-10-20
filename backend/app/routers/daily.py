@@ -10,7 +10,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from starlette.concurrency import run_in_threadpool
 
 from .. import daily
-from ..adaptation import learn, record_scores
+from ..adaptation import learn
 from ..auth import CurrentUser
 from ..config import Settings, get_settings
 from ..db import get_session
@@ -96,7 +96,6 @@ async def try_daily(
     if match >= 0.8:  # they really said today's phrase: a genuine try worth learning from
         others = [c for c in await nearest_speakers(session, vector, 3) if c.speaker_id != speaker.id]
         impostor = others[0].score if others else None
-        record_scores(session, voice, impostor, "daily")
         if voice >= settings.learn_min_score and (impostor is None or voice > impostor):
             await learn(session, speaker.id, vector, prepared.speech_seconds, settings.max_learned_samples)
     if match < daily.MIN_PHRASE_MATCH:

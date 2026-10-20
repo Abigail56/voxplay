@@ -16,9 +16,8 @@ from ..auth import CurrentUser
 from ..config import Settings, get_settings
 from ..db import get_session
 from ..demo import is_active
-from .. import accuracy
-from ..models import AppSetting, GamePlay, ScoreSample, Speaker, User, VoiceSample
-from ..schemas import AccuracyOut, AdminOverview, AdminPlay, AdminPlayer, AdminRoom, RatesOut, ThresholdIn
+from ..models import GamePlay, Speaker, User, VoiceSample
+from ..schemas import AdminOverview, AdminPlay, AdminPlayer, AdminRoom
 from .accounts import is_admin, on_map
 from .rooms import RoomsDep
 
@@ -198,39 +197,3 @@ async def delete_player(user_id: int, request: Request, admin: CurrentUser, sess
     await session.commit()
     await request.app.state.store.publish("dashboard", "changed")
     return Response(status_code=status.HTTP_204_NO_CONTENT)
-
-
-def _rates(r: accuracy.Rates | None) -> RatesOut | None:
-    return RatesOut(**vars(r)) if r else None
-
-
-@router.get("/accuracy", response_model=AccuracyOut)
-async def recognition_accuracy(session: SessionDep, settings: SettingsDep) -> AccuracyOut:
-    """How well the AI separates real players on real phones, and the recommended threshold."""
-    pairs = (await session.exec(select(ScoreSample.genuine, ScoreSample.impostor))).all()
-    learned = (await session.exec(select(func.count()).where(VoiceSample.source == "game"))).one()
-    r = accuracy.report(pairs, settings.match_threshold)
-    return AccuracyOut(
-        genuine_count=r.genuine_count,
-        impostor_count=r.impostor_count,
-        current=_rates(r.current),
-        recommended=_rates(r.recommended),
-        eer=r.eer,
-        eer_threshold=r.eer_threshold,
-        enough_data=r.enough_data,
-        min_samples=accuracy.MIN_SAMPLES,
-        target_far=accuracy.TARGET_FAR,
-        histogram=r.histogram,
-        learned_samples=int(learned),
-    )
-
-
-@router.post("/accuracy/threshold", response_model=AccuracyOut)
-async def set_threshold(body: ThresholdIn, session: SessionDep, settings: SettingsDep) -> AccuracyOut:
-    """Use a new match threshold from now on (saved, so it survives restarts)."""
-    row = await session.get(AppSetting, "match_threshold") or AppSetting(key="match_threshold", value="")
-    row.value = f"{body.threshold:.2f}"
-    session.add(row)
-    await session.commit()
-    settings.match_threshold = round(body.threshold, 2)  # this instance: at once; others: on restart
-    return await recognition_accuracy(session, settings)

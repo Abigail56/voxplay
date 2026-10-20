@@ -323,7 +323,7 @@ class LeaderboardsOut(BaseModel):
     last_week_champion: WeeklyEntry | None
 
 
-# ---------- recognition accuracy ----------
+# ---------- voice setup ----------
 
 
 class ClipCheckOut(BaseModel):
@@ -335,28 +335,3 @@ class ClipCheckOut(BaseModel):
     snr_db: float
     problems: list[str]  # what to fix, in plain words
 
-
-class RatesOut(BaseModel):
-    threshold: float
-    far: float  # stranger test: had the speaker not been enrolled, the closest other player would be named
-    frr: float  # share of turns where the real player wouldn't be recognised
-    recognition: float  # share of turns where the game names the right person
-    wrong: float  # share of turns where the game names the wrong player
-
-
-class AccuracyOut(BaseModel):
-    genuine_count: int
-    impostor_count: int
-    current: RatesOut
-    recommended: RatesOut | None
-    eer: float | None
-    eer_threshold: float | None
-    enough_data: bool
-    min_samples: int
-    target_far: float
-    histogram: list[tuple[float, int, int]]  # (bin start, genuine, impostor)
-    learned_samples: int  # game clips currently helping players' voiceprints
-
-
-class ThresholdIn(BaseModel):
-    threshold: float = Field(ge=0.2, le=0.8)

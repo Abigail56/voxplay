@@ -66,7 +66,7 @@ class Settings(BaseSettings):
     # Comma-separated player names who may open the admin page, e.g. "chi,rita".
     admin_usernames: str = ""
 
-    # --- Recognition accuracy ---
+    # --- Voice setup and learning ---
     # Players record this many takes of their voice, each checked for quality.
     min_enroll_clips: int = 3
     # Each take must sound like the others at least this much (catches a different person or heavy noise).

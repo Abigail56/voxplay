@@ -1,4 +1,4 @@
-"""Make each player's voiceprint better as they play, and collect real-world scores.
+"""Make each player's voiceprint better as they play.
 
 Enrollment happens once, in one room, on one phone. Real games happen elsewhere:
 on the bus, in a noisy hall, on a friend's phone. So every turn where the AI was
@@ -21,7 +21,7 @@ from sqlmodel import col, delete, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from .matching import compute_centroid, l2_normalize
-from .models import ScoreSample, Speaker, VoiceSample
+from .models import Speaker, VoiceSample
 
 
 def inconsistent_takes(vectors: Sequence[np.ndarray], min_similarity: float) -> list[int]:
@@ -60,7 +60,3 @@ async def learn(session: AsyncSession, speaker_id: int, vector: np.ndarray, spee
         speaker.embedding = compute_centroid(vectors).tolist()
         session.add(speaker)
 
-
-def record_scores(session: AsyncSession, genuine: float, impostor: float | None, source: str) -> None:
-    """Keep this turn's two similarity numbers for tuning the threshold (caller commits)."""
-    session.add(ScoreSample(genuine=round(genuine, 4), impostor=None if impostor is None else round(impostor, 4), source=source))

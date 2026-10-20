@@ -147,30 +147,3 @@ class GamePlay(SQLModel, table=True):
         default=None, sa_type=DateTime(timezone=True), sa_column_kwargs={"server_default": func.now()}, index=True
     )
 
-
-class ScoreSample(SQLModel, table=True):
-    """From one real turn: how close the voice was to its owner, and to the closest other person.
-
-    Only these two numbers are kept (no audio, no voiceprint, no name). Thousands of
-    them show how well the AI separates real players on real phones, and where the
-    match threshold should sit (see accuracy.py and the admin page).
-    """
-
-    __tablename__ = "score_samples"
-
-    id: int | None = Field(default=None, primary_key=True)
-    genuine: float  # similarity to the player's own voiceprint
-    impostor: float | None  # similarity to the most similar *other* voiceprint
-    source: str = Field(max_length=10)  # "game" or "daily"
-    created_at: datetime | None = Field(
-        default=None, sa_type=DateTime(timezone=True), sa_column_kwargs={"server_default": func.now()}, index=True
-    )
-
-
-class AppSetting(SQLModel, table=True):
-    """Settings an admin changes at runtime (e.g. the match threshold), kept across restarts."""
-
-    __tablename__ = "app_settings"
-
-    key: str = Field(primary_key=True, max_length=50)
-    value: str = Field(max_length=200)

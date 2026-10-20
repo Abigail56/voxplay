@@ -26,7 +26,7 @@ async def make_client(**overrides):
     app = create_app(settings, embedder=FakeEmbedder(), transcriber=FakeTranscriber(), geocoder=FakeGeocoder())
     async with app.router.lifespan_context(app):
         async with app.state.sessionmaker() as s:
-            await s.exec(text("TRUNCATE speakers, voice_samples, game_plays, users, score_samples, app_settings RESTART IDENTITY CASCADE"))
+            await s.exec(text("TRUNCATE speakers, voice_samples, game_plays, users RESTART IDENTITY CASCADE"))
             await s.commit()
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
             c.transcriber = app.state.transcriber
