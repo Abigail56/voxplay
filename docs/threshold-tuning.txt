@@ -1,0 +1,31 @@
+Output of: docker compose run --rm api python scripts/tune_threshold.py --data /data/samples
+Data: 9 LibriSpeech dev-clean speakers, 2 enrollment clips + 3-4 test clips each (2026-10-19)
+
+  skipping 1272-135031-0014.flac: Only 0.8s of speech found; please record at least 1s of clear speech.
+speaker 1272: 2 enroll + 3 test clips
+speaker 1988: 2 enroll + 4 test clips
+speaker 2277: 2 enroll + 4 test clips
+speaker 251: 2 enroll + 4 test clips
+speaker 3752: 2 enroll + 4 test clips
+speaker 5694: 2 enroll + 4 test clips
+speaker 6313: 2 enroll + 4 test clips
+speaker 7976: 2 enroll + 3 test clips
+speaker 8297: 2 enroll + 4 test clips
+
+9 speakers, 34 genuine and 272 impostor comparisons
+genuine  scores: min 0.350  mean 0.716  max 0.913
+impostor scores: min -0.108  mean 0.098  max 0.350
+EER 0.2% at threshold 0.350
+
+threshold   FAR     FRR    open-set accuracy
+  0.20      14.7%    0.0%    91.5%
+  0.25       6.2%    0.0%    95.4%
+  0.30       1.5%    0.0%    98.7%
+  0.35       0.4%    2.9%    97.1%
+  0.40       0.0%    2.9%    97.4%
+  0.45       0.0%    2.9%    97.4%
+  0.50       0.0%    8.8%    92.2%
+  0.55       0.0%   11.8%    89.5%
+  0.60       0.0%   17.6%    84.3%
+  0.65       0.0%   23.5%    79.1%
+  0.70       0.0%   35.3%    68.6%

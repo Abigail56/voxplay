@@ -1,0 +1,32 @@
+== Enrollment ==
+  enrolled 'Speaker 1272' with 2 samples
+  enrolled 'Speaker 1988' with 2 samples
+  enrolled 'Speaker 2277' with 2 samples
+
+== Identification ==
+  PASS  1272-135031-0013.flac  wav   -> Speaker 1272     score 0.649  (expected Speaker 1272)
+  PASS  1272-135031-0013.flac  mp3   -> Speaker 1272     score 0.642  (expected Speaker 1272)
+  PASS  1272-135031-0013.flac  webm  -> Speaker 1272     score 0.616  (expected Speaker 1272)
+  SKIP  1272-135031-0014.flac  wav   -> 1272-135031-0014.wav: Only 0.8s of speech found; please record at least 1s of clear speech.
+  SKIP  1272-135031-0014.flac  mp3   -> 1272-135031-0014.mp3: Only 0.9s of speech found; please record at least 1s of clear speech.
+  SKIP  1272-135031-0014.flac  webm  -> 1272-135031-0014.webm: Only 0.8s of speech found; please record at least 1s of clear speech.
+  PASS  1988-147956-0002.flac  wav   -> Speaker 1988     score 0.729  (expected Speaker 1988)
+  PASS  1988-147956-0002.flac  mp3   -> Speaker 1988     score 0.707  (expected Speaker 1988)
+  PASS  1988-147956-0002.flac  webm  -> Speaker 1988     score 0.719  (expected Speaker 1988)
+  PASS  1988-147956-0003.flac  wav   -> Speaker 1988     score 0.744  (expected Speaker 1988)
+  PASS  1988-147956-0003.flac  mp3   -> Speaker 1988     score 0.729  (expected Speaker 1988)
+  PASS  1988-147956-0003.flac  webm  -> Speaker 1988     score 0.748  (expected Speaker 1988)
+  PASS  2277-149896-0002.flac  wav   -> Speaker 2277     score 0.827  (expected Speaker 2277)
+  PASS  2277-149896-0002.flac  mp3   -> Speaker 2277     score 0.799  (expected Speaker 2277)
+  PASS  2277-149896-0002.flac  webm  -> Speaker 2277     score 0.798  (expected Speaker 2277)
+  PASS  2277-149896-0003.flac  wav   -> Speaker 2277     score 0.793  (expected Speaker 2277)
+  PASS  2277-149896-0003.flac  mp3   -> Speaker 2277     score 0.776  (expected Speaker 2277)
+  PASS  2277-149896-0003.flac  webm  -> Speaker 2277     score 0.782  (expected Speaker 2277)
+  PASS  251-137823-0020.flac   wav   -> unknown          score 0.143  (expected unknown)
+  PASS  251-137823-0020.flac   mp3   -> unknown          score 0.116  (expected unknown)
+  PASS  251-137823-0020.flac   webm  -> unknown          score 0.170  (expected unknown)
+  PASS  251-137823-0021.flac   wav   -> unknown          score 0.134  (expected unknown)
+  PASS  251-137823-0021.flac   mp3   -> unknown          score 0.153  (expected unknown)
+  PASS  251-137823-0021.flac   webm  -> unknown          score 0.141  (expected unknown)
+
+21/21 correct (threshold 0.4)
