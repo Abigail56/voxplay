@@ -45,7 +45,7 @@ SPELLINGS = {
 class Transcriber(Protocol):
     """Anything that turns 16 kHz mono samples into text. Tests use a fake one."""
 
-    def transcribe(self, samples: np.ndarray) -> str: ...
+    def transcribe(self, samples: np.ndarray, prompt: str | None = None) -> str: ...
 
 
 class WhisperTranscriber:
@@ -60,15 +60,16 @@ class WhisperTranscriber:
         )
         self._lock = threading.Lock()
 
-    def transcribe(self, samples: np.ndarray) -> str:
+    def transcribe(self, samples: np.ndarray, prompt: str | None = None) -> str:
+        """`prompt` hints at the vocabulary to expect. The liveness check never passes one: the
+        expected phrase would nudge Whisper into "hearing" it even when it wasn't said."""
         with self._lock:
-            # No prompt with the expected words: that would nudge Whisper into
-            # "hearing" the phrase even when it wasn't said.
             segments, _ = self._model.transcribe(
                 np.ascontiguousarray(samples, dtype=np.float32),
                 language="en",
                 beam_size=5,
                 condition_on_previous_text=False,
+                initial_prompt=prompt,
             )
             return " ".join(s.text.strip() for s in segments).strip()
 

@@ -4,6 +4,67 @@
 friends, each from your own phone. (This project used to be called Voice ID; the database, Docker project
 and internal names still say `voiceid`, so existing data and deployments keep working.)
 
+| Page | What's there |
+|---|---|
+| `/` | The landing page: hero, *Choose your battle*, the featured game, how it works, FAQ |
+| `/games` | Every game, with Play now or Coming soon |
+| `/brain-clash`, `/brain-clash/CODE` | **Brain Clash**: the team quiz (below). The room link is also the invite |
+| `/whos-talking` | **Who's Talking?**: the voice game (old `/?join=CODE` links redirect here) |
+| `/sign-in` | One player for every game |
+| `/admin` | Admins only |
+
+The look is original: a midnight/violet/neon design system in `frontend/app/globals.css` (colour tokens checked
+for contrast), the Chakra Petch font (SIL OFL, bundled), and hand-drawn SVG scenes in
+`frontend/components/art/Scenes.tsx` (a hero facing the Nexus portal, the Brain Clash arena, a victory scene).
+Every artwork spot is a named slot in `frontend/lib/art.ts`: put a licensed image in `frontend/public/art/` and
+set its path there to replace a scene, no other code changes needed.
+
+## Brain Clash: two teams, one battle, one champion
+
+A team quiz for friends, families, classes and group chats. The host opens a room, everyone joins from their own
+phone with the code or link, and two teams battle it out. Players need a VOXPLAY account but **no voice setup**.
+
+- **⚔️ Brain Battle:** teams take turns; only the team on turn may answer (3 tries). Miss, and the other team
+  gets 10 seconds to steal it for half points.
+- **⚡ Quick-Fire:** both teams race, one try each; the first right answer wins the round, plus up to 5 points for speed.
+- **📝 Name It Fast:** "Name five African countries": each team builds its own list. 5 points per valid answer;
+  repeats score nothing; one answer can name several ("Ghana, Kenya and Togo"). The other team's list stays
+  hidden until the round ends.
+- **🔗 Word Association:** a word appears; each team scores once for a related word from the accepted list.
+
+Scoring (configurable per room): 10 points for a right answer, 20 for a hard one, 5 per Name It Fast item, up to
++5 for speed. The host picks the mode, categories, rounds, timer, a winning score ("first to 100") and team
+names, moves players between teams or shuffles them, starts, skips the answer reveal and can end the match.
+A level game gets one tie-breaker question open to both teams; still level, it's a draw.
+
+**Answering.** Type it, or press the mic and say it. Spoken answers are turned into text on the server by
+Whisper (the same model as the liveness check) and the recording is thrown away straight after. This is
+*speech-to-text*, not *speaker recognition*: Brain Clash never looks at whose voice it is. The checker
+([backend/app/brain_clash.py](backend/app/brain_clash.py)) ignores case, accents, punctuation, "um, I think it's",
+leading "the", writes numbers as digits ("fifty four" = "54"), allows a small slip in longer words
+("kilimanjiro") and accepts each question's alternative answers, but not two answers at once ("Ghana or Nigeria").
+
+**Fair play.** The server holds the questions, the answers, the clock and the score; the browser only sends
+what was said. Each answer carries a fresh random id, so the same request can't be replayed; answers for an old
+round, after the buzzer or out of turn are refused; points are booked under a Redis lock, so two players can't
+both score the same question. Rounds end on the server's clock (any screen may ask "time's up?", the server
+checks). Rooms live in Redis like Who's Talking? rooms, changes reach every screen through the same WebSocket
+(`/ws?bc=CODE`), and a player who reloads or reconnects lands back in the room with their team and points.
+Finished matches are saved in PostgreSQL (`bc_results`).
+
+**The question bank** is [backend/app/data/brain_clash_questions.json](backend/app/data/brain_clash_questions.json):
+218 questions, Name It Fast lists and Word Association words across 16 categories (African and Nigerian general
+knowledge, African music, Nigerian entertainment, history and culture, current affairs, football, animals and
+nature, food, languages, Nigerian Pidgin, African movies, riddles, word challenges, everyday knowledge and funny
+challenges). Each has a category, difficulty, answer, accepted alternatives and optional points, explanation,
+source and active flag. The file is loaded into the `bc_questions` table at every start, so to add or fix a
+question, edit the file and restart. A test checks every question: each answer and alternative must be accepted
+by the checker, and every category must be playable.
+
+*Current affairs* questions are written as dated events ("Who was sworn in as Nigeria's President in May 2023?"),
+so they stay true, and carry `as_of` and `source`. Anything that can't be checked when it's added ships with
+`"active": false` until someone verifies it (one does today: the 2025 Grammys question).
+
 ## Who's Talking? A voice game
 
 An online multiplayer game where an AI has to work out who's talking. Sign up, record your voice once,
@@ -185,12 +246,16 @@ docker compose up -d api      # liveness back on
 docker compose run --rm api pytest -v
 ```
 
-There are 117 tests:
+There are 138 tests:
 - `test_matching.py`: cosine similarity, centroids, ranking, threshold/"unknown" decisions, margin rule, EER
 - `test_audio.py`: resampling, silence trimming, rejecting garbage and too-short audio
 - `test_voice_map.py`: PCA keeps similar voices close, voice twins, consistency
 - `test_liveness.py`: random digit phrases, the ways Whisper writes digits, wrong order and old recordings fail,
   phrases expire and work once (in memory and in the real Redis)
+- `test_brain_clash.py`: answer checking (accents, fillers, numbers, slips, no hedging), every question in the bank
+  is answerable, Brain Battle turns and steals, Quick-Fire speed bonus, Name It Fast items and repeats, Word
+  Association, late and replayed answers, the server clock, tie-breaker and draw, win score, rooms, team
+  permissions, voice answers, the other team's hidden list, results saved, live WebSocket updates and reconnecting
 - `test_modes.py`: silly lines and near-miss words, disguise, broken telephone (chains, drift, a player leaving
   mid-chain), humans vs AI ratings, twists and the double final, the replay (and clips deleted straight away when
   it's off), highlights, solo play (guess the voice, impersonate, disguise, kept out of the weekly cup)
@@ -249,6 +314,16 @@ docker compose down -v     # stop AND delete the database + model cache volumes
 | `WS` | `/ws?token=…&room=…` | Live "something changed" messages for the dashboard and a room |
 | `GET` | `/admin/overview`, `/admin/players`, `/admin/rooms`, `/admin/plays?cheats_only=` | Admins only: everything |
 | `POST` / `DELETE` | `/admin/rooms/{code}/end`, `/admin/players/{id}` | Admins only: end a game, delete a player |
+| | **Brain Clash** | |
+| `GET` | `/brain-clash/categories` | The 16 categories and how many active questions each has per mode (no sign-in needed) |
+| `POST` | `/brain-clash/rooms` | JSON `settings` (mode, categories, rounds, seconds, win_score, speed_bonus, steals, team_names), `name` → a room like `NOVA-42` |
+| `GET` | `/brain-clash/rooms/{code}` | The room as you may see it (answers only after each round) |
+| `POST` | `/brain-clash/rooms/{code}/join`, `/leave` | Join (optional `name`, `team`) or come back after a disconnect; leave |
+| `PATCH` | `/brain-clash/rooms/{code}/settings` | Host: change the match settings in the lobby |
+| `POST` | `/brain-clash/rooms/{code}/team`, `/shuffle` | Switch your team (the host can move anyone); host: deal even teams at random |
+| `POST` | `/brain-clash/rooms/{code}/start`, `/end` | Host: start (or rematch); end the match now |
+| `POST` | `/brain-clash/rooms/{code}/answer` | Form `round`, `answer_id`, and `text` or `file` (a spoken answer) → checked and scored by the server |
+| `POST` | `/brain-clash/rooms/{code}/advance` | Time's up / next question (the server checks its clock; the host may skip the reveal) |
 | | **Voice lab** | |
 | `GET` | `/challenge?kind=digits\|line` | A fresh phrase to say: 6 digits (default) or a silly line (valid 2 minutes, one use) |
 | `POST` | `/identify` | Form fields `file`, `challenge_id` → best match or `"unknown"` |
@@ -426,6 +501,8 @@ voice-id/
 │   │   ├── store.py            # Redis (or in-memory): phrases, rate limits, rooms, locks, pub/sub
 │   │   ├── auth.py             # scrypt password hashes, JWTs, "who is signed in"
 │   │   ├── rooms.py            # game rooms: modes, turn plan, twists, server-side scoring, highlights, Redis persistence
+│   │   ├── brain_clash.py      # Brain Clash rules: answer checking, modes, clock, steals, tie-breaker, Redis store
+│   │   ├── data/brain_clash_questions.json  # the question bank (source of truth)
 │   │   ├── geocode.py          # place names ↔ map points (OpenStreetMap Nominatim, cached)
 │   │   ├── services.py         # upload → preprocess → embed / transcribe (in worker threads)
 │   │   ├── db.py, models.py    # SQLModel tables (speakers, samples, users, game_plays) + pgvector, async sessions
@@ -436,6 +513,7 @@ voice-id/
 │   │       ├── accounts.py     # sign up / in, my voice, my location, delete me
 │   │       ├── rooms.py        # create / join / start / turn / vote / rate / clips and the replay
 │   │       ├── solo.py         # solo play against the built-in voices
+│   │       ├── brain_clash.py  # Brain Clash rooms, answers (text or voice), question bank loading
 │   │       ├── game.py         # dashboard + the /ws live-updates WebSocket
 │   │       └── admin.py        # the admin page's data and actions
 │   ├── scripts/
@@ -445,18 +523,22 @@ voice-id/
 │   └── tests/                  # pytest: matching, audio, voice map, liveness, API
 └── frontend/
     ├── Dockerfile              # node:22-alpine multi-stage, Next.js standalone
-    ├── app/                    # layout.tsx, page.tsx (the game), admin/ (admin page), globals.css
+    ├── app/                    # layout.tsx, page.tsx (landing), games/, brain-clash/, whos-talking/, sign-in/,
+    │                           #   admin/, not-found, error, loading, icon.svg, manifest, globals.css
     ├── components/
     │   ├── ClipInput.tsx       # record (MediaRecorder) or upload audio
     │   ├── game/               # Welcome, VoiceSetup, PlayerCard, Lobby, GameOptions, RoomPanel, Solo, World (map,
     │   │                       #   leaderboard, feed), GameHome, Avatar, PlayButton, PlayersMapLeaflet, LocationPicker,
     │   │                       #   Invite, VoiceTwins
     │   ├── admin/AdminDashboard.tsx # the admin page
+    │   ├── brain-clash/        # Entry (create / join / how to play) and Room (lobby, match, victory)
+    │   ├── portal/, brand/, art/, auth/  # game cards and footer; logo and loader; SVG artwork; sign-in form
     │   └── Phrase.tsx          # the line (or digits) to read out + countdown (lib/useChallenge.ts fetches them)
     ├── lib/api.ts              # typed fetch wrapper for the backend
     ├── lib/game.ts             # levels, avatars, sound effects, spoken announcer
     ├── lib/countries.ts        # country list, names and flags (from the browser's Intl API)
     ├── lib/useLive.ts          # WebSocket live updates with reconnect + ping
+    ├── lib/games.ts, art.ts, brainClash.ts  # the game catalogue, artwork slots, Brain Clash mode texts
     ├── lib/useChallenge.ts     # fetches the line to read out and counts down
     └── store/                  # Zustand: signed-in player (useAuthStore)
 ```

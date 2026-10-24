@@ -222,6 +222,14 @@ def test_a_team_with_nobody_left_ends_the_match():
     assert r.status == "finished" and "Team Nova has no players left" in r.finish_reason and r.host_id == 2
 
 
+def test_vocabulary_hint_hides_the_answer_among_others():
+    pool = [q(f"x{i}", a) for i, a in enumerate(["Abuja", "Lagos", "Kano", "Benue", "Naira", "Jos"])]
+    hint = bc.vocabulary_hint(pool[0], pool)
+    assert hint.startswith("Quiz answers:") and all(a in hint for a in ("Abuja", "Lagos", "Jos"))
+    countries = q("c", kind="list", items=[["Ghana"], ["Kenya"]])
+    assert "Ghana" in bc.vocabulary_hint(countries, [])
+
+
 def test_choosing_questions_spreads_categories_and_keeps_a_reserve():
     pool = [bc.Question(id=f"{c}{i}", kind="question", category=c, prompt="?", answer="x") for c in ("a", "b") for i in range(10)]
     plan = bc.choose_questions(pool, 6)
@@ -297,6 +305,8 @@ async def test_a_full_quick_fire_match(client):
     client.app.state.transcriber.text = await cheat_answer(client, code)
     res = (await send(client, bayo, code, 2, audio=tone_wav(300))).json()
     assert res["feedback"]["verdict"] == "correct" and res["feedback"]["said"] == client.app.state.transcriber.text
+    hint = client.app.state.transcriber.prompts[-1]  # speech-to-text was told the words to expect...
+    assert hint.startswith("Quiz answers:") and client.app.state.transcriber.text in hint and hint.count(",") >= 5  # ...among decoys
     client.app.state.transcriber.text = ""
     assert (await send(client, ada, code, 2, audio=tone_wav(300))).status_code == 409  # round already won
     room = (await client.post(f"/brain-clash/rooms/{code}/advance", headers=ada)).json()

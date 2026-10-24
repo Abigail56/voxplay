@@ -439,7 +439,10 @@ async def answer(
 
     if file is not None:
         prepared = await prepare_upload(file, settings, max_seconds=20, min_speech=0.2)
-        said = await run_in_threadpool(get_transcriber(request).transcribe, prepared.decoded)
+        q = room.round.question
+        same_category = (await session.exec(select(BrainClashQuestion).where(BrainClashQuestion.category == q.category))).all()
+        hint = bc.vocabulary_hint(q, [bc.Question.model_validate(r, from_attributes=True) for r in same_category])
+        said = await run_in_threadpool(get_transcriber(request).transcribe, prepared.decoded, hint)
     else:
         said = text or ""
 

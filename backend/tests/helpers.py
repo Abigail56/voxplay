@@ -48,8 +48,10 @@ class FakeTranscriber:
 
     def __init__(self, text: str = "") -> None:
         self.text = text
+        self.prompts: list[str | None] = []  # the vocabulary hints it was given
 
-    def transcribe(self, samples: np.ndarray) -> str:
+    def transcribe(self, samples: np.ndarray, prompt: str | None = None) -> str:
+        self.prompts.append(prompt)
         return self.text
 
 
