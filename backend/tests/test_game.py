@@ -27,7 +27,12 @@ ADA, BAYO, CHI = 200, 600, 1500  # each player's "voice" (the fake model hears p
 
 def make_app():
     settings = Settings(
-        database_url=TEST_DB, match_threshold=0.5, redis_url="", jwt_secret="test-secret", admin_usernames="boss"
+        database_url=TEST_DB,
+        match_threshold=0.5,
+        redis_url="",
+        jwt_secret="test-secret",
+        admin_usernames="boss",
+        seed_sample_voices=False,  # solo tests seed them after clearing the tables
     )
     return create_app(settings, embedder=FakeEmbedder(), transcriber=FakeTranscriber(), geocoder=FakeGeocoder())
 

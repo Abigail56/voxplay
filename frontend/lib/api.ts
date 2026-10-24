@@ -31,10 +31,27 @@ export type Me = {
 
 export type Badge = { id: string; emoji: string; name: string; description: string; earned: boolean; progress: number; goal: number };
 
-export type GameMode = "yourself" | "impersonate" | "guess";
+export type GameMode = "yourself" | "impersonate" | "disguise" | "guess" | "telephone";
+
+/** What the host picks before starting. */
+export type RoomOptions = {
+  mode: GameMode;
+  rounds: number;
+  speed: boolean; // 20 seconds a turn
+  twists: boolean; // a silly style every turn
+  crowd: boolean; // impersonate: humans vs AI ratings
+  double_final: boolean; // the last round counts double
+  replay: boolean; // keep each turn's clip for an hour
+};
 
 export type RoomPlayer = { user_id: number; username: string; speaker_id: number; country: string | null; points: number; turns: number };
-export type Turn = { player_id: number; target_id: number };
+export type Turn = {
+  player_id: number;
+  target_id: number; // who to sound like: yourself, another player, or (telephone) the voice before
+  twist: string | null; // e.g. "🤫 Whisper it"
+  double: boolean; // final round: double points
+  chain_start: boolean; // telephone: the first voice of a chain
+};
 export type TurnResult = {
   turn_number: number;
   player_id: number;
@@ -44,32 +61,50 @@ export type TurnResult = {
   message: string;
   liveness: Liveness | null;
   speed_bonus: number;
+  twist: string | null;
+  double: boolean;
+  sounded_like: Record<string, number>; // player -> 0-100, best first
+  score: number | null;
+  has_clip: boolean; // can be replayed
   votes: Record<string, string>; // Guess Who: voter -> who they named
   ai_guess: string | null;
   points_by_player: Record<string, number>;
+  stars: Record<string, number>; // humans vs AI: rater -> 1-5
+  ai_points: number | null;
+  crowd_points: number;
+  chain_from: string | null; // telephone: who started the chain
+  drift: number | null; // telephone: how much it still sounds like them (0-100)
 };
 
-export type Room = {
+export type Highlight = { emoji: string; title: string; player: string; detail: string; turn_number: number; has_clip: boolean };
+
+export type Room = RoomOptions & {
   code: string;
   host_id: number;
-  mode: GameMode;
-  rounds: number;
-  speed: boolean;
   status: "lobby" | "playing" | "finished";
   game_no: number;
   players: RoomPlayer[];
   turn_index: number;
   turns_total: number;
   last_result: TurnResult | null;
+  history: TurnResult[];
+  highlights: Highlight[];
   current_turn: Turn | null; // null for everyone but the speaker in Guess Who
-  phase: "speak" | "vote";
+  phase: "speak" | "vote" | "rate";
   you_speak: boolean; // Guess Who: you're the secret speaker
   voted: number[];
-  my_vote: number | null;
-  has_clip: boolean;
+  my_vote: number | null; // your suspect (vote) or your stars (rate)
+  has_clip: boolean; // there's a clip to listen to right now
   deadline: string | null; // ISO time the turn runs out
+  deadline_seconds: number | null; // how long that phase lasts
   winner_ids: number[];
 };
+
+export type SoloVoice = { speaker_id: number; name: string };
+export type SoloInfo = { voices: SoloVoice[]; rounds: number; right: number; points: number };
+export type SoloRound = { round_id: string; options: SoloVoice[]; expires_in_seconds: number };
+export type SoloGuess = { right: boolean; answer: SoloVoice; ai_guess: SoloVoice | null; points: number; message: string };
+export type SoloTurn = { points: number; message: string; score: number | null; liveness: Liveness | null; sounded_like: Record<string, number> };
 
 export type DailyState = {
   day: string;
@@ -154,7 +189,7 @@ export type AdminPlay = {
   id: number;
   username: string;
   room_code: string | null;
-  mode: GameMode | "guess_vote";
+  mode: GameMode | "guess_vote" | "solo_guess" | "solo_impersonate" | "solo_disguise";
   points: number;
   live_passed: boolean | null;
   created_at: string;
@@ -188,15 +223,6 @@ const json = (body: unknown): RequestInit => ({
 });
 
 export type Challenge = { challenge_id: string; phrase: string; expires_in_seconds: number };
-
-export type Health = {
-  status: string;
-  model_loaded: boolean;
-  threshold: number;
-  speakers: number;
-  demo_retention_hours: number;
-  liveness_required: boolean;
-};
 
 export type MapSpeaker = {
   speaker_id: number;
@@ -249,10 +275,16 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return (res.status === 204 ? undefined : await res.json()) as T;
 }
 
-export const api = {
-  health: () => request<Health>("/health"),
+/** Audio that needs the sign-in token, so it's fetched rather than linked. */
+async function audio(path: string): Promise<Blob> {
+  const res = await fetch(`${API_URL}${path}`, { headers: authToken ? { Authorization: `Bearer ${authToken}` } : {} });
+  if (!res.ok) throw new Error("That recording isn't available.");
+  return res.blob();
+}
 
-  challenge: () => request<Challenge>("/challenge"),
+export const api = {
+  /** "line" for game turns (a silly sentence), "digits" for the plain voice check. */
+  challenge: (kind: "digits" | "line" = "line") => request<Challenge>(`/challenge?kind=${kind}`),
 
   // ---------- voice game ----------
   signup: (username: string, password: string, country: string, place: string) =>
@@ -280,25 +312,37 @@ export const api = {
 
   dashboard: () => request<Dashboard>("/dashboard"),
   voiceTwins: () => request<VoiceMap>("/voice-twins"),
-  createRoom: (mode: GameMode, rounds: number, speed: boolean) =>
-    request<Room>("/rooms", { method: "POST", ...json({ mode, rounds, speed }) }),
+  createRoom: (options: RoomOptions) => request<Room>("/rooms", { method: "POST", ...json(options) }),
   room: (code: string) => request<Room>(`/rooms/${encodeURIComponent(code)}`),
   joinRoom: (code: string) => request<Room>(`/rooms/${encodeURIComponent(code)}/join`, { method: "POST" }),
   leaveRoom: (code: string) => request<Room | null>(`/rooms/${encodeURIComponent(code)}/leave`, { method: "POST" }),
-  changeRoom: (code: string, mode: GameMode, rounds: number, speed: boolean) =>
-    request<Room>(`/rooms/${encodeURIComponent(code)}`, { method: "PATCH", ...json({ mode, rounds, speed }) }),
+  changeRoom: (code: string, options: RoomOptions) =>
+    request<Room>(`/rooms/${encodeURIComponent(code)}`, { method: "PATCH", ...json(options) }),
   vote: (code: string, suspectId: number) =>
     request<Room>(`/rooms/${encodeURIComponent(code)}/vote`, { method: "POST", ...json({ suspect_id: suspectId }) }),
+  rate: (code: string, stars: number) =>
+    request<Room>(`/rooms/${encodeURIComponent(code)}/rate`, { method: "POST", ...json({ stars }) }),
   advance: (code: string) => request<Room>(`/rooms/${encodeURIComponent(code)}/advance`, { method: "POST" }),
   react: (code: string, emoji: string) =>
     request<void>(`/rooms/${encodeURIComponent(code)}/react`, { method: "POST", ...json({ emoji }) }),
-  /** Guess Who: the secret speaker's clip (needs the sign-in token, so it's fetched, not linked). */
-  async clip(code: string): Promise<Blob> {
-    const res = await fetch(`${API_URL}/rooms/${encodeURIComponent(code)}/clip`, {
-      headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
-    });
-    if (!res.ok) throw new Error("The clip isn't available.");
-    return res.blob();
+  /** The clip to listen to now: Guess Who's mystery voice, the impression to rate, or the voice to copy. */
+  clip: (code: string) => audio(`/rooms/${encodeURIComponent(code)}/clip`),
+  /** A finished turn of this game, for the replay. */
+  replay: (code: string, turn: number) => audio(`/rooms/${encodeURIComponent(code)}/replay/${turn}`),
+
+  solo: () => request<SoloInfo>("/solo"),
+  soloIntro: (speakerId: number) => audio(`/solo/voices/${speakerId}/intro`),
+  soloNewGuess: () => request<SoloRound>("/solo/guess", { method: "POST" }),
+  soloGuessClip: (roundId: string) => audio(`/solo/guess/${encodeURIComponent(roundId)}/clip`),
+  soloGuess: (roundId: string, speakerId: number) =>
+    request<SoloGuess>(`/solo/guess/${encodeURIComponent(roundId)}`, { method: "POST", ...json({ speaker_id: speakerId }) }),
+  soloTurn(mode: "impersonate" | "disguise", clip: Clip, challengeId: string, speakerId?: number) {
+    const form = new FormData();
+    form.append("mode", mode);
+    form.append("file", clip.blob, clip.filename);
+    form.append("challenge_id", challengeId);
+    if (speakerId !== undefined) form.append("speaker_id", String(speakerId));
+    return request<SoloTurn>("/solo/turn", { method: "POST", body: form });
   },
 
   daily: () => request<DailyState>("/daily"),

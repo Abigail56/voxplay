@@ -4,22 +4,22 @@ import { useCallback, useEffect, useState } from "react";
 
 import { api, type Challenge } from "./api";
 
-/** A fresh "say these digits" phrase from the server, with a live countdown.
+/** A fresh phrase to say (a silly line for game turns) from the server, with a live countdown.
  *  Call `renew()` after every attempt: each phrase works only once. */
-export function useChallenge() {
+export function useChallenge(kind: "digits" | "line" = "line") {
   const [challenge, setChallenge] = useState<(Challenge & { expiresAt: number }) | null>(null);
   const [secondsLeft, setSecondsLeft] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
   const renew = useCallback(async () => {
     try {
-      const c = await api.challenge();
+      const c = await api.challenge(kind);
       setChallenge({ ...c, expiresAt: Date.now() + c.expires_in_seconds * 1000 });
       setError(null);
     } catch (e) {
       setError((e as Error).message);
     }
-  }, []);
+  }, [kind]);
 
   useEffect(() => {
     renew();

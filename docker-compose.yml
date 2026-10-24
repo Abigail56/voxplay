@@ -50,6 +50,8 @@ services:
       # The Voice ID UI (3010) and the portfolio demo page (3001) may call this API.
       # Going public (e.g. Tailscale Funnel)? Add the site's https address in .env.
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3010,http://localhost:3001}
+      # The built-in LibriSpeech readers: solo play needs them, and they give the AI someone else to pick.
+      SEED_SAMPLE_VOICES: ${SEED_SAMPLE_VOICES:-true}
     ports:
       - "8010:8000"
     volumes:

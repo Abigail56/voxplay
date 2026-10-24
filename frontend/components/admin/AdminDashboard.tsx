@@ -19,7 +19,17 @@ const PlayersMapLeaflet = dynamic(() => import("../game/PlayersMapLeaflet"), {
 type Data = { overview: AdminOverview; players: AdminPlayer[]; rooms: AdminRoom[]; plays: AdminPlay[] };
 type Tab = "overview" | "players" | "games" | "turns";
 const TABS: Tab[] = ["overview", "players", "games", "turns"];
-const MODE: Record<string, string> = { yourself: "Be yourself", impersonate: "Impersonate", guess: "Guess Who" };
+const MODE: Record<string, string> = {
+  yourself: "Be yourself",
+  impersonate: "Impersonate",
+  disguise: "Disguise",
+  guess: "Guess Who",
+  guess_vote: "Guess Who (vote)",
+  telephone: "Broken telephone",
+  solo_guess: "Solo: guess the voice",
+  solo_impersonate: "Solo: impersonate",
+  solo_disguise: "Solo: disguise",
+};
 
 function when(iso: string | null): string {
   if (!iso) return "—";
@@ -396,7 +406,7 @@ function TurnsTable({ plays, empty }: { plays: AdminPlay[]; empty: string }) {
               <td className="adm-muted nowrap">{when(p.created_at)}</td>
               <td>{p.username}</td>
               <td className="mono">{p.room_code ?? "—"}</td>
-              <td>{p.mode === "guess_vote" ? "Guess Who (vote)" : (MODE[p.mode] ?? p.mode)}</td>
+              <td>{MODE[p.mode] ?? p.mode}</td>
               <td>{p.live_passed === false ? <Pill tone="bad">Failed</Pill> : p.live_passed ? <Pill tone="ok">Passed</Pill> : <span className="adm-muted">—</span>}</td>
               <td className="num">{p.points}</td>
             </tr>

@@ -45,8 +45,8 @@ export function Welcome({ invite }: { invite: string | null }) {
           Who&apos;s <em>Talking?</em>
         </h1>
         <p className="tagline">
-          Everyone records their voice, then you take turns reading numbers out loud while the game works out who&apos;s
-          speaking. It&apos;s usually right. Your job is to make it wrong.
+          Everyone records their voice, then you take turns reading silly lines out loud while the game works out
+          who&apos;s speaking. It&apos;s usually right. Your job is to make it wrong.
         </p>
         <ol className="how">
           <li>
@@ -56,11 +56,13 @@ export function Welcome({ invite }: { invite: string | null }) {
             <strong>Share a game code</strong> with friends. Everyone plays on their own phone.
           </li>
           <li>
-            <strong>On your turn</strong>, read the numbers on screen. Sound like yourself, do an impression of
-            someone, or hide in Guess Who while everyone votes.
+            <strong>On your turn</strong>, read the line on screen (&ldquo;the sleepy penguin stole seven shiny
+            pizzas&rdquo;). Sound like yourself, do an impression, put on a disguise, hide in Guess Who, or pass a voice
+            down a broken telephone.
           </li>
           <li>
-            <strong>Every point counts</strong> towards the weekly cup and your country&apos;s total.
+            <strong>Every point counts</strong> towards the weekly cup and your country&apos;s total. No one around?
+            Play solo against the built-in voices.
           </li>
         </ol>
       </section>

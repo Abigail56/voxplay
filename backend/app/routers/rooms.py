@@ -1,6 +1,5 @@
 import base64
 import json
-import secrets
 import time
 from datetime import datetime, timezone
 from typing import Annotated
@@ -20,26 +19,39 @@ from ..liveness import ChallengeStore
 from ..matching import cosine_similarity, decide
 from ..models import GamePlay, GameResult, Speaker, User
 from ..rooms import (
+    CHAIN_START_POINTS,
     MAX_PLAYERS,
+    RATE_SECONDS,
     REACTIONS,
+    SPEED_SECONDS,
+    VOTE_SECONDS,
+    Pending,
     Room,
     RoomPlayer,
     RoomStore,
     Turn,
     apply_turn,
+    chain_origin_name,
+    crowd_verdict,
     everyone_voted,
     failed_liveness,
+    min_players,
+    open_rating,
     open_voting,
+    pct,
     ranks,
     reveal,
+    score_copy,
+    score_disguise,
     score_impersonation,
     score_yourself,
     speed_bonus,
     start_game,
     timed_out,
+    voters,
     winners,
 )
-from ..schemas import LivenessOut, ReactIn, RoomCreateIn, VoteIn
+from ..schemas import RateIn, ReactIn, RoomCreateIn, VoteIn
 from ..services import get_challenges, get_embedder, live_clip, nearest_speakers
 from .accounts import active_speaker, on_map
 
@@ -47,7 +59,9 @@ router = APIRouter(prefix="/rooms", tags=["rooms"])
 
 SessionDep = Annotated[AsyncSession, Depends(get_session)]
 SettingsDep = Annotated[Settings, Depends(get_settings)]
-CLIP_SECONDS = 15 * 60  # a Guess Who clip is deleted at the reveal, or after this at the latest
+# Turn clips (Guess Who's mystery clip, the impression being rated, the voice to copy in
+# telephone, and the replay) are deleted when no longer needed, or after this at the latest.
+CLIP_SECONDS = 60 * 60
 
 
 def get_rooms(request: Request) -> RoomStore:
@@ -58,21 +72,26 @@ RoomsDep = Annotated[RoomStore, Depends(get_rooms)]
 
 
 class RoomOut(Room):
-    # Never sent: the turn order and Guess Who's secrets would give the speaker away.
+    # Never sent: the turn order, Guess Who's secrets, ratings before the reveal and voiceprints.
     plan: list[Turn] = Field(default=[], exclude=True)
     votes: dict[int, int] = Field(default={}, exclude=True)
     clip_key: str | None = Field(default=None, exclude=True)
-    ai_guess: str | None = Field(default=None, exclude=True)
-    pending_liveness: LivenessOut | None = Field(default=None, exclude=True)
+    pending: Pending | None = Field(default=None, exclude=True)
+    chain_origin: list[float] | None = Field(default=None, exclude=True)
+    chain_last: list[float] | None = Field(default=None, exclude=True)
 
     current_turn: Turn | None = None  # hidden from everyone but the speaker in Guess Who
     turns_total: int = 0
     you_speak: bool = False  # Guess Who: you're the secret speaker this turn
-    voted: list[int] = []  # who has voted (not for whom)
-    my_vote: int | None = None
-    has_clip: bool = False
-    deadline: str | None = None  # ISO time the turn runs out (speed rounds, voting)
+    voted: list[int] = []  # who has voted or rated (not what)
+    my_vote: int | None = None  # your suspect (Guess Who) or your stars (rating)
+    has_clip: bool = False  # there's a clip to listen to right now
+    deadline: str | None = None  # ISO time the turn runs out (speed rounds, voting, rating)
+    deadline_seconds: int | None = None  # how long that phase lasts in total
     winner_ids: list[int] = []
+
+
+PHASE_SECONDS = {"speak": SPEED_SECONDS, "vote": VOTE_SECONDS, "rate": RATE_SECONDS}
 
 
 def out(room: Room, viewer_id: int) -> RoomOut:
@@ -80,7 +99,7 @@ def out(room: Room, viewer_id: int) -> RoomOut:
     turn = room.active_turn()
     secret = room.mode == "guess" and turn is not None
     deadline = room.turn_deadline()
-    data = room.model_dump(exclude={"plan", "votes", "clip_key", "ai_guess", "pending_liveness"})
+    data = room.model_dump(exclude={"plan", "votes", "clip_key", "pending", "chain_origin", "chain_last"})
     return RoomOut(
         **data,
         current_turn=None if secret and turn.player_id != viewer_id else turn,
@@ -90,6 +109,7 @@ def out(room: Room, viewer_id: int) -> RoomOut:
         my_vote=room.votes.get(viewer_id),
         has_clip=room.clip_key is not None,
         deadline=deadline.isoformat() if deadline else None,
+        deadline_seconds=PHASE_SECONDS[room.phase] if deadline else None,
         winner_ids=[w.user_id for w in winners(room)] if room.status == "finished" else [],
     )
 
@@ -120,7 +140,7 @@ async def leave_other_rooms(rooms: RoomStore, user_id: int, keep: str | None = N
         await rooms.leave(other.code, user_id)
 
 
-async def improve_voice(session: AsyncSession, settings: Settings, speaker_id: int, clip, candidates, source: str) -> None:
+async def improve_voice(session: AsyncSession, settings: Settings, speaker_id: int, clip, candidates) -> None:
     """A real turn (live check passed): learn from it if it was clearly you."""
     own = (await session.exec(select(Speaker.embedding).where(Speaker.id == speaker_id))).first()
     if own is None:
@@ -149,9 +169,12 @@ def record_results(session: AsyncSession, room: Room) -> None:
         )
 
 
-def play_row(user_id: int, speaker_id: int, room: Room, mode: str, points: int, user: User | None, live: bool | None) -> GamePlay:
+def play_row(
+    user_id: int, speaker_id: int, room: Room, mode: str, points: int, user: User | None, live: bool | None, score: float | None = None
+) -> GamePlay:
     shared = user is not None and on_map(user)
     return GamePlay(
+        score=round(score, 4) if score is not None else None,
         speaker_id=speaker_id,
         user_id=user_id,
         room_code=room.code,
@@ -163,20 +186,63 @@ def play_row(user_id: int, speaker_id: int, room: Room, mode: str, points: int, 
     )
 
 
+# ---------- turn clips ----------
+
+
+def clip_key(room: Room, turn_number: int) -> str:
+    return f"clip:{room.code}:{room.game_no}:{turn_number}"
+
+
+def needs_clip(room: Room) -> bool:
+    """Does the game itself play this turn's clip to the others (not just the replay)?"""
+    return room.mode in ("guess", "telephone") or (room.mode == "impersonate" and room.crowd)
+
+
+async def put_clip(rooms: RoomStore, key: str, audio: bytes, content_type: str) -> None:
+    await rooms.store.put(key, json.dumps({"type": content_type, "audio": base64.b64encode(audio).decode()}), CLIP_SECONDS)
+
+
+async def clip_response(rooms: RoomStore, key: str | None) -> Response:
+    raw = await rooms.store.get(key) if key else None
+    if raw is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "There's no clip to listen to right now.")
+    clip = json.loads(raw)
+    return Response(base64.b64decode(clip["audio"]), media_type=clip["type"], headers={"Cache-Control": "no-store"})
+
+
+async def drop_clips(rooms: RoomStore, room: Room, *keys: str | None) -> None:
+    """Without the replay, a clip goes as soon as the game no longer plays it to anyone."""
+    if room.replay:
+        return
+    for key in keys:
+        if key and key != room.clip_key:
+            await rooms.store.delete(key)
+
+
+def similarities(vector, room: Room, voices: dict[int, list[float]]) -> dict[str, float]:
+    """How much a clip sounds like each player in the room (cosine similarity), best first."""
+    sims = {p.username: cosine_similarity(vector, voices[p.speaker_id]) for p in room.players if p.speaker_id in voices}
+    return dict(sorted(sims.items(), key=lambda kv: -kv[1]))
+
+
+async def users_by_id(session: AsyncSession, room: Room) -> dict[int, User]:
+    rows = await session.exec(select(User).where(User.id.in_([p.user_id for p in room.players])))
+    return {u.id: u for u in rows.all()}
+
+
 async def finish_reveal(session: AsyncSession, rooms: RoomStore, room: Room) -> None:
-    """Guess Who: reveal under the room lock, delete the clip, and book everyone's points."""
+    """Guess Who: reveal under the room lock, drop the clip (unless it's kept for the replay), book the points."""
     speaker_id = room.active_turn().player_id
     votes = dict(room.votes)
-    clip_key = room.clip_key
-    live = room.pending_liveness.passed if room.pending_liveness else None
-    points = reveal(room)
+    key = room.clip_key
+    live = room.pending.liveness.passed if room.pending and room.pending.liveness else None
+    points = reveal(room, has_clip=room.replay and key is not None)
     await rooms.save(room)
-    if clip_key:
-        await rooms.store.delete(clip_key)
-    users = {u.id: u for u in (await session.exec(select(User).where(User.id.in_([p.user_id for p in room.players])))).all()}
+    await drop_clips(rooms, room, key)
+    users = await users_by_id(session, room)
     for p in room.players:
         if p.user_id == speaker_id:
-            session.add(play_row(p.user_id, p.speaker_id, room, "guess", points.get(p.user_id, 0), users.get(p.user_id), live))
+            session.add(play_row(p.user_id, p.speaker_id, room, "guess", points.get(p.user_id, 0), users.get(p.user_id), live, room.last_result.score))
         elif p.user_id in votes:
             session.add(play_row(p.user_id, p.speaker_id, room, "guess_vote", points.get(p.user_id, 0), users.get(p.user_id), None))
     if room.status == "finished":
@@ -184,12 +250,30 @@ async def finish_reveal(session: AsyncSession, rooms: RoomStore, room: Room) -> 
     await session.commit()
 
 
+async def finish_rating(session: AsyncSession, rooms: RoomStore, room: Room) -> None:
+    """Humans vs AI: add up the stars under the room lock, reveal both verdicts and book the turn."""
+    player = room.player(room.active_turn().player_id)
+    key = room.clip_key
+    live = room.pending.liveness.passed if room.pending and room.pending.liveness else None
+    total = crowd_verdict(room, has_clip=room.replay and key is not None)
+    await rooms.save(room)
+    await drop_clips(rooms, room, key)
+    user = (await users_by_id(session, room)).get(player.user_id)
+    session.add(play_row(player.user_id, player.speaker_id, room, "impersonate", total, user, live, room.last_result.score))
+    if room.status == "finished":
+        record_results(session, room)
+    await session.commit()
+
+
+# ---------- endpoints ----------
+
+
 @router.post("", response_model=RoomOut, status_code=status.HTTP_201_CREATED, dependencies=[Depends(rate_limit)])
 async def create_room(body: RoomCreateIn, user: CurrentUser, session: SessionDep, rooms: RoomsDep) -> RoomOut:
     """Start a new game. Share its code (e.g. TIGER-42) so friends can join from their phones."""
     host = await as_player(session, user)
     await leave_other_rooms(rooms, user.id)
-    return out(await rooms.create(host, body.mode, body.rounds, body.speed), user.id)
+    return out(await rooms.create(host, **body.model_dump()), user.id)
 
 
 @router.get("/{code}", response_model=RoomOut)
@@ -223,14 +307,15 @@ async def leave_room(code: str, user: CurrentUser, rooms: RoomsDep) -> RoomOut |
 
 @router.patch("/{code}", response_model=RoomOut)
 async def change_room(code: str, body: RoomCreateIn, user: CurrentUser, rooms: RoomsDep) -> RoomOut:
-    """The host picks the game type, rounds and speed before starting."""
+    """The host picks the game type, rounds and options before starting."""
     async with rooms.lock(code):
         room = await get_or_404(rooms, code)
         if room.host_id != user.id:
             raise HTTPException(status.HTTP_403_FORBIDDEN, "Only the host can change the game.")
         if room.status == "playing":
             raise HTTPException(status.HTTP_409_CONFLICT, "The game is already running.")
-        room.mode, room.rounds, room.speed = body.mode, body.rounds, body.speed
+        for field, value in body.model_dump().items():
+            setattr(room, field, value)
         await rooms.save(room)
     return out(room, user.id)
 
@@ -244,12 +329,10 @@ async def start_room(code: str, user: CurrentUser, rooms: RoomsDep) -> RoomOut:
             raise HTTPException(status.HTTP_403_FORBIDDEN, "Only the host can start the game.")
         if room.status == "playing":
             raise HTTPException(status.HTTP_409_CONFLICT, "The game is already running.")
-        need = 3 if room.mode == "guess" else 2
+        need = min_players(room.mode)
         if len(room.players) < need:
-            raise HTTPException(
-                status.HTTP_409_CONFLICT,
-                f"You need at least {need} players{' for Guess Who' if need == 3 else ''}. Share the code with friends!",
-            )
+            which = {"guess": " for Guess Who", "telephone": " for Broken telephone"}.get(room.mode, "")
+            raise HTTPException(status.HTTP_409_CONFLICT, f"You need at least {need} players{which}. Share the code with friends!")
         start_game(room)
         await rooms.save(room)
     return out(room, user.id)
@@ -265,7 +348,7 @@ async def take_turn(
     rooms: RoomsDep,
     embedder: Annotated[Embedder, Depends(get_embedder)],
     challenges: Annotated[ChallengeStore, Depends(get_challenges)],
-    file: Annotated[UploadFile, File(description="You, saying the digits from GET /challenge.")],
+    file: Annotated[UploadFile, File(description="You, saying the line from GET /challenge?kind=line.")],
     challenge_id: Annotated[str, Form(description="From GET /challenge. Game turns always need the phrase.")],
 ) -> RoomOut:
     """Your turn: send your recording. The server checks the phrase and the voice and scores it."""
@@ -275,56 +358,99 @@ async def take_turn(
         raise HTTPException(status.HTTP_409_CONFLICT, "The game isn't running.")
     if turn.player_id != user.id:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "It's not your turn yet.")
-    if room.mode == "guess" and room.phase != "speak":
-        raise HTTPException(status.HTTP_409_CONFLICT, "You've already recorded. Now the others are guessing!")
+    if room.phase != "speak":
+        raise HTTPException(status.HTTP_409_CONFLICT, "You've already recorded. Now the others are having their say!")
     turn_index, received = room.turn_index, time.time()
     player, target = room.player(turn.player_id), room.player(turn.target_id)
+    target_name = target.username if target else "the last voice"
 
     # The slow part (speech-to-text + voice model) runs without holding the room lock.
     clip, liveness = await live_clip(request, file, challenge_id, embedder, settings, challenges)
     failed = liveness is not None and not liveness.passed
+    voices = dict(
+        (await session.exec(select(Speaker.id, Speaker.embedding).where(Speaker.id.in_([p.speaker_id for p in room.players])))).all()
+    )
+    sims = {} if failed else similarities(clip.vector, room, voices)
+    sounded_like = {name: pct(s) for name, s in sims.items()}
+    own = sims.get(player.username)
 
-    if room.mode == "guess" and not failed:
-        # The AI guesses too: which player in the room does the clip sound most like?
-        voices = dict((await session.exec(select(Speaker.id, Speaker.embedding).where(Speaker.id.in_([p.speaker_id for p in room.players])))).all())
-        scored = [(cosine_similarity(clip.vector, voices[p.speaker_id]), p.username) for p in room.players if p.speaker_id in voices]
-        best = max(scored, default=(0.0, None))
-        ai_guess = best[1] if best[0] >= settings.match_threshold else None
+    # Keep the clip if the game plays it to the others, or for the replay. Never a failed one.
+    key = None
+    if not failed and (room.replay or needs_clip(room)):
+        key = clip_key(room, turn_index + 1)
         await file.seek(0)
-        audio = await file.read()
-        clip_key = f"clip:{room.code}:{room.game_no}:{turn_index}:{secrets.token_hex(4)}"
-        await rooms.store.put(clip_key, base64.b64encode(audio).decode(), CLIP_SECONDS)
+        await put_clip(rooms, key, await file.read(), file.content_type or "audio/webm")
+    content_type = file.content_type or "audio/webm"
+
+    score, drift = None, None
+    if failed:
+        points, message = failed_liveness(player.username)
+    elif room.mode == "guess":
+        # The AI guesses too: which player in the room does the clip sound most like?
+        best = next(iter(sims.items()), (None, 0.0))
+        ai_guess = best[0] if best[1] >= settings.match_threshold else None
+        pending = Pending(liveness=liveness, score=own, sounded_like=sounded_like, ai_guess=ai_guess)
         async with rooms.lock(room.code):
             room = await get_or_404(rooms, code)
             if room.status != "playing" or room.turn_index != turn_index:
-                await rooms.store.delete(clip_key)
+                await rooms.store.delete(key)
                 raise HTTPException(status.HTTP_409_CONFLICT, "The game moved on while you were recording.")
-            open_voting(room, clip_key, file.content_type or "audio/webm", ai_guess, liveness)
+            open_voting(room, key, content_type, pending)
             await rooms.save(room)
         return out(room, user.id)
-
-    if failed:
-        points, message = failed_liveness(player.username)
     elif room.mode == "yourself":
         candidates = await nearest_speakers(session, clip.vector, settings.top_k)
         decision = decide(candidates, settings.match_threshold, settings.min_margin)
         points, message = score_yourself(player.username, player.speaker_id, decision.speaker_id, decision.label, decision.score)
-        await improve_voice(session, settings, player.speaker_id, clip, candidates, "game")
+        score = own
+        await improve_voice(session, settings, player.speaker_id, clip, candidates)
+    elif room.mode == "disguise":
+        candidates = await nearest_speakers(session, clip.vector, settings.top_k)
+        decision = decide(candidates, settings.match_threshold, settings.min_margin)
+        framed = decision.label if decision.is_match and decision.speaker_id != player.speaker_id else None
+        score = own or 0.0
+        points, message = score_disguise(player.username, score, framed)
+    elif room.mode == "telephone":
+        if turn.chain_start:
+            points, message = CHAIN_START_POINTS, f"{player.username} starts a chain. Next: copy that voice! {CHAIN_START_POINTS} points."
+        else:
+            score = cosine_similarity(clip.vector, room.chain_last) if room.chain_last else 0.0
+            points, message = score_copy(player.username, target_name, score)
+            if room.chain_origin:
+                drift = pct(cosine_similarity(clip.vector, room.chain_origin))
+                origin = chain_origin_name(room)
+                if origin and origin != target_name:
+                    message += f" The voice now sounds {drift}% like {origin}, who started it."
     else:
-        target_voice = (await session.exec(select(Speaker.embedding).where(Speaker.id == target.speaker_id))).first()
+        target_voice = voices.get(target.speaker_id) if target else None
         score = cosine_similarity(clip.vector, target_voice) if target_voice is not None else 0.0
-        points, message = score_impersonation(player.username, target.username, score, score >= settings.match_threshold)
+        points, message = score_impersonation(player.username, target_name, score, score >= settings.match_threshold)
 
     async with rooms.lock(room.code):
         room = await get_or_404(rooms, code)
         if room.status != "playing" or room.turn_index != turn_index:
+            await drop_clips(rooms, room, key)
             raise HTTPException(status.HTTP_409_CONFLICT, "The game moved on while you were recording.")
         # The clock stops when the recording arrives, not when the AI has finished listening.
         bonus = speed_bonus(room, points, datetime.fromtimestamp(received, timezone.utc))
-        apply_turn(room, points, message, liveness, bonus)
+        if room.mode == "impersonate" and room.crowd and not failed and voters(room):
+            # Humans vs AI: the others rate it first; the AI's verdict waits for the reveal.
+            pending = Pending(points=points, message=message, liveness=liveness, score=score, bonus=bonus, sounded_like=sounded_like)
+            open_rating(room, key, content_type, pending)
+            await rooms.save(room)
+            return out(room, user.id)
+        old_key = room.clip_key
+        if room.mode == "telephone" and not failed:
+            room.chain_last = clip.vector.tolist()
+            if turn.chain_start:
+                room.chain_origin = room.chain_last
+            room.clip_key, room.clip_type = key, content_type  # the voice the next player copies
+        apply_turn(room, points, message, liveness, bonus, score=score, sounded_like=sounded_like, has_clip=room.replay and key is not None, drift=drift)
         await rooms.save(room)
+    await drop_clips(rooms, room, old_key, key)
 
-    session.add(play_row(user.id, player.speaker_id, room, room.mode, points + bonus, user, liveness.passed if liveness else None))
+    live = liveness.passed if liveness else None
+    session.add(play_row(user.id, player.speaker_id, room, room.mode, room.last_result.points, user, live, score))
     if room.status == "finished":
         record_results(session, room)
     await session.commit()
@@ -333,13 +459,21 @@ async def take_turn(
 
 @router.get("/{code}/clip")
 async def get_clip(code: str, user: CurrentUser, rooms: RoomsDep) -> Response:
-    """Guess Who: the secret speaker's clip, for the players to listen to while they vote."""
+    """The clip to listen to right now: Guess Who's mystery voice, the impression to rate, or the voice to copy."""
     room = await get_or_404(rooms, code)
     member(room, user)
-    raw = await rooms.store.get(room.clip_key) if room.clip_key else None
-    if raw is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "There's no clip to listen to right now.")
-    return Response(base64.b64decode(raw), media_type=room.clip_type, headers={"Cache-Control": "no-store"})
+    return await clip_response(rooms, room.clip_key)
+
+
+@router.get("/{code}/replay/{turn_number}")
+async def get_replay(code: str, turn_number: int, user: CurrentUser, rooms: RoomsDep) -> Response:
+    """Play back a finished turn of this game (when the replay is on). Clips are deleted after an hour."""
+    room = await get_or_404(rooms, code)
+    member(room, user)
+    done = room.history[turn_number - 1] if 1 <= turn_number <= len(room.history) else None
+    if not room.replay or done is None or not done.has_clip:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "There's no recording of that turn.")
+    return await clip_response(rooms, clip_key(room, turn_number))
 
 
 @router.post("/{code}/vote", response_model=RoomOut)
@@ -363,6 +497,25 @@ async def vote(code: str, body: VoteIn, user: CurrentUser, session: SessionDep, 
     return out(room, user.id)
 
 
+@router.post("/{code}/rate", response_model=RoomOut)
+async def rate(code: str, body: RateIn, user: CurrentUser, session: SessionDep, rooms: RoomsDep) -> RoomOut:
+    """Humans vs AI: give the impression 1-5 stars. You can change your mind until everyone has rated."""
+    async with rooms.lock(code):
+        room = await get_or_404(rooms, code)
+        member(room, user)
+        turn = room.active_turn()
+        if turn is None or room.phase != "rate":
+            raise HTTPException(status.HTTP_409_CONFLICT, "There's nothing to rate right now.")
+        if user.id == turn.player_id:
+            raise HTTPException(status.HTTP_409_CONFLICT, "No rating your own impression!")
+        room.votes[user.id] = body.stars
+        if everyone_voted(room):
+            await finish_rating(session, rooms, room)
+        else:
+            await rooms.save(room)
+    return out(room, user.id)
+
+
 @router.post("/{code}/advance", response_model=RoomOut)
 async def advance(code: str, user: CurrentUser, session: SessionDep, rooms: RoomsDep) -> RoomOut:
     """Time's up: any player's screen calls this when the countdown ends. The server checks the clock."""
@@ -372,8 +525,11 @@ async def advance(code: str, user: CurrentUser, session: SessionDep, rooms: Room
         turn = room.active_turn()
         if turn is None or not timed_out(room):
             raise HTTPException(status.HTTP_409_CONFLICT, "Not yet!")
-        if room.mode == "guess" and room.phase == "vote":
+        if room.phase == "vote":
             await finish_reveal(session, rooms, room)
+            return out(room, user.id)
+        if room.phase == "rate":
+            await finish_rating(session, rooms, room)
             return out(room, user.id)
         name = room.player(turn.player_id).username
         apply_turn(room, 0, f"Time's up! {name} ran out of time. No points.", None)

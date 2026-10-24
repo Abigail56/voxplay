@@ -24,7 +24,7 @@ class CandidateOut(BaseModel):
 
 class ChallengeOut(BaseModel):
     challenge_id: str
-    phrase: str  # what the person has to say, e.g. "four seven two nine one six"
+    phrase: str  # what the person has to say, e.g. "four seven two nine one six" or a silly line
     expires_in_seconds: int
 
 
@@ -32,7 +32,7 @@ class LivenessOut(BaseModel):
     passed: bool
     phrase: str  # what they were asked to say
     heard: str  # what speech-to-text heard
-    match: float  # share of the phrase's digits heard in order (0..1)
+    match: float  # share of the phrase's words heard in order (0..1)
 
 
 class IdentifyOut(BaseModel):
@@ -162,13 +162,21 @@ class PlaceOut(BaseModel):
 
 
 class RoomCreateIn(BaseModel):
-    mode: Literal["yourself", "impersonate", "guess"] = "yourself"
+    mode: Literal["yourself", "impersonate", "disguise", "guess", "telephone"] = "yourself"
     rounds: int = Field(default=2, ge=1, le=5)
     speed: bool = False  # 20 seconds a turn, bonus for being quick
+    twists: bool = False  # a silly style for every turn
+    crowd: bool = False  # impersonate: the players rate each impression too (humans vs AI)
+    double_final: bool = False  # the last round counts double
+    replay: bool = True  # keep each turn's clip for an hour, for the replay
 
 
 class VoteIn(BaseModel):
     suspect_id: int  # Guess Who: the player you think spoke
+
+
+class RateIn(BaseModel):
+    stars: int = Field(ge=1, le=5)  # humans vs AI: how good was that impression?
 
 
 class ReactIn(BaseModel):
@@ -335,3 +343,44 @@ class ClipCheckOut(BaseModel):
     snr_db: float
     problems: list[str]  # what to fix, in plain words
 
+
+
+# ---------- solo play (against the built-in voices) ----------
+
+
+class SoloVoice(BaseModel):
+    speaker_id: int
+    name: str  # e.g. "Reader 1272"
+
+
+class SoloOut(BaseModel):
+    voices: list[SoloVoice]
+    rounds: int  # solo turns you've played
+    right: int  # mystery voices you picked out
+    points: int
+
+
+class SoloRoundOut(BaseModel):
+    round_id: str
+    options: list[SoloVoice]  # one of them is the mystery voice
+    expires_in_seconds: int
+
+
+class SoloGuessIn(BaseModel):
+    speaker_id: int
+
+
+class SoloGuessOut(BaseModel):
+    right: bool
+    answer: SoloVoice
+    ai_guess: SoloVoice | None  # the AI's pick, from the same introductions you heard
+    points: int
+    message: str
+
+
+class SoloTurnOut(BaseModel):
+    points: int
+    message: str
+    score: float | None  # the voice score behind the points
+    liveness: LivenessOut | None
+    sounded_like: dict[str, int]  # the closest voices the game knows (0-100), best first

@@ -1,18 +1,35 @@
 # Who's Talking? A voice game
 
 An online multiplayer game where an AI has to work out who's talking. Sign up, record your voice once,
-then join a game with a code from your own phone. On your turn you read out 6 secret digits, and the
-AI scores you:
+then join a game with a code from your own phone. On your turn you read out a silly secret line ("the sleepy
+penguin stole my shiny pizzas"), and the AI scores you:
 
 - **🎯 Be yourself:** the AI must recognise you. Points = how sure it is (0–100); 0 if it thinks you're someone else.
 - **🎭 Impersonate:** "Bayo, sound like Ada!" Points = how much you sound like Ada, +50 if you fool the AI.
+  With **⭐ Humans vs AI** on, the other players hear the impression and rate it 1–5 stars *before* the machine's
+  verdict is revealed; the stars score too (10 points a star), and the result shows both side by side.
+- **🥸 Disguise:** the opposite of Be yourself. Points = how much you *don't* sound like you, +25 if the AI blames
+  another player.
 - **🕵️ Guess Who** (3+ players): a secretly chosen player speaks, everyone listens to the clip and votes on who it
   was. +50 for a right guess, +25 to the speaker for each player fooled. The AI guesses too.
-- **⚡ Speed rounds** (any mode): 20 seconds a turn, up to +20 for being quick, 0 if time runs out.
+- **📞 Broken telephone** (3+ players): the first player puts on any voice; each next player hears the clip
+  before theirs and copies it. Points = how close the copy is, and every result shows how far the voice has
+  drifted from where the chain started.
+
+Options for any game: **⚡ speed rounds** (20 seconds a turn, up to +20 for being quick, 0 if time runs out),
+**🌀 twists** (a style for every turn: whisper it, sing it, like a pirate…; x1.5 in Be yourself), a
+**🔥 double final** round, and the **🔁 replay**: each turn's clip is kept for an hour, so the game can end with
+**highlights** ("Worst impression", "Best disguise", "Humans vs machine", "Lost in the line"…) you can play back.
+Every result shows **who the machine thought you sounded like** ("ada 82%, bayo 31%"), and a live level meter
+shows the microphone is hearing you while you record.
+
+**🎧 Solo play** for when nobody's online: guess which built-in voice (9 public LibriSpeech readers) is talking
+(the AI guesses from the same clips you heard), or impersonate one, or practise your disguise.
 
 Plus: a **📅 daily challenge** (the same tongue-twister for everyone each day, 3 tries, best counts, 🔥 streaks),
-**🏅 10 badges** with progress, **⚔️ country vs country** and the **🏆 Weekly Cup** (this week's Top 8 and last
-week's champion), **emoji reactions** that float across everyone's screen, and a **📸 shareable result card**.
+**🏅 13 badges** with progress, **⚔️ country vs country** and the **🏆 Weekly Cup** (this week's Top 8 and last
+week's champion; solo play doesn't count there), **emoji reactions** that float across everyone's screen, and a
+**📸 shareable result card**.
 
 Everyone in the game sees each result live, the browser reads it out loud, and the winner gets confetti.
 At sign-up players give their **country and town or area** (or tap "📍 Use my current location"), and the
@@ -21,8 +38,8 @@ leaderboard with levels, and a live feed of turns. Hosts **invite** friends with
 or copy) that drops them straight into the game. An **admin page** shows everything: every player and
 where they play, every game, every turn and every cheat attempt.
 
-**No faking:** the digits are new every turn, valid for 2 minutes and good for one try, and Whisper checks
-they were really said, so a recording of someone can't be played back. **The server works out every
+**No faking:** the line is new every turn, valid for 2 minutes and good for one try, and Whisper checks
+it was really said, so a recording of someone can't be played back. **The server works out every
 score**; the browser only sends the recording.
 
 **👯 Voice twins** on the game page puts every player's voice on a map and tells you who sounds most like you
@@ -48,12 +65,14 @@ Tech:
    salted, deliberately slow hash), never stored. Signing in returns a JWT that the browser sends as
    `Authorization: Bearer …`. Then `POST /me/voice` enrolls your voice as an ordinary speaker named after you.
 2. **Rooms** ([backend/app/rooms.py](backend/app/rooms.py), [routers/rooms.py](backend/app/routers/rooms.py)).
-   A room is JSON in Redis (deleted 6 hours after its last change): code, host, mode, players, the turn plan
-   and the last result. Changes happen under a Redis lock, so two phones can't both take the same turn.
-3. **A turn.** The player's phone gets fresh digits (`GET /challenge`), records, and sends the clip to
+   A room is JSON in Redis (deleted 6 hours after its last change): code, host, mode and options, players, the
+   turn plan (with each turn's twist), this game's results and, at the end, its highlights. Changes happen under a Redis lock, so two phones can't both take the same turn.
+3. **A turn.** The player's phone gets a fresh line (`GET /challenge?kind=line`), records, and sends the clip to
    `POST /rooms/{code}/turn`. The server checks it's really their turn, runs the liveness check and the voice
    model *without* holding the lock (it takes ~2 s), then books the points under the lock, but only if the game
    hasn't moved on in the meantime. Each turn is also saved in PostgreSQL (`game_plays`) for the leaderboard.
+   Guess Who and Humans vs AI turns go through one more phase first (`vote` / `rate`), with the clip in Redis for
+   the others to hear, and the points are booked at the reveal.
 4. **Live updates** (`/ws`, [routers/game.py](backend/app/routers/game.py)). Every change is published on Redis
    pub/sub (`room:<code>` and `dashboard`). Each WebSocket listens to those channels and tells its browser
    *what* changed; the browser then fetches the new state over HTTP. Because the messages go through Redis,
@@ -91,9 +110,10 @@ cities on the map.
 3. **Enroll** (`POST /speakers`). Each sample's embedding is stored, and their average
    (the **centroid**) is stored on the speaker row in a pgvector `vector(192)` column.
 4. **Liveness** (`GET /challenge`, [backend/app/liveness.py](backend/app/liveness.py)). The server hands out
-   6 random digits ("four seven two nine one six"), stored in Redis for 2 minutes and good for **one** try.
-   Whisper transcribes the clip, and at least 5 of the 6 digits must be heard, in order. Otherwise
-   the answer is "unknown", with no names or scores.
+   6 random digits ("four seven two nine one six") for `/identify`, or a random silly line for game turns,
+   stored in Redis for 2 minutes and good for **one** try. Whisper transcribes the clip, and at least 5 of the 6
+   digits (or 5 of the line's 7 words) must be heard, in order. Otherwise the answer is "unknown", with no
+   names or scores.
 5. **Identify** (`POST /identify`). PostgreSQL finds the nearest centroids using pgvector's
    cosine-distance operator `<=>` (with an HNSW index). The pure function `decide()` in
    [backend/app/matching.py](backend/app/matching.py) then returns the best speaker
@@ -159,12 +179,15 @@ docker compose up -d api      # liveness back on
 docker compose run --rm api pytest -v
 ```
 
-There are 102 tests:
+There are 117 tests:
 - `test_matching.py`: cosine similarity, centroids, ranking, threshold/"unknown" decisions, margin rule, EER
 - `test_audio.py`: resampling, silence trimming, rejecting garbage and too-short audio
 - `test_voice_map.py`: PCA keeps similar voices close, voice twins, consistency
 - `test_liveness.py`: random digit phrases, the ways Whisper writes digits, wrong order and old recordings fail,
   phrases expire and work once (in memory and in the real Redis)
+- `test_modes.py`: silly lines and near-miss words, disguise, broken telephone (chains, drift, a player leaving
+  mid-chain), humans vs AI ratings, twists and the double final, the replay (and clips deleted straight away when
+  it's off), highlights, solo play (guess the voice, impersonate, disguise, kept out of the weekly cup)
 - `test_api.py`, `test_demo.py`: full HTTP flows against a real pgvector database (`voiceid_test`): enroll → identify → delete,
   liveness pass / replay fails / phrase reused, voice map,
   demo limits.
@@ -201,21 +224,27 @@ docker compose down -v     # stop AND delete the database + model cache volumes
 | `PUT` | `/me/location` | JSON `share`, optional `country` + `place` → move your pin, or show / hide it |
 | `GET` | `/places/search?q=&country=` | Check a place before signing up ("You'll appear at Yaba, Lagos") |
 | `GET` | `/places/here?lat=&lon=` | "Use my current location": the neighbourhood a GPS point is in |
-| `POST` | `/rooms` | JSON `mode`, `rounds` → a new game with a code like `TIGER-42` |
-| `GET` / `PATCH` | `/rooms/{code}` | A game's state / the host changes mode and rounds |
+| `POST` | `/rooms` | JSON `mode`, `rounds`, `speed`, `twists`, `crowd`, `double_final`, `replay` → a new game with a code like `TIGER-42` |
+| `GET` / `PATCH` | `/rooms/{code}` | A game's state / the host changes the mode and options |
 | `POST` | `/rooms/{code}/join`, `/leave`, `/start` | Join, leave (the host role passes on), start or rematch (host) |
 | `POST` | `/rooms/{code}/turn` | Form `file`, `challenge_id` → your turn, scored by the server |
 | `GET` | `/dashboard` | Players (online, city if shared, game, points), open games, latest turns |
 | `GET` | `/voice-twins` | Every player's voice on a 2D map, their voice twin, and which dot is you |
-| `POST` | `/rooms/{code}/vote`, `/advance`, `/react` | Guess Who vote; move on when time's up (the server checks the clock); send an emoji |
-| `GET` | `/rooms/{code}/clip` | Guess Who: the secret speaker's clip (players in the game only, deleted at the reveal) |
+| `POST` | `/rooms/{code}/vote`, `/rate`, `/advance`, `/react` | Guess Who vote; Humans vs AI stars; move on when time's up (the server checks the clock); send an emoji |
+| `GET` | `/rooms/{code}/clip` | The clip to hear right now: Guess Who's mystery voice, the impression to rate, or the voice to copy (players in the game only) |
+| `GET` | `/rooms/{code}/replay/{turn}` | A finished turn's clip, when the replay is on (kept for an hour) |
+| `GET` | `/solo` | The built-in voices and your solo record |
+| `GET` | `/solo/voices/{id}/intro` | A built-in voice introducing itself (public LibriSpeech audio) |
+| `POST` / `GET` | `/solo/guess`, `/solo/guess/{round}/clip` | A new "guess the voice" round / its mystery clip |
+| `POST` | `/solo/guess/{round}` | JSON `speaker_id` → right or wrong, and the AI's pick |
+| `POST` | `/solo/turn` | Form `mode` (`impersonate` / `disguise`), `speaker_id`, `file`, `challenge_id` → scored like a game turn |
 | `GET` / `POST` | `/daily` | Today's tongue-twister, your tries, streak and leaderboard / send a try |
 | `GET` | `/leaderboards` | This week: country vs country, the Weekly Cup's Top 8, last week's champion |
 | `WS` | `/ws?token=…&room=…` | Live "something changed" messages for the dashboard and a room |
 | `GET` | `/admin/overview`, `/admin/players`, `/admin/rooms`, `/admin/plays?cheats_only=` | Admins only: everything |
 | `POST` / `DELETE` | `/admin/rooms/{code}/end`, `/admin/players/{id}` | Admins only: end a game, delete a player |
 | | **Voice lab** | |
-| `GET` | `/challenge` | A fresh 6-digit phrase to say (valid 2 minutes, one use) |
+| `GET` | `/challenge?kind=digits\|line` | A fresh phrase to say: 6 digits (default) or a silly line (valid 2 minutes, one use) |
 | `POST` | `/identify` | Form fields `file`, `challenge_id` → best match or `"unknown"` |
 | `GET` | `/health` | Model loaded? threshold? number of speakers |
 
@@ -314,8 +343,18 @@ a person) read 30 phrases of each kind. Whisper `base.en` heard **27/30 digit ph
 but is about 3 times slower (4 s per clip on a CPU), so it's an option (`ASR_MODEL=small.en`), not the default.
 Unrelated sentences never matched more than 40 % of any phrase, far below the 80 % (5 of 6 digits) needed.
 
+**Game turns read silly lines instead** ("the sleepy penguin stole my shiny pizzas"), which are more fun to say
+and, at about 2 million combinations handed out once for 2 minutes, just as impossible to have recorded in advance.
+Words are harder for Whisper than digits, so the lines were tuned with the same robot-voice test
+(`espeak-ng` → Whisper `base.en`). The first version passed only 19/30 lines: most misses were near-hits
+("umbrella" for "umbrellas", "rusted" for "rusty") or a mangled number word ("nine" heard as "I'm"). So longer
+words now count when they're off by a plural or a letter or two (digits stay exact), the number was dropped,
+and short, easily misheard words ("goat" → "got", "brave" → "brain") were swapped for longer ones. Result:
+**60/60 lines passed** at the 70 % needed (5 of 7 words), against 26/30 digit phrases in the same run, while
+unrelated speech still matched at most 29 % of a line.
+
 **It does not stop a live voice clone.** Someone with an AI clone of Ada's voice could make it say the
-digits within the 2 minutes. Catching that needs an anti-spoofing model trained to tell real from
+phrase within the 2 minutes. Catching that needs an anti-spoofing model trained to tell real from
 synthetic speech (for example AASIST, trained on the ASVspoof challenge data). That's the next step
 if this is ever used for anything that matters.
 
@@ -329,10 +368,12 @@ and Illinois' BIPA, it needs explicit consent and careful handling. This project
 - **Consent is required.** `POST /speakers` refuses to enroll anyone unless `consent=true`, and
   the UI has a consent checkbox. The time of consent is stored (`consent_given_at`).
 - **Enroll only people who agree**, and tell them what it's for and how long it's kept.
-- **Raw audio is never stored**, with one short exception. Only the 192-number embeddings are kept, and uploads
-  are processed in memory or in a temp file that is deleted right away. The exception is Guess Who, where the
-  other players have to *hear* the clip: it's kept in Redis until the round's reveal (15 minutes at most), only
-  players in that game can fetch it, and it's then deleted.
+- **Raw audio isn't kept for long.** Only the 192-number embeddings are stored in the database, and uploads
+  are processed in memory or in a temp file that is deleted right away. Game turns are the exception, and only in
+  Redis: when the other players have to *hear* a clip (Guess Who, Humans vs AI, the voice to copy in Broken
+  telephone) it's kept until it has been heard, and with the **replay** on (the host's choice, shown to everyone in
+  the waiting room) each turn's clip is kept for an hour. Only players in that game can fetch them, and clips
+  are always gone after an hour at most.
 - **Right to be forgotten.** `DELETE /speakers/{id}` (the "Delete" button) removes the speaker
   and all of their sample embeddings (`ON DELETE CASCADE`).
 - **Treat embeddings as sensitive.** Even without the audio, they identify a person. In production,
@@ -375,10 +416,10 @@ voice-id/
 │   │   ├── embedding.py        # ECAPA-TDNN wrapper (SpeechBrain), batched embedding
 │   │   ├── matching.py         # cosine similarity, centroids, decide() → name / unknown
 │   │   ├── voice_map.py        # PCA to 2D, voice twins, consistency
-│   │   ├── liveness.py         # digit phrases, Whisper wrapper, phrase matching, one-time challenges
+│   │   ├── liveness.py         # digit phrases and silly lines, Whisper wrapper, phrase matching, one-time challenges
 │   │   ├── store.py            # Redis (or in-memory): phrases, rate limits, rooms, locks, pub/sub
 │   │   ├── auth.py             # scrypt password hashes, JWTs, "who is signed in"
-│   │   ├── rooms.py            # game rooms: turn plan, server-side scoring, Redis persistence
+│   │   ├── rooms.py            # game rooms: modes, turn plan, twists, server-side scoring, highlights, Redis persistence
 │   │   ├── geocode.py          # place names ↔ map points (OpenStreetMap Nominatim, cached)
 │   │   ├── services.py         # upload → preprocess → embed / transcribe (in worker threads)
 │   │   ├── db.py, models.py    # SQLModel tables (speakers, samples, users, game_plays) + pgvector, async sessions
@@ -387,7 +428,8 @@ voice-id/
 │   │       ├── speakers.py     # enroll, add samples, list, get, delete, voice map
 │   │       ├── identify.py     # GET /challenge, liveness check, identify (pgvector + decide())
 │   │       ├── accounts.py     # sign up / in, my voice, my location, delete me
-│   │       ├── rooms.py        # create / join / start / turn
+│   │       ├── rooms.py        # create / join / start / turn / vote / rate / clips and the replay
+│   │       ├── solo.py         # solo play against the built-in voices
 │   │       ├── game.py         # dashboard + the /ws live-updates WebSocket
 │   │       └── admin.py        # the admin page's data and actions
 │   ├── scripts/
@@ -400,15 +442,16 @@ voice-id/
     ├── app/                    # layout.tsx, page.tsx (the game), admin/ (admin page), globals.css
     ├── components/
     │   ├── ClipInput.tsx       # record (MediaRecorder) or upload audio
-    │   ├── game/               # Welcome, VoiceSetup, PlayerCard, Lobby, RoomPanel, World (map, leaderboard,
-    │   │                       #   feed), GameHome, Avatar, PlayersMapLeaflet, LocationPicker, Invite, VoiceTwins
+    │   ├── game/               # Welcome, VoiceSetup, PlayerCard, Lobby, GameOptions, RoomPanel, Solo, World (map,
+    │   │                       #   leaderboard, feed), GameHome, Avatar, PlayButton, PlayersMapLeaflet, LocationPicker,
+    │   │                       #   Invite, VoiceTwins
     │   ├── admin/AdminDashboard.tsx # the admin page
-    │   └── Phrase.tsx          # the digits to read out + countdown (lib/useChallenge.ts fetches them)
+    │   └── Phrase.tsx          # the line (or digits) to read out + countdown (lib/useChallenge.ts fetches them)
     ├── lib/api.ts              # typed fetch wrapper for the backend
     ├── lib/game.ts             # levels, avatars, sound effects, spoken announcer
     ├── lib/countries.ts        # country list, names and flags (from the browser's Intl API)
     ├── lib/useLive.ts          # WebSocket live updates with reconnect + ping
-    ├── lib/useChallenge.ts     # fetches the digits to read out and counts down
+    ├── lib/useChallenge.ts     # fetches the line to read out and counts down
     └── store/                  # Zustand: signed-in player (useAuthStore)
 ```
 
@@ -421,6 +464,7 @@ voice-id/
 | `REQUIRE_LIVENESS` | `true` | `/identify` needs a phrase from `/challenge` |
 | `CHALLENGE_TTL_SECONDS` | `120` | How long a phrase stays valid |
 | `LIVENESS_MIN_MATCH` | `0.8` | Share of the digits that must be heard, in order |
+| `LINE_MIN_MATCH` | `0.7` | The same for game turns' silly lines (5 of 7 words) |
 | `ASR_MODEL` | `base.en` | faster-whisper model (`small.en` is more accurate, ~3x slower) |
 | `JWT_SECRET` | *(random per start)* | Signs sign-in tokens. **Set a long random value in production**, or everyone is signed out on every restart |
 | `TOKEN_DAYS` | `7` | How long a sign-in lasts |
@@ -438,7 +482,7 @@ voice-id/
 | `MAX_ACTIVE_ENROLLMENTS` | `0` | Most visitor enrollments kept at once (0 = no limit) |
 | `RATE_LIMIT_PER_MINUTE` | `0` | Enroll/identify requests per visitor IP per minute (0 = off) |
 | `TRUST_PROXY_HEADERS` | `false` | Read the visitor IP from `X-Forwarded-For` (only behind a proxy) |
-| `SEED_SAMPLE_VOICES` | `false` | Enroll the LibriSpeech readers in `backend/sample_voices/` on startup |
+| `SEED_SAMPLE_VOICES` | `false` (`true` in docker compose) | Enroll the LibriSpeech readers in `backend/sample_voices/` on startup (solo play needs them) |
 | `NEXT_PUBLIC_API_URL` | `http://localhost:8010` | Frontend → API URL (build arg) |
 
 ## Public demo and deployment
@@ -446,8 +490,8 @@ voice-id/
 For a public demo, turn on the settings above. They're already on in the Hugging Face Space image. The demo
 then works like this:
 
-- **Sample voices.** Three LibriSpeech readers (`backend/sample_voices/`, CC BY 4.0) are enrolled at startup, so
-  there is always someone to match. They can't be deleted or changed (`403`).
+- **Sample voices.** Nine LibriSpeech readers (`backend/sample_voices/`, CC BY 4.0) are enrolled at startup, so
+  there is always someone to match and to play solo against. They can't be deleted or changed (`403`).
 - **Visitors' enrollments expire.** Each gets `expires_at`. Expired speakers disappear from every endpoint at once,
   and a background job deletes them for good every 5 minutes (`app/demo.py`).
 - **Abuse limits.** Per-IP rate limit (`429`) and a cap on active enrollments (`503 demo is full`).

@@ -35,6 +35,7 @@ async def init_db(engine: AsyncEngine) -> None:
         await conn.execute(text("ALTER TABLE users ALTER COLUMN share_location SET DEFAULT true"))
         await conn.execute(text("ALTER TABLE game_plays ADD COLUMN IF NOT EXISTS live_passed BOOLEAN"))
         await conn.execute(text("ALTER TABLE voice_samples ADD COLUMN IF NOT EXISTS source VARCHAR(10) NOT NULL DEFAULT 'enroll'"))
+        await conn.execute(text("ALTER TABLE game_plays ADD COLUMN IF NOT EXISTS score DOUBLE PRECISION"))
 
 
 async def get_session(request: Request) -> AsyncIterator[AsyncSession]:

@@ -19,6 +19,9 @@ class Stats:
     daily_days: int = 0  # days the daily challenge was played
     best_streak: int = 0
     countries_met: int = 0  # countries of everyone you've played a game with (you included)
+    best_disguise: int = 0  # best disguise turn: 100 - how much you still sounded like you
+    telephone_games: int = 0  # Broken telephone games played
+    solo_right: int = 0  # built-in voices guessed right in solo play
 
 
 @dataclass(frozen=True)
@@ -44,6 +47,9 @@ BADGES = (
     ("on_fire", "🔥", "On Fire", "Play the daily challenge 3 days in a row", "best_streak", 3),
     ("devotee", "📅", "Daily Devotee", "Play the daily challenge on 7 days", "daily_days", 7),
     ("globetrotter", "🌍", "Globetrotter", "Play games with people from 3 countries", "countries_met", 3),
+    ("invisible", "🥸", "Invisible", "Score 80 or more in a disguise", "best_disguise", 80),
+    ("switchboard", "📞", "Switchboard", "Play 3 games of Broken telephone", "telephone_games", 3),
+    ("good_ear", "🎧", "Good Ear", "Pick out 10 mystery voices in solo play", "solo_right", 10),
 )
 
 

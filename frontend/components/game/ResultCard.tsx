@@ -5,12 +5,13 @@ import { useEffect, useRef, useState } from "react";
 import type { Me, Room } from "@/lib/api";
 import { avatarSlot } from "@/lib/game";
 
+import { modeName } from "./ModePicker";
+
 const W = 1080;
 const H = 1080;
 // The avatar colours (the same palette as the --series-* tokens), for drawing on a canvas.
 const COLORS = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#6250d6", "#e34948"];
 
-const MODE = { yourself: "Be yourself", impersonate: "Impersonate", guess: "Guess Who" };
 const PAPER = "#f3efe6";
 const INK = "#1f1b16";
 const MUTED = "#6e665a";
@@ -33,7 +34,7 @@ function draw(canvas: HTMLCanvasElement, room: Room, me: Me) {
   ctx.fillText("Who's Talking?", 100, 150);
   ctx.fillStyle = MUTED;
   ctx.font = `32px ${SANS}`;
-  ctx.fillText(`${MODE[room.mode]}${room.speed ? " · speed round" : ""} · game ${room.code}`, 100, 205);
+  ctx.fillText(`${modeName(room.mode)}${room.speed ? " · speed round" : ""} · game ${room.code}`, 100, 205);
 
   const board = [...room.players].sort((a, b) => b.points - a.points);
   const winner = board[0];

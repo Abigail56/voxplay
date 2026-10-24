@@ -2,16 +2,15 @@
 
 import { useState } from "react";
 
-import { api, type Dashboard, type GameMode, type Room } from "@/lib/api";
+import { api, type Dashboard, type Room, type RoomOptions } from "@/lib/api";
 
-import { MODES, ModePicker } from "./ModePicker";
+import { DEFAULT_OPTIONS, GameOptions } from "./GameOptions";
+import { modeName } from "./ModePicker";
 
 /** Not in a game yet: start one, join one with a code, or pick an open game. */
 export function Lobby({ dashboard, onEnter }: { dashboard: Dashboard | null; onEnter: (room: Room) => void }) {
   const [code, setCode] = useState("");
-  const [mode, setMode] = useState<GameMode>("yourself");
-  const [rounds, setRounds] = useState(2);
-  const [speed, setSpeed] = useState(false);
+  const [options, setOptions] = useState<RoomOptions>(DEFAULT_OPTIONS);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const open = dashboard?.rooms.filter((r) => r.status === "lobby") ?? [];
@@ -53,23 +52,10 @@ export function Lobby({ dashboard, onEnter }: { dashboard: Dashboard | null; onE
       </form>
 
       <div className="or">or start your own</div>
-      <ModePicker value={mode} onChange={setMode} disabled={busy} />
-      <div className="create">
-        <label className="field">
-          Rounds
-          <select value={rounds} onChange={(e) => setRounds(Number(e.target.value))}>
-            {[1, 2, 3, 5].map((n) => (
-              <option key={n}>{n}</option>
-            ))}
-          </select>
-        </label>
-        <label className="consent">
-          <input type="checkbox" checked={speed} onChange={(e) => setSpeed(e.target.checked)} />Speed round
-        </label>
-        <button className="btn primary big" disabled={busy} onClick={() => run(() => api.createRoom(mode, rounds, speed))}>
-          Create game
-        </button>
-      </div>
+      <GameOptions value={options} onChange={setOptions} disabled={busy} />
+      <button className="btn primary big" disabled={busy} onClick={() => run(() => api.createRoom(options))}>
+        Create game
+      </button>
       {error && <p className="error">{error}</p>}
 
       {open.length > 0 && (
@@ -82,7 +68,7 @@ export function Lobby({ dashboard, onEnter }: { dashboard: Dashboard | null; onE
                   <strong className="code">{r.code}</strong>
                   <span className="hint">
                     {" "}
-                    · {r.host}&apos;s game · {MODES.find((m) => m.id === r.mode)?.name} ·{" "}
+                    · {r.host}&apos;s game · {modeName(r.mode)} ·{" "}
                     {r.players.length} waiting
                   </span>
                 </div>

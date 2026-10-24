@@ -60,7 +60,8 @@ async def test_rate_limiter_zero_means_off():
 
 def make_client(**overrides):
     # redis_url="": never share rate-limit counters with a running API through the real Redis.
-    settings = Settings(database_url=TEST_DB, match_threshold=0.5, require_liveness=False, redis_url="", **overrides)
+    base = {"require_liveness": False, "redis_url": "", "seed_sample_voices": False}
+    settings = Settings(database_url=TEST_DB, match_threshold=0.5, **{**base, **overrides})
     return create_app(settings, embedder=FakeEmbedder(), transcriber=FakeTranscriber(), geocoder=FakeGeocoder())
 
 

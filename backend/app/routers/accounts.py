@@ -77,7 +77,7 @@ async def me_out(session: AsyncSession, user: User, settings: Settings) -> MeOut
     points, turns = (
         await session.exec(select(func.coalesce(func.sum(GamePlay.points), 0), func.count()).where(GamePlay.user_id == user.id))
     ).one()
-    stats = await player_stats(session, user.id)
+    stats = await player_stats(session, user.id, settings.match_threshold)
     return MeOut(
         id=user.id,
         username=user.username,
@@ -97,23 +97,31 @@ async def me_out(session: AsyncSession, user: User, settings: Settings) -> MeOut
     )
 
 
-async def player_stats(session: AsyncSession, user_id: int) -> Stats:
+async def player_stats(session: AsyncSession, user_id: int, threshold: float) -> Stats:
     """Everything the badges need, from the turns, results and daily tries."""
     mine = GamePlay.user_id == user_id
-    turns, best, fooled, right = (
+    # Turns from before voice scores were kept: the points tell the story instead.
+    voice_pct = func.coalesce(func.round(GamePlay.score * 100), GamePlay.points)
+    fooled_ai = (GamePlay.score >= threshold) | (GamePlay.score.is_(None) & (GamePlay.points >= IMPERSONATION_BONUS))
+    turns, best, fooled, right, disguise, solo_right = (
         await session.exec(
             select(
                 func.count().filter(GamePlay.mode != "guess_vote"),
-                func.coalesce(func.max(GamePlay.points).filter(GamePlay.mode == "yourself"), 0),
-                func.count().filter(GamePlay.mode == "impersonate", GamePlay.points >= IMPERSONATION_BONUS),
+                func.coalesce(func.max(voice_pct).filter(GamePlay.mode == "yourself"), 0),
+                func.count().filter(GamePlay.mode.in_(["impersonate", "solo_impersonate"]), fooled_ai),
                 func.count().filter(GamePlay.mode == "guess_vote", GamePlay.points > 0),
+                func.coalesce(func.max(100 - func.round(GamePlay.score * 100)).filter(GamePlay.mode.in_(["disguise", "solo_disguise"])), 0),
+                func.count().filter(GamePlay.mode == "solo_guess", GamePlay.points > 0),
             ).where(mine)
         )
     ).one()
-    wins, speed_wins = (
+    wins, speed_wins, telephone = (
         await session.exec(
-            select(func.count().filter(GameResult.rank == 1), func.count().filter(GameResult.rank == 1, GameResult.speed))
-            .where(GameResult.user_id == user_id)
+            select(
+                func.count().filter(GameResult.rank == 1),
+                func.count().filter(GameResult.rank == 1, GameResult.speed),
+                func.count().filter(GameResult.mode == "telephone"),
+            ).where(GameResult.user_id == user_id)
         )
     ).one()
     days = (await session.exec(select(DailyAttempt.day).where(DailyAttempt.user_id == user_id).distinct())).all()
@@ -137,6 +145,9 @@ async def player_stats(session: AsyncSession, user_id: int) -> Stats:
         daily_days=len(days),
         best_streak=daily.best_streak(days),
         countries_met=int(countries or 0),
+        best_disguise=int(disguise),
+        telephone_games=int(telephone),
+        solo_right=int(solo_right),
     )
 
 

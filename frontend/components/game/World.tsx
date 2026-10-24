@@ -38,6 +38,15 @@ function ago(iso: string): string {
 }
 
 /** Everyone who plays: the map, the all-time leaderboard and the live feed. */
+const FEED_MODE: Record<string, string> = {
+  impersonate: " impersonating",
+  disguise: " in disguise",
+  telephone: " on the telephone",
+  solo_guess: " guessing solo",
+  solo_impersonate: " impersonating solo",
+  solo_disguise: " in disguise, solo",
+};
+
 export function World({ dashboard }: { dashboard: Dashboard }) {
   const places = useMemo(() => toPlaces(dashboard), [dashboard]);
   const ranked = useMemo(
@@ -116,7 +125,7 @@ export function World({ dashboard }: { dashboard: Dashboard }) {
                   <Avatar name={p.username} size={28} />
                   <span>
                     <strong>{p.username}</strong> scored <strong>{p.points}</strong>
-                    {p.mode === "impersonate" ? " impersonating" : ""}
+                    {FEED_MODE[p.mode] ?? ""}
                     {p.room_code && <span className="hint"> in {p.room_code}</span>}
                   </span>
                   <span className="hint">{ago(p.created_at)}</span>

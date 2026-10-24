@@ -2,8 +2,9 @@
 
 A voiceprint alone can't tell a live person from a recording of them: play
 Ada's voice note from a phone and the speaker model happily says "Ada". So
-before identifying, the server hands out a random phrase of digits such as
-"four seven two nine one six". The clip only counts if
+before identifying, the server hands out a random phrase: digits such as
+"four seven two nine one six" for /identify, or a silly line such as "the
+sleepy penguin stole my shiny pizzas" for game turns. The clip only counts if
 
 1. speech-to-text (Whisper) hears that phrase in it, and
 2. the challenge is fresh (valid for a short time) and used only once.
@@ -22,7 +23,8 @@ import re
 import secrets
 import threading
 from dataclasses import dataclass
-from typing import Protocol
+from difflib import SequenceMatcher
+from typing import Literal, Protocol
 
 import numpy as np
 
@@ -71,6 +73,39 @@ class WhisperTranscriber:
             return " ".join(s.text.strip() for s in segments).strip()
 
 
+# Game turns read a silly line instead: more fun to say, and just as impossible to
+# have recorded in advance (about 2 million lines). Mostly 2-3 syllable words: in tests
+# with a robot voice, Whisper misheard short ones ("goat" -> "got", "brave" -> "brain")
+# and number words ("nine" -> "I'm") far more often.
+ADJECTIVES = (
+    "purple", "sleepy", "angry", "hungry", "fancy", "grumpy", "happy", "noisy", "shiny", "crazy",
+    "silly", "golden", "frozen", "dancing", "famous", "magic", "lucky", "smelly", "wobbly", "sparkly",
+)
+CHARACTERS = (
+    "penguin", "pirate", "robot", "dragon", "teacher", "monkey", "chicken", "wizard", "giraffe", "cowboy",
+    "unicorn", "pumpkin", "grandma", "kangaroo", "gorilla", "octopus", "princess", "vampire", "farmer", "landlord",
+)
+VERBS = (
+    "stole", "painted", "hugged", "licked", "kicked", "washed", "borrowed", "cooked", "tickled", "buried",
+    "juggled", "swallowed", "delivered", "decorated", "cuddled",
+)
+THINGS = (
+    "pizzas", "slippers", "trumpets", "wallets", "tomatoes", "sausages", "guitars", "pancakes", "cupcakes", "phones",
+    "balloons", "footballs", "pillows", "carpets", "motorbikes", "bananas", "noodles", "bicycles", "umbrellas", "laptops",
+)
+
+
+def make_line() -> str:
+    """A random silly sentence, e.g. 'the sleepy penguin stole my shiny pizzas'."""
+    pick = secrets.choice
+    return f"the {pick(ADJECTIVES)} {pick(CHARACTERS)} {pick(VERBS)} my {pick(ADJECTIVES)} {pick(THINGS)}"
+
+
+def is_line(phrase: str) -> bool:
+    """A silly line rather than digits (lines are checked a little more leniently)."""
+    return not all(w in DIGITS for w in phrase.split())
+
+
 def make_phrase(length: int = 6) -> str:
     """Random digits written as words, e.g. 'four seven two nine one six'.
 
@@ -85,6 +120,16 @@ def normalise(text: str) -> list[str]:
     for token in re.findall(r"[a-z]+|\d", text.lower()):
         tokens.append(SPELLINGS.get(token, token))
     return tokens
+
+
+def same_word(want: str, got: str) -> bool:
+    """Exact for digits and short words; longer words may be off by a plural or a letter or two
+    ("umbrella" for "umbrellas", "rusted" for "rusty"), which is how Whisper usually slips."""
+    if want == got:
+        return True
+    if len(want) < 5 or len(got) < 4 or want in DIGITS or got in DIGITS:
+        return False
+    return want.rstrip("s") == got.rstrip("s") or SequenceMatcher(None, want, got).ratio() >= 0.7
 
 
 def phrase_match(expected: str, heard: str) -> float:
@@ -102,7 +147,7 @@ def phrase_match(expected: str, heard: str) -> float:
     for w in want:
         cur = [0]
         for j, g in enumerate(got):
-            cur.append(prev[j] + 1 if w == g else max(prev[j + 1], cur[j]))
+            cur.append(prev[j] + 1 if same_word(w, g) else max(prev[j + 1], cur[j]))
         prev = cur
     return prev[-1] / len(want)
 
@@ -126,8 +171,8 @@ class ChallengeStore:
         self.store = store
         self.ttl = ttl_seconds
 
-    async def issue(self) -> Challenge:
-        challenge = Challenge(secrets.token_urlsafe(16), make_phrase(), self.ttl)
+    async def issue(self, kind: Literal["digits", "line"] = "digits") -> Challenge:
+        challenge = Challenge(secrets.token_urlsafe(16), make_line() if kind == "line" else make_phrase(), self.ttl)
         await self.store.put(f"challenge:{challenge.id}", challenge.phrase, self.ttl)
         return challenge
 

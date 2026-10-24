@@ -21,7 +21,7 @@ pytestmark = pytest.mark.skipif(not TEST_DB, reason="TEST_DATABASE_URL not set")
 
 async def make_client(**overrides):
     settings = Settings(
-        database_url=TEST_DB, match_threshold=0.5, **{"require_liveness": False, "redis_url": "", **overrides}
+        database_url=TEST_DB, match_threshold=0.5, **{"require_liveness": False, "redis_url": "", "seed_sample_voices": False, **overrides}
     )
     app = create_app(settings, embedder=FakeEmbedder(), transcriber=FakeTranscriber(), geocoder=FakeGeocoder())
     async with app.router.lifespan_context(app):

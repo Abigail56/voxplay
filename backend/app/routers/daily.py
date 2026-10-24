@@ -114,13 +114,20 @@ def week_start(day: date) -> date:
 
 
 async def week_points(session: AsyncSession, start: date) -> dict[int, int]:
-    """Points per player in the week starting `start`: game turns + each day's best daily score."""
+    """Points per player in the week starting `start`: game turns + each day's best daily score.
+
+    Solo play doesn't count here: the weekly cup is for playing people."""
     begin = datetime.combine(start, time.min, tzinfo=timezone.utc)
     end = begin + timedelta(days=7)
     points: dict[int, int] = defaultdict(int)
     games = await session.exec(
         select(GamePlay.user_id, func.sum(GamePlay.points))
-        .where(GamePlay.user_id.is_not(None), GamePlay.created_at >= begin, GamePlay.created_at < end)
+        .where(
+            GamePlay.user_id.is_not(None),
+            GamePlay.created_at >= begin,
+            GamePlay.created_at < end,
+            GamePlay.mode.not_like("solo_%"),
+        )
         .group_by(GamePlay.user_id)
     )
     for uid, pts in games.all():

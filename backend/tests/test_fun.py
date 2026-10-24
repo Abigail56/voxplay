@@ -2,7 +2,6 @@
 
 from datetime import date, datetime, timedelta, timezone
 
-import pytest
 from sqlalchemy import text
 from starlette.testclient import TestClient
 

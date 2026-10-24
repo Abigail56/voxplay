@@ -12,6 +12,7 @@ import { Leaderboards } from "./Leaderboards";
 import { Lobby } from "./Lobby";
 import { PlayerCard } from "./PlayerCard";
 import { RoomPanel, type Reaction } from "./RoomPanel";
+import { Solo } from "./Solo";
 import { VoiceSetup } from "./VoiceSetup";
 import { VoiceTwins } from "./VoiceTwins";
 import { Welcome } from "./Welcome";
@@ -165,7 +166,14 @@ export function GameHome() {
       {inviteError && <p className="error">{inviteError}</p>}
       <div className="game-layout">
         <div className="game-main">
-          {room && room.code === roomCode ? <RoomPanel room={room} me={me} sound={sound} reactions={reactions} onRoom={enter} /> : <Lobby dashboard={dashboard} onEnter={enter} />}
+          {room && room.code === roomCode ? (
+            <RoomPanel room={room} me={me} sound={sound} reactions={reactions} onRoom={enter} />
+          ) : (
+            <>
+              <Lobby dashboard={dashboard} onEnter={enter} />
+              <Solo sound={sound} onPlayed={loadDashboard} />
+            </>
+          )}
         </div>
         <aside className="side">
           <PlayerCard me={me} />
@@ -178,7 +186,8 @@ export function GameHome() {
       {dashboard && <World dashboard={dashboard} />}
 
       <footer>
-        <strong>Privacy:</strong> your voiceprint (192 numbers, not a recording) is used only for this game. Your city
+        <strong>Privacy:</strong> your voiceprint (192 numbers, not a recording) is used only for this game. Game
+        recordings are only kept while a game needs them, or for an hour when the host turns on the replay. Your city
         is shown only if you turn it on, rounded to about 10 km, and is deleted after 30 days or when you turn it off.
         Deleting your player deletes everything.
       </footer>

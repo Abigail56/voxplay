@@ -31,6 +31,50 @@ type Props = {
   allowUpload?: boolean; // false: microphone only (the liveness check wants a live voice)
 };
 
+const BARS = 28;
+
+/** A live picture of the microphone while recording: the last few moments' loudness, newest on the right. */
+function useLevels() {
+  const [levels, setLevels] = useState<number[]>([]);
+  const stop = useRef<() => void>(() => {});
+
+  function start(stream: MediaStream) {
+    try {
+      const ctx = new AudioContext();
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 512;
+      ctx.createMediaStreamSource(stream).connect(analyser);
+      const buf = new Float32Array(analyser.fftSize);
+      let last = 0;
+      let frame = 0;
+      const tick = (t: number) => {
+        frame = requestAnimationFrame(tick);
+        if (t - last < 70) return;
+        last = t;
+        analyser.getFloatTimeDomainData(buf);
+        const rms = Math.sqrt(buf.reduce((sum, x) => sum + x * x, 0) / buf.length);
+        setLevels((ls) => [...ls.slice(1 - BARS), Math.min(1, rms * 6)]);
+      };
+      frame = requestAnimationFrame(tick);
+      stop.current = () => {
+        cancelAnimationFrame(frame);
+        ctx.close().catch(() => {});
+      };
+    } catch {
+      // no meter: recording still works
+    }
+  }
+
+  return {
+    levels,
+    start,
+    stop: () => {
+      stop.current();
+      setLevels([]);
+    },
+  };
+}
+
 /** Record from the microphone or pick audio files. Calls onClip for each clip. */
 export function ClipInput({ onClip, multiple = false, disabled = false, allowUpload = true }: Props) {
   const [recording, setRecording] = useState(false);
@@ -38,12 +82,14 @@ export function ClipInput({ onClip, multiple = false, disabled = false, allowUpl
   const [error, setError] = useState<string | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const meter = useLevels();
 
   // Stop the microphone if the component unmounts mid-recording.
   useEffect(() => () => stopTracks(), []);
 
   function stopTracks() {
     if (timerRef.current) clearInterval(timerRef.current);
+    meter.stop();
     recorderRef.current?.stream.getTracks().forEach((t) => t.stop());
   }
 
@@ -65,6 +111,7 @@ export function ClipInput({ onClip, multiple = false, disabled = false, allowUpl
       };
       recorderRef.current = recorder;
       recorder.start();
+      meter.start(stream);
       setSeconds(0);
       setRecording(true);
       timerRef.current = setInterval(() => setSeconds((s) => s + 1), 1000);
@@ -97,6 +144,14 @@ export function ClipInput({ onClip, multiple = false, disabled = false, allowUpl
         <button type="button" className="btn" onClick={start} disabled={disabled}>
           Record
         </button>
+      )}
+      {recording && (
+        <span className="meter" aria-hidden>
+          {Array.from({ length: BARS }, (_, i) => {
+            const level = meter.levels[i - (BARS - meter.levels.length)] ?? 0;
+            return <span key={i} style={{ height: `${Math.max(8, level * 100)}%` }} className={level > 0.08 ? "on" : ""} />;
+          })}
+        </span>
       )}
       {allowUpload && (
         <label className={`btn ghost ${disabled || recording ? "disabled" : ""}`}>

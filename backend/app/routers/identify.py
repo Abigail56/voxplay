@@ -1,6 +1,6 @@
-from typing import Annotated
+from typing import Annotated, Literal
 
-from fastapi import APIRouter, Depends, File, Form, Request, UploadFile
+from fastapi import APIRouter, Depends, File, Form, Query, Request, UploadFile
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from ..config import Settings, get_settings
@@ -22,9 +22,12 @@ ChallengeIdForm = Annotated[str | None, Form(description="From GET /challenge. T
 
 
 @router.get("/challenge", response_model=ChallengeOut)
-async def new_challenge(challenges: ChallengesDep) -> ChallengeOut:
+async def new_challenge(
+    challenges: ChallengesDep,
+    kind: Annotated[Literal["digits", "line"], Query(description="digits for /identify; a silly line for game turns")] = "digits",
+) -> ChallengeOut:
     """A fresh phrase to say in the next /identify clip or game turn. It works once, for a short time."""
-    c = await challenges.issue()
+    c = await challenges.issue(kind)
     return ChallengeOut(challenge_id=c.id, phrase=c.phrase, expires_in_seconds=c.expires_in_seconds)
 
 

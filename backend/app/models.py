@@ -141,6 +141,9 @@ class GamePlay(SQLModel, table=True):
     mode: str = Field(max_length=20)
     points: int
     live_passed: bool | None = None  # False = the phrase wasn't said: a replay or a cheat attempt
+    # The voice score behind the points (cosine similarity to the voice that counted:
+    # your own, or the one you impersonated or copied). None when there was no voice check.
+    score: float | None = None
     lat: float | None = None
     lon: float | None = None
     created_at: datetime | None = Field(

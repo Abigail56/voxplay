@@ -49,6 +49,8 @@ class Settings(BaseSettings):
     challenge_ttl_seconds: int = 120
     # Share of the phrase's digits that must be heard, in order (0.8 = 5 of 6).
     liveness_min_match: float = 0.8
+    # The same for game turns' silly lines (5 of 7 words). Funny voices are harder to transcribe.
+    line_min_match: float = 0.7
     # faster-whisper model. "small.en" hears digits even better but is ~3x slower on a CPU.
     asr_model: str = "base.en"
     asr_dir: str = "/models/whisper"

@@ -7,7 +7,6 @@ import contextlib
 import logging
 import secrets
 from contextlib import asynccontextmanager
-from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -16,12 +15,12 @@ from starlette.concurrency import run_in_threadpool
 
 from .config import Settings, get_settings
 from .db import create_engine, init_db
-from .demo import RateLimiter, cleanup_loop, is_active, seed_sample_voices
+from .demo import RateLimiter, cleanup_loop, is_active, sample_folder, seed_sample_voices
 from .embedding import EcapaEmbedder, Embedder
 from .geocode import Geocoder, NominatimGeocoder
 from .liveness import ChallengeStore, Transcriber, WhisperTranscriber
 from .models import Speaker
-from .routers import accounts, admin, daily, game, identify, rooms, speakers
+from .routers import accounts, admin, daily, game, identify, rooms, solo, speakers
 from .schemas import HealthOut
 from .rooms import RoomStore
 from .store import make_store
@@ -70,10 +69,7 @@ def create_app(
             log.info("Speech-to-text ready.")
 
         if settings.seed_sample_voices:
-            folder = Path(settings.sample_voices_dir)
-            if not folder.is_absolute():
-                folder = Path(__file__).resolve().parents[1] / folder
-            await seed_sample_voices(sessionmaker, app.state.embedder, folder)
+            await seed_sample_voices(sessionmaker, app.state.embedder, sample_folder(settings))
 
         cleanup = None
         if settings.demo_retention_hours > 0:
@@ -109,6 +105,7 @@ def create_app(
     app.include_router(rooms.router)
     app.include_router(game.router)
     app.include_router(daily.router)
+    app.include_router(solo.router)
     app.include_router(admin.router)
 
     @app.get("/health", response_model=HealthOut, tags=["health"])

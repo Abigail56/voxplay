@@ -16,7 +16,7 @@ from ..auth import CurrentUser
 from ..config import Settings, get_settings
 from ..db import get_session
 from ..demo import is_active
-from ..models import GamePlay, Speaker, User, VoiceSample
+from ..models import GamePlay, Speaker, User
 from ..schemas import AdminOverview, AdminPlay, AdminPlayer, AdminRoom
 from .accounts import is_admin, on_map
 from .rooms import RoomsDep

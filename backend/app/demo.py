@@ -105,6 +105,20 @@ async def rate_limit(request: Request) -> None:
         )
 
 
+def sample_folder(settings: Settings) -> Path:
+    """Where the built-in voices' recordings are (SAMPLE_VOICES_DIR, relative to the backend folder)."""
+    folder = Path(settings.sample_voices_dir)
+    return folder if folder.is_absolute() else Path(__file__).resolve().parents[1] / folder
+
+
+def sample_clips(folder: Path, name: str) -> list[Path]:
+    """One built-in voice's recordings, in order (the first is the one to introduce them with)."""
+    person = folder / name
+    if not person.is_dir() or person.parent != folder:
+        return []
+    return sorted(f for f in person.iterdir() if f.suffix.lower() in AUDIO_EXT)
+
+
 async def seed_sample_voices(
     sessionmaker: async_sessionmaker[AsyncSession], embedder: Embedder, folder: Path
 ) -> int:
@@ -122,7 +136,7 @@ async def seed_sample_voices(
             if (await session.exec(select(Speaker.id).where(Speaker.name == person.name))).first():
                 continue
             vectors, seconds = [], []
-            for clip in sorted(f for f in person.iterdir() if f.suffix.lower() in AUDIO_EXT):
+            for clip in sample_clips(folder, person.name):
                 try:
                     prepared = await run_in_threadpool(preprocess, clip.read_bytes())
                 except AudioError as exc:
