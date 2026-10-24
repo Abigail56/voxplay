@@ -1,75 +1,75 @@
+/* ================= VOXPLAY design system =================
+   Midnight surfaces, an electric violet accent, neon blue highlights and a little magenta.
+   Text colours are checked for contrast on --card (all >= 4.5:1). Neon glow is kept for
+   primary actions, live states and wins, not every element. */
 :root {
-  /* Paper and ink, with one "on air" red. */
-  --bg: #f3efe6;
-  --card: #fffcf5;
-  --text: #1f1b16;
-  --muted: #6e665a;
-  --border: #e1d9c9;
-  --primary: #c8401f;
-  --primary-ink: #9e3015;
+  color-scheme: dark;
+  --bg: #080a16;
+  --bg-2: #101329;
+  --card: #171b35;
+  --card-2: #1f2446;
+  --text: #f8fafc;
+  --muted: #a5b4d4;
+  --border: #2b3163;
+  /* Accent for text, outlines and small fills (6.2:1 on --card). */
+  --primary: #a78bfa;
+  /* Accent behind white text: buttons (5.7:1). */
+  --primary-fill: #7c3aed;
+  --primary-ink: #6d28d9;
   --on-primary: #ffffff;
-  --danger: #c92a2a;
-  --ok: #2f7d32;
-  --warn: #b35c00;
-  /* Speaker colours: a colour-blind-safe categorical set, checked against --card in both
-     themes. Keep them in this order. */
-  --series-1: #2a78d6;
-  --series-2: #eb6834;
-  --series-3: #1baf7a;
-  --series-4: #eda100;
-  --series-5: #e87ba4;
-  --series-6: #008300;
-  --series-7: #6250d6;
-  --series-8: #e34948;
-  --series-other: #8a8f9c;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #17140f;
-    --card: #211d17;
-    --text: #efe8db;
-    --muted: #a89e8e;
-    --border: #383128;
-    --primary: #ff7a52;
-    --primary-ink: #e5623b;
-    --on-primary: #1a120c;
-    --danger: #ff6b6b;
-    --ok: #7cc47f;
-    --warn: #f0a046;
-    --series-1: #3987e5;
-    --series-2: #d95926;
-    --series-3: #199e70;
-    --series-4: #c98500;
-    --series-5: #d55181;
-    --series-6: #008300;
-    --series-7: #9085e9;
-    --series-8: #e66767;
-    --series-other: #6b7080;
-  }
+  --accent-2: #38bdf8;
+  --highlight: #f472b6;
+  --danger: #f87171;
+  --ok: #4ade80;
+  --warn: #fbbf24;
+  --glow: 0 0 0 1px color-mix(in srgb, var(--primary) 40%, transparent), 0 8px 28px -6px color-mix(in srgb, var(--primary-fill) 70%, transparent);
+  --glass: color-mix(in srgb, var(--card) 72%, transparent);
+  --radius: 14px;
+  /* Player colours: a colour-blind-safe categorical set, checked against --card. Keep them in this order. */
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --series-4: #c98500;
+  --series-5: #d55181;
+  --series-6: #3d9a3d;
+  --series-7: #9085e9;
+  --series-8: #e66767;
+  --series-other: #6b7080;
 }
 
 * { box-sizing: border-box; }
 :root { accent-color: var(--primary); }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 
 body {
   margin: 0;
-  background: var(--bg);
   min-height: 100vh;
   color: var(--text);
-  font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font: 15px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  /* The Nexus: a deep sky with two faint light sources, fixed so it doesn't scroll away. */
+  background:
+    radial-gradient(1200px 600px at 85% -10%, color-mix(in srgb, var(--primary-fill) 22%, transparent), transparent 70%),
+    radial-gradient(900px 500px at -10% 10%, color-mix(in srgb, var(--accent-2) 12%, transparent), transparent 70%),
+    var(--bg);
+  background-attachment: fixed;
 }
+a { color: var(--accent-2); }
+:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+::selection { background: color-mix(in srgb, var(--primary-fill) 60%, transparent); }
 
-main { max-width: 1040px; margin: 0 auto; padding: 32px 16px 48px; }
-h1, h2, .display { font-family: var(--font-display), Georgia, serif; font-weight: 600; letter-spacing: -0.01em; }
-h2 { margin: 0 0 4px; font-size: 21px; }
+main { max-width: 1120px; margin: 0 auto; padding: 24px 16px 48px; }
+h1, h2, h3, .display { font-family: var(--font-display), system-ui, sans-serif; font-weight: 700; letter-spacing: 0.01em; }
+h2 { margin: 0 0 4px; font-size: 22px; }
 
 .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-bottom: 16px; }
 
 .card {
-  background: var(--card);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--card-2) 80%, transparent), var(--glass));
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: var(--radius);
+  box-shadow: 0 1px 0 color-mix(in srgb, #fff 6%, transparent) inset, 0 20px 40px -24px rgb(0 0 0 / 0.7);
+  backdrop-filter: blur(10px);
   padding: 20px;
   display: flex;
   flex-direction: column;
@@ -80,14 +80,15 @@ h2 { margin: 0 0 4px; font-size: 21px; }
 .error { color: var(--danger); margin: 0; }
 
 .field { display: flex; flex-direction: column; gap: 4px; font-weight: 500; }
-.field input {
+.field input, .field textarea, .text-input {
   font: inherit;
-  padding: 8px 10px;
+  padding: 9px 12px;
   border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--bg);
+  border-radius: 10px;
+  background: var(--bg-2);
   color: var(--text);
 }
+.field input:focus, .text-input:focus { outline: none; border-color: var(--accent-2); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-2) 25%, transparent); }
 
 .consent { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; }
 .consent input { margin-top: 3px; }
@@ -98,21 +99,25 @@ h2 { margin: 0 0 4px; font-size: 21px; }
   font: inherit;
   cursor: pointer;
   border: 1px solid var(--border);
-  background: var(--bg);
+  background: var(--bg-2);
   color: var(--text);
-  padding: 8px 14px;
-  border-radius: 8px;
+  padding: 9px 16px;
+  border-radius: 10px;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
+  min-height: 40px;
+  text-decoration: none;
+  transition: border-color 0.15s, background 0.15s, transform 0.1s, box-shadow 0.2s;
 }
 .btn:disabled, .btn.disabled { opacity: 0.5; cursor: not-allowed; }
-.btn.primary { background: var(--primary); border-color: var(--primary); color: var(--on-primary); align-self: flex-start; }
+.btn.primary { background: linear-gradient(135deg, var(--primary-fill), var(--primary-ink)); border-color: var(--primary-fill); color: var(--on-primary); align-self: flex-start; }
 .btn.danger { border-color: var(--danger); color: var(--danger); }
-.btn.small { padding: 4px 10px; font-size: 13px; }
+.btn.small { padding: 4px 12px; font-size: 13px; min-height: 32px; }
 .btn.ghost { background: transparent; }
 .link { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 13px; }
-.link.plain { color: var(--primary); padding: 0; }
+.link.plain { color: var(--accent-2); padding: 0; }
 
 .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--danger); animation: pulse 1s infinite; }
 @keyframes pulse { 50% { opacity: 0.3; } }
@@ -137,7 +142,7 @@ details summary { cursor: pointer; margin-bottom: 6px; }
   padding: 12px 14px; border: 1px dashed var(--primary); border-radius: 10px;
 }
 .challenge .digits { display: flex; gap: 10px; font-size: 28px; font-weight: 700; letter-spacing: 1px; font-variant-numeric: tabular-nums; }
-.challenge .line { flex: 1 1 100%; font-family: var(--font-display), Georgia, serif; font-size: 24px; font-weight: 600; line-height: 1.25; }
+.challenge .line { flex: 1 1 100%; font-family: var(--font-display), system-ui, sans-serif; font-size: 24px; font-weight: 600; line-height: 1.25; }
 .challenge.expired .digits, .challenge.expired .line { opacity: 0.35; }
 .twist { display: inline-block; font-size: 14px; font-weight: 700; padding: 3px 10px; margin-left: 8px; border-radius: 999px;
   color: var(--warn); border: 1px solid var(--warn); background: color-mix(in srgb, var(--warn) 10%, transparent); }
@@ -176,17 +181,22 @@ details summary { cursor: pointer; margin-bottom: 6px; }
 .play-map.placeholder { display: flex; align-items: center; justify-content: center; }
 @media (max-width: 600px) { .play-map { height: 280px; } }
 
-/* ================= Game ================= */
-.nav { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+/* ================= Brand and navigation ================= */
+.logo { display: inline-flex; align-items: center; gap: 10px; }
+.wordmark { font-family: var(--font-display), system-ui, sans-serif; font-weight: 700; font-size: 22px; letter-spacing: 0.14em; color: var(--text); }
+.wordmark span { background: linear-gradient(90deg, var(--accent-2), var(--primary) 50%, var(--highlight)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.nav-bar { position: sticky; top: 0; z-index: 20; border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  background: color-mix(in srgb, var(--bg) 78%, transparent); backdrop-filter: blur(14px); }
+.nav { max-width: 1120px; margin: 0 auto; padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .nav a { color: var(--text); text-decoration: none; }
-.nav .brand { display: inline-flex; align-items: center; gap: 10px; font-family: var(--font-display), Georgia, serif; font-size: 22px; font-weight: 600; }
+.nav .brand { display: inline-flex; border-radius: 10px; }
 .nav .nav-link { font-size: 14px; color: var(--muted); text-underline-offset: 3px; }
 .nav .nav-link:hover { color: var(--text); text-decoration: underline; }
 .on-air { width: 10px; height: 10px; border-radius: 50%; background: var(--primary); flex: none;
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 22%, transparent); }
 
-.btn.primary { font-weight: 600; box-shadow: inset 0 -2px 0 var(--primary-ink); }
-.btn.primary:hover:not(:disabled) { background: var(--primary-ink); border-color: var(--primary-ink); }
+.btn.primary { font-weight: 700; letter-spacing: 0.02em; box-shadow: var(--glow); }
+.btn.primary:hover:not(:disabled) { background: var(--primary-ink); border-color: var(--primary); transform: translateY(-1px); }
 .btn.primary:active:not(:disabled) { box-shadow: none; transform: translateY(1px); }
 .btn.big { padding: 11px 22px; font-size: 16px; }
 .btn:hover:not(:disabled):not(.primary) { border-color: var(--muted); }
@@ -204,7 +214,7 @@ h3 { margin: 6px 0 0; font-size: 15px; }
 .kicker { margin: 0; display: inline-flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; letter-spacing: 0.08em;
   text-transform: uppercase; color: var(--muted); }
 .how { margin: 26px 0 0; padding: 18px 0 0 20px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; color: var(--muted); max-width: 52ch; }
-.how li::marker { font-family: var(--font-display), Georgia, serif; color: var(--primary); font-weight: 600; }
+.how li::marker { font-family: var(--font-display), system-ui, sans-serif; color: var(--primary); font-weight: 600; }
 .how strong { color: var(--text); }
 .tabs { display: flex; background: var(--bg); border-radius: 10px; padding: 4px; gap: 4px; }
 .tabs button { flex: 1; font: inherit; border: none; background: transparent; color: var(--muted); padding: 8px; border-radius: 8px; cursor: pointer; }
@@ -238,7 +248,7 @@ h3 { margin: 6px 0 0; font-size: 15px; }
 
 /* Player card */
 .player-head { display: flex; gap: 12px; align-items: center; }
-.player-name { font-family: var(--font-display), Georgia, serif; font-size: 22px; font-weight: 600; }
+.player-name { font-family: var(--font-display), system-ui, sans-serif; font-size: 22px; font-weight: 600; }
 .xp { height: 8px; border-radius: 999px; background: var(--bg); overflow: hidden; border: 1px solid var(--border); }
 .xp-fill { height: 100%; background: var(--primary); border-radius: 999px; transition: width 0.6s; }
 .stats { display: grid; grid-template-columns: repeat(3, 1fr); text-align: center; }
@@ -278,10 +288,10 @@ h3 { margin: 6px 0 0; font-size: 15px; }
 .dots { display: inline-block; animation: pulse 1.2s infinite; }
 .my-turn { display: flex; flex-direction: column; gap: 12px; padding: 14px; border-radius: 14px; border: 2px solid var(--primary);
   background: color-mix(in srgb, var(--primary) 5%, var(--card)); }
-.your-turn { margin: 0; font-family: var(--font-display), Georgia, serif; font-size: 24px; font-weight: 600; }
+.your-turn { margin: 0; font-family: var(--font-display), system-ui, sans-serif; font-size: 24px; font-weight: 600; }
 .my-turn .btn { font-size: 17px; padding: 12px 20px; }
 .winner { position: relative; overflow: hidden; text-align: center; padding: 20px 12px; border-radius: 14px; background: var(--bg); display: flex; flex-direction: column; align-items: center; gap: 10px; }
-.winner-line { margin: 0; font-family: var(--font-display), Georgia, serif; font-size: 28px; font-weight: 600; }
+.winner-line { margin: 0; font-family: var(--font-display), system-ui, sans-serif; font-size: 28px; font-weight: 600; }
 .winner > :not(.confetti) { position: relative; z-index: 1; }
 .confetti { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
 .confetti span { position: absolute; top: -12px; width: 8px; height: 14px; border-radius: 2px; animation: fall 2.6s ease-in forwards; }
@@ -448,7 +458,7 @@ h3 { margin: 6px 0 0; font-size: 15px; }
 .mode.on { border-color: var(--primary); box-shadow: inset 0 0 0 1px var(--primary); }
 .mode-tick { position: absolute; top: 14px; right: 14px; width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid var(--muted); }
 .mode.on .mode-tick { border-color: var(--primary); background: var(--primary); box-shadow: inset 0 0 0 2.5px var(--card); }
-.mode-name { font-family: var(--font-display), Georgia, serif; font-weight: 600; font-size: 18px; }
+.mode-name { font-family: var(--font-display), system-ui, sans-serif; font-weight: 600; font-size: 18px; }
 .mode-blurb { font-size: 13px; color: var(--muted); line-height: 1.4; }
 .mode-players { margin-top: auto; padding-top: 4px; font-size: 12px; color: var(--muted); }
 
@@ -560,3 +570,10 @@ body:has(.adm) { background: #f6f7f9; }
 }
 
 footer { margin-top: 24px; font-size: 13px; color: var(--muted); }
+
+/* ================= Loading and error states ================= */
+.loader { min-height: 50vh; display: grid; place-content: center; justify-items: center; gap: 14px; }
+.loader .logo-mark { animation: breathe 1.6s ease-in-out infinite; filter: drop-shadow(0 0 18px color-mix(in srgb, var(--primary-fill) 70%, transparent)); }
+@keyframes breathe { 50% { transform: scale(0.88); opacity: 0.6; } }
+.state-page { min-height: 60vh; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 14px; max-width: 620px; }
+.state-page h1 { margin: 0; font-size: clamp(36px, 7vw, 60px); line-height: 1; }

@@ -39,7 +39,7 @@ export function Welcome({ invite }: { invite: string | null }) {
           </p>
         )}
         <p className="kicker">
-          <span className="on-air" aria-hidden /> A party game for voices
+          <span className="on-air" aria-hidden /> A VOXPLAY voice game
         </p>
         <h1>
           Who&apos;s <em>Talking?</em>
@@ -56,7 +56,7 @@ export function Welcome({ invite }: { invite: string | null }) {
             <strong>Share a game code</strong> with friends. Everyone plays on their own phone.
           </li>
           <li>
-            <strong>On your turn</strong>, read the line on screen (&ldquo;the sleepy penguin stole seven shiny
+            <strong>On your turn</strong>, read the line on screen (&ldquo;the sleepy penguin stole my shiny
             pizzas&rdquo;). Sound like yourself, do an impression, put on a disguise, hide in Guess Who, or pass a voice
             down a broken telephone.
           </li>

@@ -7,6 +7,7 @@ import { loadSoundSetting, saveSoundSetting, sfx } from "@/lib/game";
 import { useLive } from "@/lib/useLive";
 import { useAuthStore } from "@/store/useAuthStore";
 
+import { Loader } from "../brand/Loader";
 import { DailyChallenge } from "./DailyChallenge";
 import { Leaderboards } from "./Leaderboards";
 import { Lobby } from "./Lobby";
@@ -129,7 +130,7 @@ export function GameHome() {
     });
   }
 
-  if (!ready) return <p className="hint">Loading…</p>;
+  if (!ready) return <Loader label="Entering the game…" />;
   if (!token || !me) return <Welcome invite={invite} />;
   if (!me.has_voice) {
     return (

@@ -6,6 +6,8 @@ import { useEffect } from "react";
 
 import { useAuthStore } from "@/store/useAuthStore";
 
+import { Logo } from "./brand/Logo";
+
 export function Nav() {
   const path = usePathname();
   const { me, restore } = useAuthStore();
@@ -19,16 +21,17 @@ export function Nav() {
   if (path.startsWith("/admin")) return null;
 
   return (
-    <nav className="nav">
-      <Link href="/" className="brand">
-        <span className="on-air" aria-hidden />
-        Who&apos;s Talking?
-      </Link>
-      {me?.is_admin && (
-        <Link href="/admin" className="nav-link">
-          Admin
+    <header className="nav-bar">
+      <nav className="nav" aria-label="Main">
+        <Link href="/" className="brand" aria-label="VOXPLAY home">
+          <Logo />
         </Link>
-      )}
-    </nav>
+        {me?.is_admin && (
+          <Link href="/admin" className="nav-link">
+            Admin
+          </Link>
+        )}
+      </nav>
+    </header>
   );
 }

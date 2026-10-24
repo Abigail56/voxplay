@@ -13,7 +13,7 @@ export function Invite({ code }: { code: string }) {
     setCanShare(typeof navigator.share === "function");
   }, [code]);
 
-  const message = `Play "Who's Talking?" with me! Join game ${code}: ${link}`;
+  const message = `Play "Who's Talking?" with me on VOXPLAY! Join game ${code}: ${link}`;
 
   async function copy(text: string, what: string) {
     try {
@@ -31,7 +31,7 @@ export function Invite({ code }: { code: string }) {
         {canShare && (
           <button
             className="btn small primary"
-            onClick={() => navigator.share({ title: "Who's Talking?", text: message, url: link }).catch(() => {})}
+            onClick={() => navigator.share({ title: "Who's Talking? · VOXPLAY", text: message, url: link }).catch(() => {})}
           >
             Share invite
           </button>

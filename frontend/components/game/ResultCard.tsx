@@ -10,42 +10,58 @@ import { modeName } from "./ModePicker";
 const W = 1080;
 const H = 1080;
 // The avatar colours (the same palette as the --series-* tokens), for drawing on a canvas.
-const COLORS = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#6250d6", "#e34948"];
+const COLORS = ["#3987e5", "#d95926", "#199e70", "#c98500", "#d55181", "#3d9a3d", "#9085e9", "#e66767"];
 
-const PAPER = "#f3efe6";
-const INK = "#1f1b16";
-const MUTED = "#6e665a";
-const RED = "#c8401f";
+// The VOXPLAY palette (see the tokens at the top of globals.css).
+const NIGHT = "#080a16";
+const INK = "#f8fafc";
+const MUTED = "#a5b4d4";
+const VIOLET = "#a78bfa";
+const RULE = "#2b3163";
 const SANS = "system-ui, sans-serif";
 
 /** Draws the final scoreboard as a square image, ready for WhatsApp or Instagram. */
 function draw(canvas: HTMLCanvasElement, room: Room, me: Me) {
   const ctx = canvas.getContext("2d")!;
-  const SERIF = getComputedStyle(document.documentElement).getPropertyValue("--font-display") || "Georgia, serif";
-  ctx.fillStyle = PAPER;
+  const SERIF = getComputedStyle(document.documentElement).getPropertyValue("--font-display") || SANS;
+  ctx.fillStyle = NIGHT;
   ctx.fillRect(0, 0, W, H);
-  // A thick red rule along the top, like a ticket stub.
-  ctx.fillStyle = RED;
-  ctx.fillRect(0, 0, W, 18);
+  // Two soft light sources, like the site's background, and a neon rule along the top.
+  for (const [x, y, color] of [[W * 0.9, 0, "rgba(124,58,237,0.35)"], [0, H * 0.25, "rgba(56,189,248,0.18)"]] as const) {
+    const glow = ctx.createRadialGradient(x, y, 0, x, y, W * 0.7);
+    glow.addColorStop(0, color);
+    glow.addColorStop(1, "rgba(8,10,22,0)");
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, W, H);
+  }
+  const rule = ctx.createLinearGradient(0, 0, W, 0);
+  rule.addColorStop(0, "#38bdf8");
+  rule.addColorStop(0.5, "#8b5cf6");
+  rule.addColorStop(1, "#f472b6");
+  ctx.fillStyle = rule;
+  ctx.fillRect(0, 0, W, 14);
 
   ctx.textAlign = "left";
+  ctx.fillStyle = MUTED;
+  ctx.font = `700 28px ${SERIF}`;
+  ctx.fillText("V O X P L A Y", 100, 95);
   ctx.fillStyle = INK;
-  ctx.font = `600 64px ${SERIF}`;
-  ctx.fillText("Who's Talking?", 100, 150);
+  ctx.font = `700 64px ${SERIF}`;
+  ctx.fillText("Who's Talking?", 100, 165);
   ctx.fillStyle = MUTED;
   ctx.font = `32px ${SANS}`;
-  ctx.fillText(`${modeName(room.mode)}${room.speed ? " · speed round" : ""} · game ${room.code}`, 100, 205);
+  ctx.fillText(`${modeName(room.mode)}${room.speed ? " · speed round" : ""} · game ${room.code}`, 100, 215);
 
   const board = [...room.players].sort((a, b) => b.points - a.points);
   const winner = board[0];
-  ctx.fillStyle = RED;
+  ctx.fillStyle = VIOLET;
   ctx.font = `600 30px ${SANS}`;
   ctx.fillText("WINNER", 100, 320);
   ctx.fillStyle = INK;
-  ctx.font = `italic 600 96px ${SERIF}`;
+  ctx.font = `700 96px ${SERIF}`;
   ctx.fillText(winner.username, 100, 415);
 
-  ctx.strokeStyle = "#d9d0bf";
+  ctx.strokeStyle = RULE;
   ctx.lineWidth = 2;
   const rowH = Math.min(84, 460 / board.length);
   board.slice(0, 6).forEach((p, i) => {
@@ -80,7 +96,7 @@ function draw(canvas: HTMLCanvasElement, room: Room, me: Me) {
   ctx.textAlign = "left";
   ctx.fillStyle = MUTED;
   ctx.font = `30px ${SANS}`;
-  ctx.fillText("Think it can tell your voice apart? Come and play.", 100, H - 80);
+  ctx.fillText("Enter the game. Own the moment. Play on VOXPLAY.", 100, H - 80);
 }
 
 /** "Share my result": the final scores as an image, via the phone's share menu or a download. */
@@ -104,7 +120,7 @@ export function ResultCard({ room, me }: { room: Room; me: Me }) {
     if (!blob) return;
     const file = new File([blob], `whos-talking-${room.code}.png`, { type: "image/png" });
     const rank = [...room.players].sort((a, b) => b.points - a.points).findIndex((p) => p.user_id === me.id) + 1;
-    const text = `I came #${rank} in Who's Talking? Think it can tell your voice apart? ${window.location.origin}`;
+    const text = `I came #${rank} in Who's Talking? on VOXPLAY. Think it can tell your voice apart? ${window.location.origin}`;
     if (navigator.canShare?.({ files: [file] })) {
       await navigator.share({ files: [file], text }).catch(() => {});
     } else {

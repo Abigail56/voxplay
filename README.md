@@ -1,4 +1,10 @@
-# Who's Talking? A voice game
+# VOXPLAY
+
+**Enter the game. Own the moment.** VOXPLAY is a social gaming universe: multiplayer games you play with
+friends, each from your own phone. (This project used to be called Voice ID; the database, Docker project
+and internal names still say `voiceid`, so existing data and deployments keep working.)
+
+## Who's Talking? A voice game
 
 An online multiplayer game where an AI has to work out who's talking. Sign up, record your voice once,
 then join a game with a code from your own phone. On your turn you read out a silly secret line ("the sleepy

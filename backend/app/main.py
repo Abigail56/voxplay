@@ -85,9 +85,9 @@ def create_app(
         await engine.dispose()
 
     app = FastAPI(
-        title="Voice ID - speaker recognition API",
-        description="Enroll people by voice, identify who is speaking (with a liveness check) "
-        "and find out who spoke when in a longer recording.",
+        title="VOXPLAY API",
+        description="The backend of VOXPLAY: game accounts, rooms and live updates, plus the voice engine "
+        "(enroll people by voice, identify who is speaking with a liveness check, speech-to-text).",
         version="2.0.0",
         lifespan=lifespan,
     )

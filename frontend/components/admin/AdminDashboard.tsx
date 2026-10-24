@@ -165,7 +165,7 @@ export function AdminDashboard() {
     <div className="adm">
       <header className="adm-bar">
         <div className="adm-title">
-          <span className="adm-product">Who&apos;s Talking?</span>
+          <span className="adm-product">VOXPLAY</span>
           <span className="adm-sep">/</span>
           <h1>Admin console</h1>
         </div>
