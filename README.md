@@ -9,6 +9,8 @@ and internal names still say `voiceid`, so existing data and deployments keep wo
 | `/` | The landing page: hero, *Choose your battle*, the featured game, how it works, FAQ |
 | `/games` | Every game, with Play now or Coming soon |
 | `/brain-clash`, `/brain-clash/CODE` | **Brain Clash**: the team quiz (below). The room link is also the invite |
+| `/beat-drop`, `/beat-drop/CODE` | **Beat Drop**: hum a secret song, your team names it |
+| `/story-forge`, `/story-forge/CODE` | **Story Forge**: two teams build one story, a line each |
 | `/whos-talking` | **Who's Talking?**: the voice game (old `/?join=CODE` links redirect here) |
 | `/sign-in` | One player for every game |
 | `/admin` | Admins only |
@@ -67,6 +69,44 @@ by the checker, and every category must be playable.
 *Current affairs* questions are written as dated events ("Who was sworn in as Nigeria's President in May 2023?"),
 so they stay true, and carry `as_of` and `source`. Anything that can't be checked when it's added ships with
 `"active": false` until someone verifies it (one does today: the 2025 Grammys question).
+
+## Beat Drop and Story Forge
+
+Both run on Brain Clash's rooms (same lobby, teams, invite links, reconnecting and live updates), as the
+modes `hum` and `story`. A room keeps to the game it was opened for.
+
+- **🎵 Beat Drop.** Each round a new hummer (the teams take turns) secretly sees a song, from Afrobeats and
+  amapiano hits to Naija classics, and records up to 15 seconds of humming. The hum plays on every phone; the
+  hummer's teammates have 3 guesses (say it or type it: "Essence by Wizkid" counts), then the other team can
+  steal it for half. A right guess scores 10 (20 for hard ones) and the hummer's team +5. A hummer with no
+  teammates hums for the other team. Only titles are used: no copyrighted recordings are played. The hum is
+  kept in Redis for 10 minutes at most, only so the round can play it.
+- **✍️ Story Forge.** The game writes the first line; then the teams take turns adding one line each (typed or
+  spoken, at least three words). Every turn has a spark word ("danfo", "tortoise", "WhatsApp"…) worth +10 if the
+  line uses it, and a twist for inspiration. The other team then has 12 seconds to fire 🔥 at the line: +3 a
+  fire. At the end the whole legend is shown and can be read aloud.
+- **🔥 Streaks** (every Brain Clash room): win three rounds in a row and your team is on fire, +5 a round.
+- **Emoji reactions** float across every screen in the room.
+
+The songs and sparks are in the same question bank file (kinds `song` and `spark`): 61 songs in 3 playlists,
+36 sparks in 3 story worlds. The bank test checks every title (with and without "by <artist>") and every spark.
+
+### The fair-play AI
+
+[backend/app/fairplay.py](backend/app/fairplay.py) flags answers that look like cheating, for the host to judge:
+
+- **What the AI hears.** Every Beat Drop hum goes through Whisper: a hummer who says the title instead of
+  humming it is caught. A Story Forge line copied from earlier in the story is caught by comparing the text.
+- **How the answer was given.** With each typed answer the browser reports how long the game was hidden
+  (switched to another tab or app to look it up), whether the answer was pasted, and how long the typing took;
+  the server adds how soon after the question it came, and whether someone on the other team just sent the same
+  answer.
+
+Each sign has a weight and they combine like independent probabilities (suspicion = 1 − Π(1 − w)); one sign
+alone is never enough, two are. A flagged answer's points are **held**: every player sees the reasons ("Left
+the game for 11s before answering · Pasted the answer"), and the host allows or voids it (when the host is the
+one flagged, the other team decides). Nobody is punished automatically, so a false alarm costs a tap. Flags are
+saved with each finished match (`bc_results.flags`).
 
 ## Who's Talking? A voice game
 
@@ -249,7 +289,7 @@ docker compose up -d api      # liveness back on
 docker compose run --rm api pytest -v
 ```
 
-There are 138 tests:
+There are 150 tests:
 - `test_matching.py`: cosine similarity, centroids, ranking, threshold/"unknown" decisions, margin rule, EER
 - `test_audio.py`: resampling, silence trimming, rejecting garbage and too-short audio
 - `test_voice_map.py`: PCA keeps similar voices close, voice twins, consistency
@@ -258,7 +298,9 @@ There are 138 tests:
 - `test_brain_clash.py`: answer checking (accents, fillers, numbers, slips, no hedging), every question in the bank
   is answerable, Brain Battle turns and steals, Quick-Fire speed bonus, Name It Fast items and repeats, Word
   Association, late and replayed answers, the server clock, tie-breaker and draw, win score, rooms, team
-  permissions, voice answers, the other team's hidden list, results saved, live WebSocket updates and reconnecting
+  permissions, voice answers, the other team's hidden list, results saved, live WebSocket updates and reconnecting;
+  streaks; Beat Drop (the secret song, hums, guesses, the hummer's bonus, a title said aloud flagged); Story Forge
+  (sparks, fires, copied lines flagged); the fair-play detector's signs, held points and who may decide
 - `test_modes.py`: silly lines and near-miss words, disguise, broken telephone (chains, drift, a player leaving
   mid-chain), humans vs AI ratings, twists and the double final, the replay (and clips deleted straight away when
   it's off), highlights, solo play (guess the voice, impersonate, disguise, kept out of the weekly cup)

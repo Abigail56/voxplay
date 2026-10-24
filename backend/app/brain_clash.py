@@ -16,6 +16,18 @@ Modes
 - association: Word Association. A word appears; each team scores once for a related word
                from the accepted list. One try per player.
 
+The same room engine also runs two more VOXPLAY games, as their own modes:
+
+- hum:         Beat Drop. Each round one player (the hummer, taking turns) secretly sees a song
+               title and hums it; their clip plays on every screen and the hummer's teammates try
+               to name the song (then the other team may steal). A right guess also earns the hummer
+               a bonus. Whisper listens to the hum: saying the title instead is flagged (see fairplay.py).
+- story:       Story Forge. The teams build one story together, a line each, taking turns. Every
+               line must use the round's spark word; then the other team has a few seconds to
+               fire 🔥 at a line they love. Points for the spark and for every fire.
+
+A team that wins three rounds in a row is on fire: +STREAK_BONUS each round until the streak breaks.
+
 The clock is the server's. Rounds close when the server says so: when someone has won the
 round, or when a client reports the time is up and the server checks its own clock (the
 same pattern as Who's Talking?, so there's no background job). A round then shows its
@@ -37,13 +49,15 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from . import fairplay
 from .store import Store
 
-Mode = Literal["battle", "namefast", "quickfire", "association"]
+Mode = Literal["battle", "namefast", "quickfire", "association", "hum", "story"]
 TeamId = Literal["A", "B"]
 Status = Literal["lobby", "playing", "finished"]
-Phase = Literal["open", "steal", "reveal"]
-Verdict = Literal["correct", "wrong", "duplicate", "item", "steal"]
+# hum: Beat Drop's hummer is recording. vote: Story Forge's fire votes on the new line.
+Phase = Literal["hum", "open", "steal", "vote", "reveal"]
+Verdict = Literal["correct", "wrong", "duplicate", "item", "steal", "line", "streak"]
 
 CATEGORIES = {
     "african_general": "African General Knowledge",
@@ -63,13 +77,51 @@ CATEGORIES = {
     "everyday": "Everyday Knowledge",
     "funny": "Funny Challenges",
 }
-KIND_FOR_MODE = {"battle": "question", "quickfire": "question", "namefast": "list", "association": "association"}
-DEFAULT_SECONDS = {"battle": 30, "quickfire": 12, "namefast": 45, "association": 15}
+HUM_CATEGORIES = {
+    "hum_afrobeats": "Afrobeats Hits",
+    "hum_amapiano": "Amapiano and South African Hits",
+    "hum_classics": "Naija Classics",
+}
+STORY_CATEGORIES = {
+    "story_lagos": "Lagos Life",
+    "story_legends": "Myths and Legends",
+    "story_chaos": "Comedy Chaos",
+}
+# Story Forge: the game writes the first line, so nobody faces a blank page.
+STORY_OPENERS = {
+    "story_lagos": [
+        "It was 6am in Lagos, and the danfo was already full of surprises.",
+        "Nobody on our street expected the new neighbour to arrive with a parrot that spoke Yoruba.",
+        "The power came back on at midnight, and with it a strange voice on the radio.",
+    ],
+    "story_legends": [
+        "Long ago, when animals still talked, the tortoise called a meeting under the baobab.",
+        "The night the drums fell silent, the village knew something ancient had woken up.",
+        "At the edge of the forest lived a girl who could hear the river's secrets.",
+    ],
+    "story_chaos": [
+        "The wedding was going perfectly, until the goat walked in.",
+        "Aunty Bisi said it would be a quiet family dinner. She was very, very wrong.",
+        "Everyone in the group chat agreed: last Saturday was the most chaotic day of our lives.",
+    ],
+}
+
+# Which game each mode belongs to, and the categories that game offers.
+GAME_FOR_MODE = {"battle": "brain-clash", "quickfire": "brain-clash", "namefast": "brain-clash", "association": "brain-clash", "hum": "beat-drop", "story": "story-forge"}
+GAME_CATEGORIES = {"brain-clash": CATEGORIES, "beat-drop": HUM_CATEGORIES, "story-forge": STORY_CATEGORIES}
+ALL_CATEGORIES = {**CATEGORIES, **HUM_CATEGORIES, **STORY_CATEGORIES}
+KIND_FOR_MODE = {"battle": "question", "quickfire": "question", "namefast": "list", "association": "association", "hum": "song", "story": "spark"}
+DEFAULT_SECONDS = {"battle": 30, "quickfire": 12, "namefast": 45, "association": 15, "hum": 30, "story": 45}
 DEFAULT_TEAM_NAMES = {"A": "Team Nova", "B": "Team Pulse"}
 
 MAX_TEAM_ATTEMPTS = 3  # Brain Battle: tries per team per question
 STEAL_SECONDS = 10
 REVEAL_SECONDS = 6
+HUM_SECONDS = 25  # Beat Drop: time to record the hum
+VOTE_SECONDS = 12  # Story Forge: time to fire at the new line
+STORY_REVEAL_SECONDS = 4
+STREAK_AT = 3  # rounds in a row to be "on fire"
+STREAK_BONUS = 5
 GRACE_SECONDS = 0.75  # an answer sent just before the buzzer still counts, despite the network
 MAX_PLAYERS = 20
 FEED_SIZE = 30
@@ -94,8 +146,12 @@ class GameError(Exception):
 
 
 class Question(BaseModel):
+    """One challenge in the bank. Beat Drop songs: `prompt` is what the hummer sees, `answer` the title,
+    `items` the artists (["Wizkid", "Tems"]). Story Forge sparks: `answer` is the word every line must
+    use, `accepted` its other forms, `prompt` the twist for that round."""
+
     id: str
-    kind: Literal["question", "list", "association"]
+    kind: Literal["question", "list", "association", "song", "spark"]
     category: str
     difficulty: Literal["easy", "medium", "hard"] = "medium"
     prompt: str
@@ -116,6 +172,9 @@ class Scoring(BaseModel):
     hard: int = Field(default=20, ge=0, le=100)
     list_item: int = Field(default=5, ge=0, le=100)
     speed_max: int = Field(default=5, ge=0, le=50)
+    hum_bonus: int = Field(default=5, ge=0, le=50)  # Beat Drop: the hummer's team, when the song is guessed
+    spark: int = Field(default=10, ge=0, le=100)  # Story Forge: a line that uses the spark word
+    fire: int = Field(default=3, ge=0, le=50)  # Story Forge: each 🔥 from the other team
 
 
 class RoomSettings(BaseModel):
@@ -230,11 +289,35 @@ def answer_forms(q: Question) -> list[list[str]]:
     return [t for t in (tokens(a) for a in [q.answer, *q.accepted]) if t]
 
 
+def song_title_heard(q: Question, heard: list[str]) -> list[str]:
+    """Beat Drop: 'Essence by Wizkid', 'Wizkid Essence', 'essence wizkid and tems' all mean 'Essence'."""
+    if "by" in heard[1:]:
+        heard = heard[: heard.index("by", 1)]
+    artists = {w for name in q.items for alt in name for w in tokens(alt)}
+    while len(heard) > 1 and heard[0] in artists:
+        heard = heard[1:]
+    while len(heard) > 1 and heard[-1] in artists | {"and", "ft", "feat", "featuring"}:
+        heard = heard[:-1]
+    return heard
+
+
 def judge_answer(q: Question, said: str) -> bool:
-    """A single-answer question (or a word association): does what they said match an accepted answer?"""
+    """A single-answer question, a song or a word association: does what they said match an accepted answer?"""
     heard = tokens(said)
-    forms = answer_forms(q) if q.kind == "question" else [t for item in q.items for t in (tokens(a) for a in item) if t]
+    if q.kind == "song":
+        heard = song_title_heard(q, heard)
+    forms = answer_forms(q) if q.kind in ("question", "song") else [t for item in q.items for t in (tokens(a) for a in item) if t]
     return any(same_answer(heard, form) for form in forms)
+
+
+def uses_spark(q: Question, line: str) -> bool:
+    """Story Forge: does the line use the spark word (or one of its forms) somewhere?"""
+    heard = tokens(line)
+    for form in answer_forms(q):
+        n = len(form)
+        if any(all(same_token(h, w) for h, w in zip(heard[j : j + n], form)) for j in range(len(heard) - n + 1)):
+            return True
+    return False
 
 
 def find_items(q: Question, said: str) -> list[int]:
@@ -269,8 +352,8 @@ def vocabulary_hint(q: Question, pool: list[Question], rng: random.Random | None
     in the same category, so the hint never points at it. (Tested with a robot voice: right answers heard
     went from 8/16 to 14/16, and no wrong answer was turned into a right one.)"""
     rng = rng or random.SystemRandom()
-    if q.kind == "question":
-        words = [x.answer for x in pool if x.kind == "question" and x.category == q.category]
+    if q.kind in ("question", "song"):
+        words = [x.answer for x in pool if x.kind == q.kind and x.category == q.category]
         if q.answer not in words:
             words.append(q.answer)
     else:
@@ -305,6 +388,36 @@ class FeedItem(BaseModel):
     verdict: Verdict
     points: int = 0
     items: list[str] = []  # Name It Fast: what was found
+    flag_id: str | None = None  # held for the host to review (see Flag)
+
+
+class Flag(BaseModel):
+    """An answer, hum or line the fair-play detector thinks may be cheating. Its points wait here until
+    the host allows (they're added) or voids it (they're dropped)."""
+
+    id: str
+    round: int
+    user_id: int
+    player: str
+    team: TeamId
+    kind: Literal["answer", "hum", "line"]
+    said: str
+    reasons: list[str]
+    suspicion: float
+    held: dict[str, int] = {}  # team -> points waiting
+    held_players: dict[str, int] = {}  # user id -> points waiting
+    status: Literal["pending", "allowed", "voided"] = "pending"
+
+
+class StoryLine(BaseModel):
+    round: int
+    team: TeamId
+    player: str
+    user_id: int
+    line: str
+    spark: str
+    used_spark: bool
+    fires: int = 0
 
 
 class Round(BaseModel):
@@ -321,6 +434,11 @@ class Round(BaseModel):
     winner_team: TeamId | None = None
     reveal_until: datetime | None = None
     tiebreak: bool = False
+    performer_id: int | None = None  # Beat Drop's hummer, Story Forge's writer
+    has_clip: bool = False  # Beat Drop: the hum is ready to play
+    line: str | None = None  # Story Forge: this round's line
+    fired: list[int] = []  # Story Forge: who has fired at the line
+    flag_id: str | None = None  # a hum or line under review: this round's points wait in that flag
 
 
 class RoundSummary(BaseModel):
@@ -345,6 +463,10 @@ class BrainClashRoom(BaseModel):
     feed: list[FeedItem] = []
     history: list[RoundSummary] = []
     winner: Literal["A", "B", "draw"] | None = None
+    streaks: dict[str, int] = {"A": 0, "B": 0}  # rounds won in a row
+    flags: list[Flag] = []
+    story: list[StoryLine] = []  # Story Forge: the story so far
+    opener: str | None = None  # Story Forge: the game's first line
     finish_reason: str | None = None
     notice: str | None = None  # e.g. "Only 6 questions match those categories"
     created_at: datetime
@@ -358,6 +480,12 @@ class BrainClashRoom(BaseModel):
 
     def rounds_total(self) -> int:
         return max(0, len(self.plan) - 1)  # the reserve tie-breaker isn't a regular round
+
+    def flag(self, flag_id: str | None) -> Flag | None:
+        return next((f for f in self.flags if f.id == flag_id), None)
+
+    def performer(self) -> Player | None:
+        return self.player(self.round.performer_id) if self.round and self.round.performer_id else None
 
 
 def other(team: TeamId) -> TeamId:
@@ -410,8 +538,18 @@ def start_game(room: BrainClashRoom, pool: list[Question], at: datetime | None =
     for p in room.players:
         p.points = p.correct = 0
     room.feed, room.history, room.winner, room.finish_reason = [], [], None, None
+    room.streaks, room.flags, room.story = {"A": 0, "B": 0}, [], []
+    if room.settings.mode == "story":
+        room.opener = random.SystemRandom().choice(STORY_OPENERS.get(plan[0].category) or STORY_OPENERS["story_chaos"])
     room.round_index = 0
     open_round(room, at or now())
+
+
+def performer_for(room: BrainClashRoom, number: int) -> Player:
+    """Beat Drop and Story Forge: the teams take turns, and within a team everyone gets a go in join order."""
+    team: TeamId = "A" if number % 2 else "B"
+    members = room.team(team)
+    return members[((number - 1) // 2) % len(members)]
 
 
 def open_round(room: BrainClashRoom, at: datetime, tiebreak: bool = False) -> None:
@@ -420,14 +558,18 @@ def open_round(room: BrainClashRoom, at: datetime, tiebreak: bool = False) -> No
     turn: TeamId | None = None
     if s.mode == "battle" and not tiebreak:
         turn = "A" if number % 2 else "B"
+    performer = performer_for(room, number) if s.mode in ("hum", "story") else None
+    seconds = HUM_SECONDS if s.mode == "hum" else s.round_seconds()
     room.round = Round(
         number=number,
         question=room.plan[room.round_index],
+        phase="hum" if s.mode == "hum" else "open",
         opened_at=at,
-        closes_at=at + timedelta(seconds=s.round_seconds()),
-        turn_team=turn,
+        closes_at=at + timedelta(seconds=seconds),
+        turn_team=performer.team if performer else turn,
         found={"A": [], "B": []},
         tiebreak=tiebreak,
+        performer_id=performer.user_id if performer else None,
     )
 
 
@@ -444,6 +586,21 @@ def eligible(room: BrainClashRoom, player: Player) -> None:
     if r.phase == "reveal":
         raise GameError("This round is over. The next question is coming.")
     mode = room.settings.mode
+    if mode == "hum":
+        if r.phase == "hum":
+            raise GameError("Wait for the hum!")
+        if player.user_id == r.performer_id:
+            raise GameError("You're the hummer. No guessing your own song!")
+    if mode == "story":
+        if r.phase != "open":
+            raise GameError("The line is in. Fire at it if you love it!")
+        if player.user_id != r.performer_id:
+            raise GameError(f"It's {room.performer().name}'s line.", 403)
+        return
+    if mode == "hum" and r.turn_team and player.team != r.turn_team:
+        raise GameError(f"It's {room.settings.team_names[r.turn_team]}'s turn to guess.", 403)
+    if mode == "hum" and r.attempts.get(player.team, 0) >= MAX_TEAM_ATTEMPTS:
+        raise GameError("Your team has used all its guesses on this song.")
     if mode == "battle" and r.turn_team and player.team != r.turn_team:
         raise GameError(f"It's {room.settings.team_names[r.turn_team]}'s turn.", 403)
     if mode == "battle" and r.attempts.get(player.team, 0) >= MAX_TEAM_ATTEMPTS:
@@ -461,9 +618,52 @@ def list_target(q: Question) -> int:
     return q.target or 5
 
 
-def submit_answer(room: BrainClashRoom, user_id: int, said: str, round_number: int, received: datetime) -> FeedItem:
+def book(room: BrainClashRoom, team: TeamId, player: Player | None, points: int, flag: Flag | None) -> None:
+    """Add points to a team (and player), or hold them in a flag that's waiting for review."""
+    if not points:
+        return
+    if flag is not None and flag.status == "pending":
+        flag.held[team] = flag.held.get(team, 0) + points
+        if player:
+            flag.held_players[str(player.user_id)] = flag.held_players.get(str(player.user_id), 0) + points
+        return
+    room.scores[team] += points
+    if player:
+        player.points += points
+
+
+def raise_flag(room: BrainClashRoom, player: Player, kind: str, said: str, signs: list[fairplay.Sign]) -> Flag | None:
+    """Open a flag when the detector's suspicion reaches fairplay.FLAG_AT."""
+    level = fairplay.suspicion(signs)
+    if level < fairplay.FLAG_AT:
+        return None
+    flag = Flag(
+        id=secrets.token_hex(4),
+        round=room.round.number,
+        user_id=player.user_id,
+        player=player.name,
+        team=player.team,
+        kind=kind,
+        said=said[:200],
+        reasons=[s.reason for s in signs],
+        suspicion=level,
+    )
+    room.flags.append(flag)
+    return flag
+
+
+def submit_answer(
+    room: BrainClashRoom,
+    user_id: int,
+    said: str,
+    round_number: int,
+    received: datetime,
+    signals: fairplay.Signals | None = None,
+) -> FeedItem:
     """Score one answer. `received` is when the request arrived (before any speech-to-text), so slow
-    transcription never costs a player the round. Raises GameError for anything the rules don't allow."""
+    transcription never costs a player the round. Raises GameError for anything the rules don't allow.
+    `signals` (what the browser saw) feed the fair-play detector; a suspicious right answer's points
+    are held for the host."""
     player = room.player(user_id)
     if player is None:
         raise GameError("Join this room first.", 403)
@@ -478,8 +678,12 @@ def submit_answer(room: BrainClashRoom, user_id: int, said: str, round_number: i
         raise GameError("We didn't catch an answer. Say it again, or type it.", 422)
 
     q, mode, team = r.question, room.settings.mode, player.team
+    signals = signals or fairplay.Signals()
     item = FeedItem(round=r.number, team=team, player=player.name, user_id=user_id, said=said, verdict="wrong")
+    if mode == "story":
+        return _submit_line(room, player, said, received, signals)
     close = False
+    round_flag = room.flag(r.flag_id)  # Beat Drop: a hum under review holds the whole round's points
 
     if mode == "namefast":
         found = [i for i in find_items(q, said) if i not in r.found[team]]
@@ -496,7 +700,7 @@ def submit_answer(room: BrainClashRoom, user_id: int, said: str, round_number: i
     else:
         if mode in ("quickfire", "association") or (mode == "battle" and r.tiebreak):
             r.tried.append(user_id)
-        if mode == "battle":
+        if mode in ("battle", "hum"):
             r.attempts[team] = r.attempts.get(team, 0) + 1
         if judge_answer(q, said):
             if mode == "association":
@@ -515,7 +719,7 @@ def submit_answer(room: BrainClashRoom, user_id: int, said: str, round_number: i
                 close = True
             if item.verdict == "wrong":
                 item.verdict = "correct"
-        elif mode == "battle" and r.attempts[team] >= MAX_TEAM_ATTEMPTS:
+        elif mode in ("battle", "hum") and r.attempts[team] >= MAX_TEAM_ATTEMPTS:
             close = not _start_steal(room, received)
         elif mode == "quickfire" and all(p.user_id in r.tried for p in room.players):
             close = True  # everyone has had a go
@@ -523,14 +727,116 @@ def submit_answer(room: BrainClashRoom, user_id: int, said: str, round_number: i
             close = True
 
     if item.points:
-        room.scores[team] += item.points
+        rival = next((f.player for f in reversed(room.feed) if f.round == r.number and f.team != team and f.said.lower() == said.lower() and len(said) >= 5), None)
+        flag = round_flag or raise_flag(room, player, "answer", said, fairplay.answer_signs(signals, said, True, r.opened_at, received, rival))
+        if flag is not None:
+            item.flag_id = flag.id
+        book(room, team, player, item.points, flag)
         r.scored[team] = r.scored.get(team, 0) + item.points
-        player.points += item.points
         player.correct += 1
+        if mode == "hum" and item.verdict == "correct" and room.performer():
+            hummer = room.performer()  # a hum good enough to guess earns its team a bonus
+            book(room, hummer.team, hummer, room.settings.scoring.hum_bonus, round_flag)
+            r.scored[hummer.team] = r.scored.get(hummer.team, 0) + room.settings.scoring.hum_bonus
     room.feed = [*room.feed, item][-FEED_SIZE:]
     if close:
         close_round(room, received)
     return item
+
+
+def submit_hum(room: BrainClashRoom, user_id: int, round_number: int, heard: str, at: datetime) -> Flag | None:
+    """Beat Drop: the hummer's clip is in (the router keeps the audio). Open the guessing.
+    `heard` is what Whisper made of the hum; the title said out loud is flagged."""
+    r = room.round
+    if room.status != "playing" or r is None or r.number != round_number:
+        raise GameError("That round has already gone.")
+    if r.phase != "hum":
+        raise GameError("The hum is already in.")
+    if user_id != r.performer_id:
+        raise GameError("It's not your turn to hum.", 403)
+    hummer = room.player(user_id)
+    title = [w for form in answer_forms(r.question) for w in form]
+    flag = raise_flag(room, hummer, "hum", heard or "(humming)", fairplay.hum_signs(title, tokens(heard)))
+    r.flag_id = flag.id if flag else None
+    r.has_clip = True
+    r.phase = "open"
+    r.opened_at = at
+    r.closes_at = at + timedelta(seconds=room.settings.round_seconds())
+    # The hummer's teammates guess first. A hummer with no teammates hands the guessing to the other team.
+    if not [p for p in room.team(hummer.team) if p.user_id != user_id]:
+        r.turn_team = other(hummer.team)
+    return flag
+
+
+def _submit_line(room: BrainClashRoom, player: Player, line: str, at: datetime, signals: fairplay.Signals) -> FeedItem:
+    """Story Forge: the writer's line goes into the story; then the other team may fire at it."""
+    r = room.round
+    words = line.split()
+    if len(words) < 3:
+        raise GameError("Give us a whole line: at least three words.", 422)
+    line = " ".join(words[:40])
+    q = r.question
+    used = uses_spark(q, line)
+    item = FeedItem(round=r.number, team=player.team, player=player.name, user_id=player.user_id, said=line, verdict="line")
+    flag = raise_flag(room, player, "line", line, fairplay.line_signs(line, [s.line for s in room.story], signals))
+    r.flag_id = flag.id if flag else None
+    if used:
+        item.points = room.settings.scoring.spark
+        book(room, player.team, player, item.points, flag)
+        r.scored[player.team] = item.points
+        player.correct += 1
+    item.flag_id = r.flag_id
+    room.story.append(StoryLine(round=r.number, team=player.team, player=player.name, user_id=player.user_id, line=line, spark=q.answer, used_spark=used))
+    r.line = line
+    r.phase = "vote"
+    r.closes_at = at + timedelta(seconds=VOTE_SECONDS)
+    room.feed = [*room.feed, item][-FEED_SIZE:]
+    return item
+
+
+def fire(room: BrainClashRoom, user_id: int, round_number: int) -> None:
+    """Story Forge: someone on the other team loves the line. Each fire scores for the writer's team."""
+    r = room.round
+    voter = room.player(user_id)
+    if voter is None:
+        raise GameError("Join this room first.", 403)
+    if room.status != "playing" or r is None or r.number != round_number or r.phase != "vote":
+        raise GameError("There's no line to fire at right now.")
+    writer = room.performer()
+    if voter.team == writer.team:
+        raise GameError("Only the other team can fire. No hyping your own team!", 403)
+    if user_id in r.fired:
+        raise GameError("You've already fired at this line.")
+    r.fired.append(user_id)
+    pts = room.settings.scoring.fire
+    book(room, writer.team, writer, pts, room.flag(r.flag_id))
+    r.scored[writer.team] = r.scored.get(writer.team, 0) + pts
+    room.story[-1].fires += 1
+
+
+def decide_flag(room: BrainClashRoom, user_id: int, flag_id: str, allow: bool) -> Flag:
+    """The host (or, when the host is the one flagged, anyone on the other team) allows or voids a flag."""
+    flag = room.flag(flag_id)
+    if flag is None:
+        raise GameError("No such flag.", 404)
+    if flag.status != "pending":
+        raise GameError("That one has already been decided.")
+    judge = room.player(user_id)
+    host_flagged = flag.user_id == room.host_id
+    if judge is None or (host_flagged and judge.team == flag.team) or (not host_flagged and user_id != room.host_id):
+        raise GameError("The host decides flags (the other team does when the host is flagged).", 403)
+    flag.status = "allowed" if allow else "voided"
+    if allow:
+        for team, pts in flag.held.items():
+            room.scores[team] += pts
+        for uid, pts in flag.held_players.items():
+            p = room.player(int(uid))
+            if p:
+                p.points += pts
+    if room.status == "finished":
+        a, b = room.scores["A"], room.scores["B"]
+        room.winner = "A" if a > b else "B" if b > a else "draw"
+    return flag
 
 
 def _start_steal(room: BrainClashRoom, at: datetime) -> bool:
@@ -538,6 +844,8 @@ def _start_steal(room: BrainClashRoom, at: datetime) -> bool:
     r = room.round
     if not room.settings.steals or r.phase != "open" or r.turn_team is None:
         return False
+    if room.settings.mode == "hum" and not [p for p in room.team(other(r.turn_team)) if p.user_id != r.performer_id]:
+        return False  # nobody on the other side can guess
     r.phase = "steal"
     r.turn_team = other(r.turn_team)
     r.closes_at = at + timedelta(seconds=STEAL_SECONDS)
@@ -547,8 +855,25 @@ def _start_steal(room: BrainClashRoom, at: datetime) -> bool:
 def close_round(room: BrainClashRoom, at: datetime) -> None:
     r = room.round
     r.phase = "reveal"
-    r.reveal_until = at + timedelta(seconds=REVEAL_SECONDS)
+    r.reveal_until = at + timedelta(seconds=STORY_REVEAL_SECONDS if room.settings.mode == "story" else REVEAL_SECONDS)
+    if room.settings.mode != "story":
+        _streaks(room)
     room.history.append(RoundSummary(number=r.number, prompt=r.question.prompt, answer=r.question.answer, scored=dict(r.scored), tiebreak=r.tiebreak))
+
+
+def _streaks(room: BrainClashRoom) -> None:
+    """Three rounds won in a row and a team is on fire: +STREAK_BONUS for every round it keeps winning."""
+    r = room.round
+    for team in ("A", "B"):
+        if r.scored.get(team):
+            room.streaks[team] = room.streaks.get(team, 0) + 1
+            if room.streaks[team] >= STREAK_AT:
+                book(room, team, None, STREAK_BONUS, room.flag(r.flag_id))
+                r.scored[team] += STREAK_BONUS
+                name = room.settings.team_names[team]
+                room.feed = [*room.feed, FeedItem(round=r.number, team=team, player=name, user_id=0, said=f"{room.streaks[team]} in a row!", verdict="streak", points=STREAK_BONUS)][-FEED_SIZE:]
+        else:
+            room.streaks[team] = 0
 
 
 def advance(room: BrainClashRoom, at: datetime, by_host: bool = False) -> None:
@@ -556,10 +881,10 @@ def advance(room: BrainClashRoom, at: datetime, by_host: bool = False) -> None:
     r = room.round
     if room.status != "playing" or r is None:
         raise GameError("The game isn't running.")
-    if r.phase in ("open", "steal"):
+    if r.phase in ("hum", "open", "steal", "vote"):
         if at <= r.closes_at + timedelta(seconds=GRACE_SECONDS):
             raise GameError("Not yet!")
-        if r.phase == "open" and room.settings.mode == "battle" and r.winner_team is None and _start_steal(room, at):
+        if r.phase == "open" and room.settings.mode in ("battle", "hum") and r.winner_team is None and _start_steal(room, at):
             return
         close_round(room, at)
         return
@@ -574,7 +899,8 @@ def _next_round(room: BrainClashRoom, at: datetime) -> None:
     reached = s.win_score is not None and max(room.scores.values()) >= s.win_score
     last = room.round_index + 1 >= room.rounds_total()
     tied = room.scores["A"] == room.scores["B"]
-    if r.tiebreak or ((reached or last) and not tied):
+    no_tiebreak = s.mode in ("hum", "story")  # their rounds belong to one player: a level game is a draw
+    if r.tiebreak or ((reached or last) and (not tied or no_tiebreak)):
         finish(room, "Win score reached" if reached and not r.tiebreak else "Tie-breaker" if r.tiebreak else "All rounds played")
         return
     if (reached or last) and tied:

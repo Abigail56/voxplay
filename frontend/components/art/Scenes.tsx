@@ -343,10 +343,139 @@ export function VictoryScene({ className, color = "#c084fc" }: SceneProps & { co
   );
 }
 
+/** Beat Drop: Pulse hums in front of a spinning vinyl, with the club's equalizer pumping below. */
+export function BeatDropScene({ className }: SceneProps) {
+  const W = 800;
+  const H = 400;
+  const next = rng(61);
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid slice" className={className} role="img" aria-label="Pulse hums a tune in front of a giant spinning vinyl record in a neon club">
+      <defs>
+        <SoftFilter />
+        <radialGradient id="bd-vinyl">
+          <stop offset="0" stopColor="#1f2937" />
+          <stop offset="0.7" stopColor="#0b1120" />
+          <stop offset="1" stopColor="#020617" />
+        </radialGradient>
+      </defs>
+      <Sky id="bd" w={W} h={H} colors={["#0c0a3e", "#5b21b6", "#db2777"]} seed={61} />
+      <SpeedLines cx={400} cy={190} color="#fff" opacity={0.1} count={40} seed={8} />
+      {/* the record */}
+      <g className="art-spin" style={{ transformOrigin: "400px 190px" }}>
+        <circle cx={400} cy={190} r={180} fill="url(#bd-vinyl)" stroke="#a78bfa" strokeWidth={3} />
+        {[150, 128, 106, 84].map((r) => (
+          <circle key={r} cx={400} cy={190} r={r} fill="none" stroke="#334155" strokeWidth={1.5} />
+        ))}
+        <circle cx={400} cy={190} r={56} fill="#f472b6" />
+        <path d="M360 170 A46 46 0 0 1 430 150" fill="none" stroke="#fde68a" strokeWidth={6} strokeLinecap="round" />
+        <circle cx={400} cy={190} r={8} fill="#0b1120" />
+      </g>
+      <Aura cx={400} cy={240} r={130} color="#22d3ee" />
+      {/* the equalizer */}
+      {Array.from({ length: 40 }, (_, i) => {
+        const h = Math.round(30 + next() * 110);
+        return <rect key={i} x={i * 20 + 2} y={H - h} width={14} height={h} rx={3} fill={i % 3 ? "#22d3ee" : "#f472b6"} opacity={0.75} className={i % 4 ? undefined : "art-pulse"} />;
+      })}
+      <g transform="translate(244 56) scale(0.78)">
+        <Pulse id="bd" />
+      </g>
+      {/* "hmm hmm" bubble and notes */}
+      <g className="art-float">
+        <path d="M530 70 h110 a16 16 0 0 1 16 16 v34 a16 16 0 0 1 -16 16 h-74 l-22 20 l4 -20 h-18 a16 16 0 0 1 -16 -16 v-34 a16 16 0 0 1 16 -16 Z" fill="#fff" />
+        <text x={585} y={112} textAnchor="middle" fontSize={28} fontWeight={900} fontStyle="italic" fill="#1e1b4b" style={{ fontFamily: "var(--font-display), sans-serif" }}>
+          hmm ♪
+        </text>
+      </g>
+      <text x={150} y={110} fontSize={56} fill="#fde68a" className="art-float">
+        ♪
+      </text>
+      <text x={210} y={250} fontSize={38} fill="#a5f3fc" className="art-float slow">
+        ♫
+      </text>
+      <text x={660} y={260} fontSize={44} fill="#f9a8d4" className="art-float slow">
+        ♬
+      </text>
+      <Sparkle x={120} y={60} s={12} color="#fff" twinkle />
+      <Sparkle x={690} y={190} s={10} color="#fde68a" twinkle />
+    </svg>
+  );
+}
+
+/** Story Forge: Nova and a glowing spellbook under a fantasy moon, words drifting up like sparks. */
+export function StoryForgeScene({ className }: SceneProps) {
+  const W = 800;
+  const H = 400;
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid slice" className={className} role="img" aria-label="Nova stands beside a floating, glowing storybook under a huge moon">
+      <defs>
+        <SoftFilter />
+        <radialGradient id="sf-moon">
+          <stop offset="0" stopColor="#fff7ed" />
+          <stop offset="0.7" stopColor="#fde68a" />
+          <stop offset="1" stopColor="#f59e0b" />
+        </radialGradient>
+        <linearGradient id="sf-page" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#fffbeb" />
+          <stop offset="1" stopColor="#fde68a" />
+        </linearGradient>
+      </defs>
+      <Sky id="sf" w={W} h={H} colors={["#020617", "#1e1b4b", "#7c2d12"]} seed={83} />
+      <circle cx={560} cy={120} r={120} fill="#fde68a" opacity={0.25} filter="url(#soft)" />
+      <circle cx={560} cy={120} r={78} fill="url(#sf-moon)" />
+      <circle cx={530} cy={100} r={12} fill="#f59e0b" opacity={0.25} />
+      <circle cx={585} cy={140} r={8} fill="#f59e0b" opacity={0.2} />
+      {/* far mountains and a castle */}
+      <path d="M0 300 L90 220 L160 270 L250 190 L340 280 L430 230 L520 290 L610 210 L700 270 L800 220 L800 400 L0 400 Z" fill="#1e1b4b" />
+      <path d="M600 300 L600 230 L615 230 L615 215 L630 230 L640 200 L650 230 L665 215 L665 230 L680 230 L680 300 Z" fill="#0f0a2e" />
+      <path d="M0 330 C140 300 260 340 400 320 C540 300 660 340 800 315 L800 400 L0 400 Z" fill="#0b0820" />
+      <Aura cx={290} cy={250} r={130} color="#c084fc" />
+      <g transform="translate(130 56) scale(0.76)">
+        <Nova id="sf" />
+      </g>
+      {/* the floating book */}
+      <g className="art-float">
+        <ellipse cx={540} cy={300} rx={90} ry={16} fill="#fde68a" opacity={0.35} filter="url(#soft)" />
+        <path d="M460 250 Q500 230 540 248 L540 316 Q500 298 460 318 Z" fill="url(#sf-page)" stroke="#92400e" strokeWidth={2} />
+        <path d="M620 250 Q580 230 540 248 L540 316 Q580 298 620 318 Z" fill="url(#sf-page)" stroke="#92400e" strokeWidth={2} />
+        <path d="M472 262 Q500 250 528 260 M472 276 Q500 264 528 274 M472 290 Q500 278 528 288 M552 260 Q580 250 608 262 M552 274 Q580 264 608 276" stroke="#b45309" strokeWidth={2} opacity={0.6} fill="none" />
+        <path d="M455 318 Q500 300 540 320 Q580 300 625 318 L625 326 Q580 308 540 328 Q500 308 455 326 Z" fill="#7c2d12" />
+        {/* the quill */}
+        <path d="M600 236 Q640 170 690 150 Q650 196 612 244 Z" fill="#f9a8d4" stroke="#be185d" strokeWidth={2} />
+        <path d="M612 244 L598 262" stroke="#1e1b4b" strokeWidth={3} strokeLinecap="round" />
+      </g>
+      {/* words rising like sparks */}
+      {["once", "upon", "a", "danfo", "legend"].map((w, i) => (
+        <text
+          key={w}
+          x={470 - i * 14}
+          y={225 - i * 32}
+          fontSize={17 + i * 2}
+          fontWeight={900}
+          fontStyle="italic"
+          fill={i % 2 ? "#fde68a" : "#f5d0fe"}
+          stroke="#1e1b4b"
+          strokeWidth={4}
+          paintOrder="stroke"
+          opacity={1 - i * 0.1}
+          style={{ fontFamily: "var(--font-display), sans-serif" }}
+          className="art-float slow"
+        >
+          {w}
+        </text>
+      ))}
+      <Sparkle x={470} y={220} s={10} color="#fde68a" twinkle />
+      <Sparkle x={640} y={300} s={8} color="#fff" twinkle />
+      <Sparkle x={90} y={80} s={12} color="#f5d0fe" twinkle />
+    </svg>
+  );
+}
+
 const SCENES: Record<ArtSlot, (props: SceneProps) => React.ReactElement> = {
   hero: NexusScene,
   brainClash: ArenaScene,
   whosTalking: VoiceScene,
+  beatDrop: BeatDropScene,
+  storyForge: StoryForgeScene,
   comingSoon: SoonScene,
   lobby: (p) => <ArenaScene {...p} label="Nova and Pulse wait in the arena for the match to start" />,
   victory: VictoryScene,

@@ -14,7 +14,7 @@ const FEATURES = [
   { icon: "🎙️", title: "Answer with your voice", text: "Speak, and the server turns it into words and checks them. A text box is always there too." },
   { icon: "📱", title: "Every phone is a controller", text: "No console, no download. A room code and a browser is all it takes." },
   { icon: "🌍", title: "Made for here", text: "Questions on African music, Nigerian entertainment, football, food, history and Pidgin." },
-  { icon: "🛡️", title: "Fair by design", text: "The server keeps the score and the clock, so nobody can award themselves points." },
+  { icon: "🤖", title: "A fair-play AI", text: "It listens to every hum and watches for pasted, copied or looked-up answers. The host has the final say." },
 ];
 
 const FAQ = [
@@ -31,8 +31,12 @@ const FAQ = [
     a: "Brain Clash turns your spoken answer into text and throws the recording away straight after. Who's Talking? keeps a voiceprint (192 numbers, not a recording) so it can recognise you, and you can delete it any time.",
   },
   {
+    q: "How does VOXPLAY stop cheating?",
+    a: "The server keeps the score and the clock, so nobody can award themselves points. On top of that a fair-play AI flags anything suspicious: a Beat Drop hummer who says the title, a Story Forge line copied from earlier, or a right answer that came after leaving the game, pasted in or typed impossibly fast. Flagged points wait on hold, everyone sees why, and the host allows or voids them.",
+  },
+  {
     q: "How many people can play?",
-    a: "Brain Clash needs two teams, so at least two players, and works best with a full room of friends, family or classmates. Who's Talking? takes up to 12.",
+    a: "Brain Clash, Beat Drop and Story Forge need two teams, so at least two players, and work best with a full room of friends, family or classmates (up to 20). Who's Talking? takes up to 12.",
   },
 ];
 

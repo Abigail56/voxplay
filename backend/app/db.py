@@ -36,6 +36,8 @@ async def init_db(engine: AsyncEngine) -> None:
         await conn.execute(text("ALTER TABLE game_plays ADD COLUMN IF NOT EXISTS live_passed BOOLEAN"))
         await conn.execute(text("ALTER TABLE voice_samples ADD COLUMN IF NOT EXISTS source VARCHAR(10) NOT NULL DEFAULT 'enroll'"))
         await conn.execute(text("ALTER TABLE game_plays ADD COLUMN IF NOT EXISTS score DOUBLE PRECISION"))
+        # Fair-play flags on finished Brain Clash / Beat Drop / Story Forge matches.
+        await conn.execute(text("ALTER TABLE bc_results ADD COLUMN IF NOT EXISTS flags JSON NOT NULL DEFAULT '[]'"))
 
 
 async def get_session(request: Request) -> AsyncIterator[AsyncSession]:

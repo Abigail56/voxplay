@@ -191,6 +191,8 @@ class BrainClashResult(SQLModel, table=True):
     winner: str = Field(max_length=5)  # A | B | draw
     rounds_played: int
     players: list[dict] = Field(default_factory=list, sa_column=Column(JSON, nullable=False))  # {user_id, name, team, points}
+    # Fair-play flags raised in the match: {round, user_id, player, kind, reasons, suspicion, status}
+    flags: list[dict] = Field(default_factory=list, sa_column=Column(JSON, nullable=False, server_default="[]"))
     finished_at: datetime | None = Field(
         default=None, sa_type=DateTime(timezone=True), sa_column_kwargs={"server_default": func.now()}, index=True
     )

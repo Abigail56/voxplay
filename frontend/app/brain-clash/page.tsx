@@ -1,4 +1,4 @@
-import { BrainClashEntry } from "@/components/brain-clash/Entry";
+import { GameEntry } from "@/components/brain-clash/Entry";
 
 export const metadata = {
   title: "Brain Clash",
@@ -6,5 +6,5 @@ export const metadata = {
 };
 
 export default function BrainClash() {
-  return <BrainClashEntry />;
+  return <GameEntry game="brain-clash" />;
 }

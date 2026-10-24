@@ -5478,6 +5478,1517 @@
     ]
    ],
    "active": true
+  },
+  {
+   "id": "hum_afrobeats-s01",
+   "kind": "song",
+   "category": "hum_afrobeats",
+   "difficulty": "easy",
+   "prompt": "Essence (Wizkid ft. Tems)",
+   "answer": "Essence",
+   "accepted": [],
+   "items": [
+    [
+     "Wizkid"
+    ],
+    [
+     "Tems"
+    ]
+   ],
+   "explanation": "Essence by Wizkid and Tems (2020).",
+   "active": true
+  },
+  {
+   "id": "hum_afrobeats-s02",
+   "kind": "song",
+   "category": "hum_afrobeats",
+   "difficulty": "easy",
+   "prompt": "Calm Down (Rema)",
+   "answer": "Calm Down",
+   "accepted": [],
+   "items": [
+    [
+     "Rema"
+    ]
+   ],
+   "explanation": "Calm Down by Rema (2022).",
+   "active": true
+  },
+  {
+   "id": "hum_afrobeats-s03",
+   "kind": "song",
+   "category": "hum_afrobeats",
+   "difficulty": "easy",
+   "prompt": "Last Last (Burna Boy)",
+   "answer": "Last Last",
+   "accepted": [],
+   "items": [
+    [
+     "Burna Boy"
+    ]
+   ],
+   "explanation": "Last Last by Burna Boy (2022).",
+   "active": true
+  },
+  {
+   "id": "hum_afrobeats-s04",
+   "kind": "song",
+   "category": "hum_afrobeats",
+   "difficulty": "easy",
+   "prompt": "Ye (Burna Boy)",
+   "answer": "Ye",
+   "accepted": [],
+   "items": [
+    [
+     "Burna Boy"
+    ]
+   ],
+   "explanation": "Ye by Burna Boy (2018).",
+   "active": true
+  },
+  {
+   "id": "hum_afrobeats-s05",
+   "kind": "song",
+   "category": "hum_afrobeats",
+   "difficulty": "easy",
+   "prompt": "Love Nwantiti (CKay)",
+   "answer": "Love Nwantiti",
+   "accepted": [
+    "Love Nwantiti Ah Ah Ah",
+    "Nwantiti"
+   ],
+   "items": [
+    [
+     "CKay"
+    ]
+   ],
+   "explanation": "Love Nwantiti by CKay (2019).",
+   "active": true
+  },
+  {
+   "id": "hum_afrobeats-s06",
+   "kind": "song",
+   "category": "hum_afrobeats",
+   "difficulty": "easy",
+   "prompt": "Fall (Davido)",
+   "answer": "Fall",
+   "accepted": [],
+   "items": [
+    [
+     "Davido"
+    ]
+   ],
+   "explanation": "Fall by Davido (2017).",
+   "active": true
+  },
+  {
+   "id": "hum_afrobeats-s07",
+   "kind": "song",
+   "category": "hum_afrobeats",
+   "difficulty": "easy",
+   "prompt": "Unavailable (Davido ft. Musa Keys)",
+   "answer": "Unavailable",
+   "accepted": [],
+   "items": [
+    [
+     "Davido"
+    ],
+    [
+     "Musa Keys"
+    ]
+   ],
+   "explanation": "Unavailable by Davido and Musa Keys (2023).",
+   "active": true
+  },
+  {
+   "id": "hum_afrobeats-s08",
+   "kind": "song",
+   "category": "hum_afrobeats",
+   "difficulty": "easy",
+   "prompt": "Rush (Ayra Starr)",
+   "answer": "Rush",
+   "accepted": [],
+   "items": [
+    [
+     "Ayra Starr"
+    ]
+   ],
+   "explanation": "Rush by Ayra Starr (2022).",
+   "active": true
+  },
+  {
+   "id": "hum_afrobeats-s09",
+   "kind": "song",
+   "category": "hum_afrobeats",
+   "difficulty": "easy",
+   "prompt": "Buga (Kizz Daniel ft. Tekno)",
+   "answer": "Buga",
+   "accepted": [
+    "Buga Lo Lo Lo"
+   ],
+   "items": [
+    [
+     "Kizz Daniel"
+    ],
+    [
+     "Tekno"
+    ]
+   ],
+   "explanation": "Buga by Kizz Daniel and Tekno (2022).",
+   "active": true
+  },
+  {
+   "id": "hum_afrobeats-s10",
+   "kind": "song",
+   "category": "hum_afrobeats",
+   "difficulty": "easy",
+   "prompt": "Peru (Fireboy DML)",
+   "answer": "Peru",
+   "accepted": [],
+   "items": [
+    [
+     "Fireboy DML"
+    ]
+   ],
+   "explanation": "Peru by Fireboy DML (2021).",
+   "active": true
+  },
+  {
+   "id": "hum_afrobeats-s11",
+   "kind": "song",
+   "category": "hum_afrobeats",
+   "difficulty": "medium",
+   "prompt": "Joro (Wizkid)",
+   "answer": "Joro",
+   "accepted": [],
+   "items": [
+    [
+     "Wizkid"
+    ]
+   ],
+   "explanation": "Joro by Wizkid (2019).",
+   "active": true
+  },
+  {
+   "id": "hum_afrobeats-s12",
+   "kind": "song",
+   "category": "hum_afrobeats",
+   "difficulty": "medium",
+   "prompt": "Ojuelegba (Wizkid)",
+   "answer": "Ojuelegba",
+   "accepted": [],
+   "items": [
+    [
+     "Wizkid"
+    ]
+   ],
+   "explanation": "Ojuelegba by Wizkid (2014).",
+   "active": true
+  },
+  {
+   "id": "hum_afrobeats-s13",
+   "kind": "song",
+   "category": "hum_afrobeats",
+   "difficulty": "medium",
+   "prompt": "Sungba (Asake)",
+   "answer": "Sungba",
+   "accepted": [],
+   "items": [
+    [
+     "Asake"
+    ]
+   ],
+   "explanation": "Sungba by Asake (2022).",
+   "active": true
+  },
+  {
+   "id": "hum_afrobeats-s14",
+   "kind": "song",
+   "category": "hum_afrobeats",
+   "difficulty": "medium",
+   "prompt": "Terminator (Asake)",
+   "answer": "Terminator",
+   "accepted": [],
+   "items": [
+    [
+     "Asake"
+    ]
+   ],
+   "explanation": "Terminator by Asake (2022).",
+   "active": true
+  },
+  {
+   "id": "hum_afrobeats-s15",
+   "kind": "song",
+   "category": "hum_afrobeats",
+   "difficulty": "medium",
+   "prompt": "Lonely at the Top (Asake)",
+   "answer": "Lonely at the Top",
+   "accepted": [],
+   "items": [
+    [
+     "Asake"
+    ]
+   ],
+   "explanation": "Lonely at the Top by Asake (2023).",
+   "active": true
+  },
+  {
+   "id": "hum_afrobeats-s16",
+   "kind": "song",
+   "category": "hum_afrobeats",
+   "difficulty": "medium",
+   "prompt": "Monalisa (Lojay ft. Sarz)",
+   "answer": "Monalisa",
+   "accepted": [
+    "Mona Lisa"
+   ],
+   "items": [
+    [
+     "Lojay"
+    ],
+    [
+     "Sarz"
+    ]
+   ],
+   "explanation": "Monalisa by Lojay and Sarz (2021).",
+   "active": true
+  },
+  {
+   "id": "hum_afrobeats-s17",
+   "kind": "song",
+   "category": "hum_afrobeats",
+   "difficulty": "medium",
+   "prompt": "Ku Lo Sa (Oxlade)",
+   "answer": "Ku Lo Sa",
+   "accepted": [
+    "Kulosa"
+   ],
+   "items": [
+    [
+     "Oxlade"
+    ]
+   ],
+   "explanation": "Ku Lo Sa by Oxlade (2022).",
+   "active": true
+  },
+  {
+   "id": "hum_afrobeats-s18",
+   "kind": "song",
+   "category": "hum_afrobeats",
+   "difficulty": "medium",
+   "prompt": "Kwaku the Traveller (Black Sherif)",
+   "answer": "Kwaku the Traveller",
+   "accepted": [
+    "Kwaku the Traveler",
+    "Kwaku"
+   ],
+   "items": [
+    [
+     "Black Sherif"
+    ]
+   ],
+   "explanation": "Kwaku the Traveller by Black Sherif (2022).",
+   "active": true
+  },
+  {
+   "id": "hum_afrobeats-s19",
+   "kind": "song",
+   "category": "hum_afrobeats",
+   "difficulty": "medium",
+   "prompt": "Soweto (Victony ft. Tempoe)",
+   "answer": "Soweto",
+   "accepted": [],
+   "items": [
+    [
+     "Victony"
+    ],
+    [
+     "Tempoe"
+    ]
+   ],
+   "explanation": "Soweto by Victony and Tempoe (2022).",
+   "active": true
+  },
+  {
+   "id": "hum_afrobeats-s20",
+   "kind": "song",
+   "category": "hum_afrobeats",
+   "difficulty": "medium",
+   "prompt": "Dumebi (Rema)",
+   "answer": "Dumebi",
+   "accepted": [],
+   "items": [
+    [
+     "Rema"
+    ]
+   ],
+   "explanation": "Dumebi by Rema (2019).",
+   "active": true
+  },
+  {
+   "id": "hum_afrobeats-s21",
+   "kind": "song",
+   "category": "hum_afrobeats",
+   "difficulty": "medium",
+   "prompt": "On the Low (Burna Boy)",
+   "answer": "On the Low",
+   "accepted": [],
+   "items": [
+    [
+     "Burna Boy"
+    ]
+   ],
+   "explanation": "On the Low by Burna Boy (2018).",
+   "active": true
+  },
+  {
+   "id": "hum_afrobeats-s22",
+   "kind": "song",
+   "category": "hum_afrobeats",
+   "difficulty": "medium",
+   "prompt": "Kilometre (Burna Boy)",
+   "answer": "Kilometre",
+   "accepted": [
+    "Kilometer"
+   ],
+   "items": [
+    [
+     "Burna Boy"
+    ]
+   ],
+   "explanation": "Kilometre by Burna Boy (2020).",
+   "active": true
+  },
+  {
+   "id": "hum_afrobeats-s23",
+   "kind": "song",
+   "category": "hum_afrobeats",
+   "difficulty": "medium",
+   "prompt": "Sability (Ayra Starr)",
+   "answer": "Sability",
+   "accepted": [],
+   "items": [
+    [
+     "Ayra Starr"
+    ]
+   ],
+   "explanation": "Sability by Ayra Starr (2023).",
+   "active": true
+  },
+  {
+   "id": "hum_afrobeats-s24",
+   "kind": "song",
+   "category": "hum_afrobeats",
+   "difficulty": "medium",
+   "prompt": "Bloody Samaritan (Ayra Starr)",
+   "answer": "Bloody Samaritan",
+   "accepted": [],
+   "items": [
+    [
+     "Ayra Starr"
+    ]
+   ],
+   "explanation": "Bloody Samaritan by Ayra Starr (2021).",
+   "active": true
+  },
+  {
+   "id": "hum_afrobeats-s25",
+   "kind": "song",
+   "category": "hum_afrobeats",
+   "difficulty": "medium",
+   "prompt": "Commas (Ayra Starr)",
+   "answer": "Commas",
+   "accepted": [],
+   "items": [
+    [
+     "Ayra Starr"
+    ]
+   ],
+   "explanation": "Commas by Ayra Starr (2024).",
+   "active": true
+  },
+  {
+   "id": "hum_afrobeats-s26",
+   "kind": "song",
+   "category": "hum_afrobeats",
+   "difficulty": "medium",
+   "prompt": "Woju (Kizz Daniel)",
+   "answer": "Woju",
+   "accepted": [],
+   "items": [
+    [
+     "Kizz Daniel"
+    ]
+   ],
+   "explanation": "Woju by Kizz Daniel (2014).",
+   "active": true
+  },
+  {
+   "id": "hum_afrobeats-s27",
+   "kind": "song",
+   "category": "hum_afrobeats",
+   "difficulty": "medium",
+   "prompt": "Pana (Tekno)",
+   "answer": "Pana",
+   "accepted": [],
+   "items": [
+    [
+     "Tekno"
+    ]
+   ],
+   "explanation": "Pana by Tekno (2016).",
+   "active": true
+  },
+  {
+   "id": "hum_afrobeats-s28",
+   "kind": "song",
+   "category": "hum_afrobeats",
+   "difficulty": "medium",
+   "prompt": "If (Davido)",
+   "answer": "If",
+   "accepted": [],
+   "items": [
+    [
+     "Davido"
+    ]
+   ],
+   "explanation": "If by Davido (2017).",
+   "active": true
+  },
+  {
+   "id": "hum_afrobeats-s29",
+   "kind": "song",
+   "category": "hum_afrobeats",
+   "difficulty": "medium",
+   "prompt": "Assurance (Davido)",
+   "answer": "Assurance",
+   "accepted": [],
+   "items": [
+    [
+     "Davido"
+    ]
+   ],
+   "explanation": "Assurance by Davido (2018).",
+   "active": true
+  },
+  {
+   "id": "hum_afrobeats-s30",
+   "kind": "song",
+   "category": "hum_afrobeats",
+   "difficulty": "medium",
+   "prompt": "Come Closer (Wizkid ft. Drake)",
+   "answer": "Come Closer",
+   "accepted": [],
+   "items": [
+    [
+     "Wizkid"
+    ],
+    [
+     "Drake"
+    ]
+   ],
+   "explanation": "Come Closer by Wizkid and Drake (2017).",
+   "active": true
+  },
+  {
+   "id": "hum_afrobeats-s31",
+   "kind": "song",
+   "category": "hum_afrobeats",
+   "difficulty": "hard",
+   "prompt": "Ma Lo (Tiwa Savage ft. Wizkid, Spellz)",
+   "answer": "Ma Lo",
+   "accepted": [
+    "Malo"
+   ],
+   "items": [
+    [
+     "Tiwa Savage"
+    ],
+    [
+     "Wizkid"
+    ],
+    [
+     "Spellz"
+    ]
+   ],
+   "explanation": "Ma Lo by Tiwa Savage and Wizkid and Spellz (2018).",
+   "active": true
+  },
+  {
+   "id": "hum_amapiano-s01",
+   "kind": "song",
+   "category": "hum_amapiano",
+   "difficulty": "easy",
+   "prompt": "Jerusalema (Master KG ft. Nomcebo Zikode)",
+   "answer": "Jerusalema",
+   "accepted": [],
+   "items": [
+    [
+     "Master KG"
+    ],
+    [
+     "Nomcebo Zikode"
+    ]
+   ],
+   "explanation": "Jerusalema by Master KG and Nomcebo Zikode (2019).",
+   "active": true
+  },
+  {
+   "id": "hum_amapiano-s02",
+   "kind": "song",
+   "category": "hum_amapiano",
+   "difficulty": "easy",
+   "prompt": "Water (Tyla)",
+   "answer": "Water",
+   "accepted": [],
+   "items": [
+    [
+     "Tyla"
+    ]
+   ],
+   "explanation": "Water by Tyla (2023).",
+   "active": true
+  },
+  {
+   "id": "hum_amapiano-s03",
+   "kind": "song",
+   "category": "hum_amapiano",
+   "difficulty": "medium",
+   "prompt": "Tshwala Bam (TitoM ft. Yuppe)",
+   "answer": "Tshwala Bam",
+   "accepted": [
+    "Tshwala Bami"
+   ],
+   "items": [
+    [
+     "TitoM"
+    ],
+    [
+     "Yuppe"
+    ]
+   ],
+   "explanation": "Tshwala Bam by TitoM and Yuppe (2024).",
+   "active": true
+  },
+  {
+   "id": "hum_amapiano-s04",
+   "kind": "song",
+   "category": "hum_amapiano",
+   "difficulty": "medium",
+   "prompt": "Mnike (Tyler ICU ft. Tumela_za)",
+   "answer": "Mnike",
+   "accepted": [],
+   "items": [
+    [
+     "Tyler ICU"
+    ],
+    [
+     "Tumela_za"
+    ]
+   ],
+   "explanation": "Mnike by Tyler ICU and Tumela_za (2023).",
+   "active": true
+  },
+  {
+   "id": "hum_amapiano-s05",
+   "kind": "song",
+   "category": "hum_amapiano",
+   "difficulty": "medium",
+   "prompt": "Ke Star (Focalistic ft. Vigro Deep)",
+   "answer": "Ke Star",
+   "accepted": [
+    "Kestar"
+   ],
+   "items": [
+    [
+     "Focalistic"
+    ],
+    [
+     "Vigro Deep"
+    ]
+   ],
+   "explanation": "Ke Star by Focalistic and Vigro Deep (2020).",
+   "active": true
+  },
+  {
+   "id": "hum_amapiano-s06",
+   "kind": "song",
+   "category": "hum_amapiano",
+   "difficulty": "hard",
+   "prompt": "Umlando (Toss ft. 9umba, Mdoovar)",
+   "answer": "Umlando",
+   "accepted": [],
+   "items": [
+    [
+     "Toss"
+    ],
+    [
+     "9umba"
+    ],
+    [
+     "Mdoovar"
+    ]
+   ],
+   "explanation": "Umlando by Toss and 9umba and Mdoovar (2021).",
+   "active": true
+  },
+  {
+   "id": "hum_amapiano-s07",
+   "kind": "song",
+   "category": "hum_amapiano",
+   "difficulty": "hard",
+   "prompt": "Adiwele (Young Stunna ft. Kabza De Small)",
+   "answer": "Adiwele",
+   "accepted": [],
+   "items": [
+    [
+     "Young Stunna"
+    ],
+    [
+     "Kabza De Small"
+    ]
+   ],
+   "explanation": "Adiwele by Young Stunna and Kabza De Small (2021).",
+   "active": true
+  },
+  {
+   "id": "hum_amapiano-s08",
+   "kind": "song",
+   "category": "hum_amapiano",
+   "difficulty": "medium",
+   "prompt": "Soweto Baby (DJ Maphorisa ft. Wizkid, DJ Buckz)",
+   "answer": "Soweto Baby",
+   "accepted": [],
+   "items": [
+    [
+     "DJ Maphorisa"
+    ],
+    [
+     "Wizkid"
+    ],
+    [
+     "DJ Buckz"
+    ]
+   ],
+   "explanation": "Soweto Baby by DJ Maphorisa and Wizkid and DJ Buckz (2017).",
+   "active": true
+  },
+  {
+   "id": "hum_amapiano-s09",
+   "kind": "song",
+   "category": "hum_amapiano",
+   "difficulty": "hard",
+   "prompt": "Labantwana Ama Uber (Semi Tee ft. Miano, Kammu Dee)",
+   "answer": "Labantwana Ama Uber",
+   "accepted": [
+    "Labantwana",
+    "Ama Uber"
+   ],
+   "items": [
+    [
+     "Semi Tee"
+    ],
+    [
+     "Miano"
+    ],
+    [
+     "Kammu Dee"
+    ]
+   ],
+   "explanation": "Labantwana Ama Uber by Semi Tee and Miano and Kammu Dee (2019).",
+   "active": true
+  },
+  {
+   "id": "hum_amapiano-s10",
+   "kind": "song",
+   "category": "hum_amapiano",
+   "difficulty": "medium",
+   "prompt": "Pata Pata (Miriam Makeba)",
+   "answer": "Pata Pata",
+   "accepted": [
+    "Patapata"
+   ],
+   "items": [
+    [
+     "Miriam Makeba"
+    ]
+   ],
+   "explanation": "Pata Pata by Miriam Makeba (1967).",
+   "active": true
+  },
+  {
+   "id": "hum_classics-s01",
+   "kind": "song",
+   "category": "hum_classics",
+   "difficulty": "easy",
+   "prompt": "African Queen (2face Idibia ft. 2Baba)",
+   "answer": "African Queen",
+   "accepted": [],
+   "items": [
+    [
+     "2face Idibia"
+    ],
+    [
+     "2Baba"
+    ]
+   ],
+   "explanation": "African Queen by 2face Idibia and 2Baba (2004).",
+   "active": true
+  },
+  {
+   "id": "hum_classics-s02",
+   "kind": "song",
+   "category": "hum_classics",
+   "difficulty": "easy",
+   "prompt": "Yori Yori (Bracket)",
+   "answer": "Yori Yori",
+   "accepted": [],
+   "items": [
+    [
+     "Bracket"
+    ]
+   ],
+   "explanation": "Yori Yori by Bracket (2009).",
+   "active": true
+  },
+  {
+   "id": "hum_classics-s03",
+   "kind": "song",
+   "category": "hum_classics",
+   "difficulty": "easy",
+   "prompt": "Oliver Twist (D'banj)",
+   "answer": "Oliver Twist",
+   "accepted": [],
+   "items": [
+    [
+     "D'banj"
+    ]
+   ],
+   "explanation": "Oliver Twist by D'banj (2011).",
+   "active": true
+  },
+  {
+   "id": "hum_classics-s04",
+   "kind": "song",
+   "category": "hum_classics",
+   "difficulty": "easy",
+   "prompt": "Sweet Mother (Prince Nico Mbarga)",
+   "answer": "Sweet Mother",
+   "accepted": [],
+   "items": [
+    [
+     "Prince Nico Mbarga"
+    ]
+   ],
+   "explanation": "Sweet Mother by Prince Nico Mbarga (1976).",
+   "active": true
+  },
+  {
+   "id": "hum_classics-s05",
+   "kind": "song",
+   "category": "hum_classics",
+   "difficulty": "easy",
+   "prompt": "Ada Ada (Flavour)",
+   "answer": "Ada Ada",
+   "accepted": [],
+   "items": [
+    [
+     "Flavour"
+    ]
+   ],
+   "explanation": "Ada Ada by Flavour (2014).",
+   "active": true
+  },
+  {
+   "id": "hum_classics-s06",
+   "kind": "song",
+   "category": "hum_classics",
+   "difficulty": "medium",
+   "prompt": "Nwa Baby (Flavour)",
+   "answer": "Nwa Baby",
+   "accepted": [
+    "Ashawo",
+    "Ashawo Remix",
+    "Nwa Baby Ashawo Remix"
+   ],
+   "items": [
+    [
+     "Flavour"
+    ]
+   ],
+   "explanation": "Nwa Baby by Flavour (2010).",
+   "active": true
+  },
+  {
+   "id": "hum_classics-s07",
+   "kind": "song",
+   "category": "hum_classics",
+   "difficulty": "easy",
+   "prompt": "Johnny (Yemi Alade)",
+   "answer": "Johnny",
+   "accepted": [],
+   "items": [
+    [
+     "Yemi Alade"
+    ]
+   ],
+   "explanation": "Johnny by Yemi Alade (2014).",
+   "active": true
+  },
+  {
+   "id": "hum_classics-s08",
+   "kind": "song",
+   "category": "hum_classics",
+   "difficulty": "easy",
+   "prompt": "Skelewu (Davido)",
+   "answer": "Skelewu",
+   "accepted": [],
+   "items": [
+    [
+     "Davido"
+    ]
+   ],
+   "explanation": "Skelewu by Davido (2013).",
+   "active": true
+  },
+  {
+   "id": "hum_classics-s09",
+   "kind": "song",
+   "category": "hum_classics",
+   "difficulty": "medium",
+   "prompt": "Gobe (Davido)",
+   "answer": "Gobe",
+   "accepted": [],
+   "items": [
+    [
+     "Davido"
+    ]
+   ],
+   "explanation": "Gobe by Davido (2013).",
+   "active": true
+  },
+  {
+   "id": "hum_classics-s10",
+   "kind": "song",
+   "category": "hum_classics",
+   "difficulty": "medium",
+   "prompt": "Aye (Davido)",
+   "answer": "Aye",
+   "accepted": [],
+   "items": [
+    [
+     "Davido"
+    ]
+   ],
+   "explanation": "Aye by Davido (2014).",
+   "active": true
+  },
+  {
+   "id": "hum_classics-s11",
+   "kind": "song",
+   "category": "hum_classics",
+   "difficulty": "medium",
+   "prompt": "Dorobucci (Mavin All Stars)",
+   "answer": "Dorobucci",
+   "accepted": [],
+   "items": [
+    [
+     "Mavin All Stars"
+    ]
+   ],
+   "explanation": "Dorobucci by Mavin All Stars (2014).",
+   "active": true
+  },
+  {
+   "id": "hum_classics-s12",
+   "kind": "song",
+   "category": "hum_classics",
+   "difficulty": "medium",
+   "prompt": "Kukere (Iyanya)",
+   "answer": "Kukere",
+   "accepted": [],
+   "items": [
+    [
+     "Iyanya"
+    ]
+   ],
+   "explanation": "Kukere by Iyanya (2012).",
+   "active": true
+  },
+  {
+   "id": "hum_classics-s13",
+   "kind": "song",
+   "category": "hum_classics",
+   "difficulty": "medium",
+   "prompt": "Shoki (Lil Kesh)",
+   "answer": "Shoki",
+   "accepted": [],
+   "items": [
+    [
+     "Lil Kesh"
+    ]
+   ],
+   "explanation": "Shoki by Lil Kesh (2014).",
+   "active": true
+  },
+  {
+   "id": "hum_classics-s14",
+   "kind": "song",
+   "category": "hum_classics",
+   "difficulty": "medium",
+   "prompt": "Pakurumo (Wizkid)",
+   "answer": "Pakurumo",
+   "accepted": [],
+   "items": [
+    [
+     "Wizkid"
+    ]
+   ],
+   "explanation": "Pakurumo by Wizkid (2013).",
+   "active": true
+  },
+  {
+   "id": "hum_classics-s15",
+   "kind": "song",
+   "category": "hum_classics",
+   "difficulty": "medium",
+   "prompt": "Holla at Your Boy (Wizkid)",
+   "answer": "Holla at Your Boy",
+   "accepted": [
+    "Holla at Ya Boy"
+   ],
+   "items": [
+    [
+     "Wizkid"
+    ]
+   ],
+   "explanation": "Holla at Your Boy by Wizkid (2010).",
+   "active": true
+  },
+  {
+   "id": "hum_classics-s16",
+   "kind": "song",
+   "category": "hum_classics",
+   "difficulty": "easy",
+   "prompt": "Chop My Money (P-Square)",
+   "answer": "Chop My Money",
+   "accepted": [],
+   "items": [
+    [
+     "P-Square"
+    ]
+   ],
+   "explanation": "Chop My Money by P-Square (2011).",
+   "active": true
+  },
+  {
+   "id": "hum_classics-s17",
+   "kind": "song",
+   "category": "hum_classics",
+   "difficulty": "easy",
+   "prompt": "Personally (P-Square)",
+   "answer": "Personally",
+   "accepted": [],
+   "items": [
+    [
+     "P-Square"
+    ]
+   ],
+   "explanation": "Personally by P-Square (2012).",
+   "active": true
+  },
+  {
+   "id": "hum_classics-s18",
+   "kind": "song",
+   "category": "hum_classics",
+   "difficulty": "medium",
+   "prompt": "No One Like You (P-Square)",
+   "answer": "No One Like You",
+   "accepted": [],
+   "items": [
+    [
+     "P-Square"
+    ]
+   ],
+   "explanation": "No One Like You by P-Square (2007).",
+   "active": true
+  },
+  {
+   "id": "hum_classics-s19",
+   "kind": "song",
+   "category": "hum_classics",
+   "difficulty": "medium",
+   "prompt": "Zombie (Fela Kuti)",
+   "answer": "Zombie",
+   "accepted": [],
+   "items": [
+    [
+     "Fela Kuti"
+    ]
+   ],
+   "explanation": "Zombie by Fela Kuti (1976).",
+   "active": true
+  },
+  {
+   "id": "hum_classics-s20",
+   "kind": "song",
+   "category": "hum_classics",
+   "difficulty": "hard",
+   "prompt": "Water No Get Enemy (Fela Kuti)",
+   "answer": "Water No Get Enemy",
+   "accepted": [],
+   "items": [
+    [
+     "Fela Kuti"
+    ]
+   ],
+   "explanation": "Water No Get Enemy by Fela Kuti (1975).",
+   "active": true
+  },
+  {
+   "id": "story_lagos-k01",
+   "kind": "spark",
+   "category": "story_lagos",
+   "difficulty": "medium",
+   "prompt": "Twist: the danfo conductor knows a secret.",
+   "answer": "danfo",
+   "accepted": [
+    "danfos"
+   ],
+   "active": true
+  },
+  {
+   "id": "story_lagos-k02",
+   "kind": "spark",
+   "category": "story_lagos",
+   "difficulty": "medium",
+   "prompt": "Twist: someone claims their jollof is the best in Africa.",
+   "answer": "jollof",
+   "accepted": [
+    "jollof rice"
+   ],
+   "active": true
+  },
+  {
+   "id": "story_lagos-k03",
+   "kind": "spark",
+   "category": "story_lagos",
+   "difficulty": "medium",
+   "prompt": "Twist: the power goes off at the worst moment.",
+   "answer": "generator",
+   "accepted": [
+    "generators",
+    "gen"
+   ],
+   "active": true
+  },
+  {
+   "id": "story_lagos-k04",
+   "kind": "spark",
+   "category": "story_lagos",
+   "difficulty": "medium",
+   "prompt": "Twist: everyone is stuck on Third Mainland Bridge.",
+   "answer": "traffic",
+   "accepted": [
+    "go-slow",
+    "go slow"
+   ],
+   "active": true
+  },
+  {
+   "id": "story_lagos-k05",
+   "kind": "spark",
+   "category": "story_lagos",
+   "difficulty": "medium",
+   "prompt": "Twist: an uninvited guest arrives at the party.",
+   "answer": "owambe",
+   "accepted": [
+    "party"
+   ],
+   "active": true
+  },
+  {
+   "id": "story_lagos-k06",
+   "kind": "spark",
+   "category": "story_lagos",
+   "difficulty": "medium",
+   "prompt": "Twist: the suya man has a message for someone.",
+   "answer": "suya",
+   "accepted": [],
+   "active": true
+  },
+  {
+   "id": "story_lagos-k07",
+   "kind": "spark",
+   "category": "story_lagos",
+   "difficulty": "medium",
+   "prompt": "Twist: somebody is wearing the wrong outfit.",
+   "answer": "agbada",
+   "accepted": [
+    "agbadas"
+   ],
+   "active": true
+  },
+  {
+   "id": "story_lagos-k08",
+   "kind": "spark",
+   "category": "story_lagos",
+   "difficulty": "medium",
+   "prompt": "Twist: a very fast escape.",
+   "answer": "okada",
+   "accepted": [
+    "okadas"
+   ],
+   "active": true
+  },
+  {
+   "id": "story_lagos-k09",
+   "kind": "spark",
+   "category": "story_lagos",
+   "difficulty": "medium",
+   "prompt": "Twist: the rent is due today.",
+   "answer": "landlord",
+   "accepted": [
+    "landlords"
+   ],
+   "active": true
+  },
+  {
+   "id": "story_lagos-k10",
+   "kind": "spark",
+   "category": "story_lagos",
+   "difficulty": "medium",
+   "prompt": "Twist: a headwrap blocks somebody's view.",
+   "answer": "gele",
+   "accepted": [
+    "geles"
+   ],
+   "active": true
+  },
+  {
+   "id": "story_lagos-k11",
+   "kind": "spark",
+   "category": "story_lagos",
+   "difficulty": "medium",
+   "prompt": "Twist: the bus takes a road nobody knows.",
+   "answer": "BRT",
+   "accepted": [
+    "bus"
+   ],
+   "active": true
+  },
+  {
+   "id": "story_lagos-k12",
+   "kind": "spark",
+   "category": "story_lagos",
+   "difficulty": "medium",
+   "prompt": "Twist: an aunty asks, \"When are you getting married?\"",
+   "answer": "aunty",
+   "accepted": [
+    "auntie",
+    "aunties",
+    "aunt"
+   ],
+   "active": true
+  },
+  {
+   "id": "story_legends-k01",
+   "kind": "spark",
+   "category": "story_legends",
+   "difficulty": "medium",
+   "prompt": "Twist: the tortoise tells a clever lie.",
+   "answer": "tortoise",
+   "accepted": [
+    "tortoises",
+    "mbe"
+   ],
+   "active": true
+  },
+  {
+   "id": "story_legends-k02",
+   "kind": "spark",
+   "category": "story_legends",
+   "difficulty": "medium",
+   "prompt": "Twist: the river starts to speak.",
+   "answer": "river goddess",
+   "accepted": [
+    "goddess",
+    "river"
+   ],
+   "active": true
+  },
+  {
+   "id": "story_legends-k03",
+   "kind": "spark",
+   "category": "story_legends",
+   "difficulty": "medium",
+   "prompt": "Twist: a masquerade appears at midnight.",
+   "answer": "masquerade",
+   "accepted": [
+    "masquerades"
+   ],
+   "active": true
+  },
+  {
+   "id": "story_legends-k04",
+   "kind": "spark",
+   "category": "story_legends",
+   "difficulty": "medium",
+   "prompt": "Twist: the drum carries a warning.",
+   "answer": "talking drum",
+   "accepted": [
+    "drum",
+    "drums"
+   ],
+   "active": true
+  },
+  {
+   "id": "story_legends-k05",
+   "kind": "spark",
+   "category": "story_legends",
+   "difficulty": "medium",
+   "prompt": "Twist: a prophecy comes true too early.",
+   "answer": "oracle",
+   "accepted": [
+    "oracles",
+    "babalawo"
+   ],
+   "active": true
+  },
+  {
+   "id": "story_legends-k06",
+   "kind": "spark",
+   "category": "story_legends",
+   "difficulty": "medium",
+   "prompt": "Twist: the old tree hides a door.",
+   "answer": "baobab",
+   "accepted": [
+    "baobab tree"
+   ],
+   "active": true
+  },
+  {
+   "id": "story_legends-k07",
+   "kind": "spark",
+   "category": "story_legends",
+   "difficulty": "medium",
+   "prompt": "Twist: something inside the calabash moves.",
+   "answer": "calabash",
+   "accepted": [
+    "calabashes",
+    "gourd"
+   ],
+   "active": true
+  },
+  {
+   "id": "story_legends-k08",
+   "kind": "spark",
+   "category": "story_legends",
+   "difficulty": "medium",
+   "prompt": "Twist: the crown chooses a new king or queen.",
+   "answer": "crown",
+   "accepted": [
+    "crowns"
+   ],
+   "active": true
+  },
+  {
+   "id": "story_legends-k09",
+   "kind": "spark",
+   "category": "story_legends",
+   "difficulty": "medium",
+   "prompt": "Twist: the moon refuses to rise.",
+   "answer": "moon",
+   "accepted": [
+    "moonlight"
+   ],
+   "active": true
+  },
+  {
+   "id": "story_legends-k10",
+   "kind": "spark",
+   "category": "story_legends",
+   "difficulty": "medium",
+   "prompt": "Twist: a giant python offers a deal.",
+   "answer": "python",
+   "accepted": [
+    "snake"
+   ],
+   "active": true
+  },
+  {
+   "id": "story_legends-k11",
+   "kind": "spark",
+   "category": "story_legends",
+   "difficulty": "medium",
+   "prompt": "Twist: an old warrior returns from exile.",
+   "answer": "warrior",
+   "accepted": [
+    "warriors"
+   ],
+   "active": true
+  },
+  {
+   "id": "story_legends-k12",
+   "kind": "spark",
+   "category": "story_legends",
+   "difficulty": "medium",
+   "prompt": "Twist: someone gets lost in the forest.",
+   "answer": "forest",
+   "accepted": [
+    "bush",
+    "evil forest"
+   ],
+   "active": true
+  },
+  {
+   "id": "story_chaos-k01",
+   "kind": "spark",
+   "category": "story_chaos",
+   "difficulty": "medium",
+   "prompt": "Twist: a goat steals something important.",
+   "answer": "goat",
+   "accepted": [
+    "goats"
+   ],
+   "active": true
+  },
+  {
+   "id": "story_chaos-k02",
+   "kind": "spark",
+   "category": "story_chaos",
+   "difficulty": "medium",
+   "prompt": "Twist: a wig flies off in the wind.",
+   "answer": "wig",
+   "accepted": [
+    "wigs"
+   ],
+   "active": true
+  },
+  {
+   "id": "story_chaos-k03",
+   "kind": "spark",
+   "category": "story_chaos",
+   "difficulty": "medium",
+   "prompt": "Twist: a message goes to the wrong group chat.",
+   "answer": "WhatsApp",
+   "accepted": [
+    "whatsapp group",
+    "group chat"
+   ],
+   "active": true
+  },
+  {
+   "id": "story_chaos-k04",
+   "kind": "spark",
+   "category": "story_chaos",
+   "difficulty": "medium",
+   "prompt": "Twist: the food is far too spicy.",
+   "answer": "pepper",
+   "accepted": [
+    "pepper soup"
+   ],
+   "active": true
+  },
+  {
+   "id": "story_chaos-k05",
+   "kind": "spark",
+   "category": "story_chaos",
+   "difficulty": "medium",
+   "prompt": "Twist: the bride and groom swap roles.",
+   "answer": "wedding",
+   "accepted": [
+    "weddings",
+    "wedding party"
+   ],
+   "active": true
+  },
+  {
+   "id": "story_chaos-k06",
+   "kind": "spark",
+   "category": "story_chaos",
+   "difficulty": "medium",
+   "prompt": "Twist: a chicken becomes the hero.",
+   "answer": "chicken",
+   "accepted": [
+    "chickens",
+    "fowl"
+   ],
+   "active": true
+  },
+  {
+   "id": "story_chaos-k07",
+   "kind": "spark",
+   "category": "story_chaos",
+   "difficulty": "medium",
+   "prompt": "Twist: a mother's slipper flies across the room.",
+   "answer": "slippers",
+   "accepted": [
+    "slipper",
+    "bathroom slippers"
+   ],
+   "active": true
+  },
+  {
+   "id": "story_chaos-k08",
+   "kind": "spark",
+   "category": "story_chaos",
+   "difficulty": "medium",
+   "prompt": "Twist: someone drinks the wrong cup.",
+   "answer": "zobo",
+   "accepted": [],
+   "active": true
+  },
+  {
+   "id": "story_chaos-k09",
+   "kind": "spark",
+   "category": "story_chaos",
+   "difficulty": "medium",
+   "prompt": "Twist: there's only one puff-puff left.",
+   "answer": "puff-puff",
+   "accepted": [
+    "puff puff",
+    "puffpuff"
+   ],
+   "active": true
+  },
+  {
+   "id": "story_chaos-k10",
+   "kind": "spark",
+   "category": "story_chaos",
+   "difficulty": "medium",
+   "prompt": "Twist: the rain starts and nobody has an umbrella.",
+   "answer": "rain",
+   "accepted": [
+    "rainstorm"
+   ],
+   "active": true
+  },
+  {
+   "id": "story_chaos-k11",
+   "kind": "spark",
+   "category": "story_chaos",
+   "difficulty": "medium",
+   "prompt": "Twist: everyone oversleeps.",
+   "answer": "alarm",
+   "accepted": [
+    "alarm clock"
+   ],
+   "active": true
+  },
+  {
+   "id": "story_chaos-k12",
+   "kind": "spark",
+   "category": "story_chaos",
+   "difficulty": "medium",
+   "prompt": "Twist: a phone rings at the worst possible time.",
+   "answer": "phone",
+   "accepted": [
+    "phones",
+    "mobile phone"
+   ],
+   "active": true
   }
  ]
 }

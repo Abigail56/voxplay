@@ -6,12 +6,14 @@
 // Use a wide image (about 1600 x 1000, WebP or AVIF, under ~250 KB). Text is never placed
 // on top of artwork without an overlay, so any picture works.
 
-export type ArtSlot = "hero" | "brainClash" | "whosTalking" | "comingSoon" | "lobby" | "victory" | "empty";
+export type ArtSlot = "hero" | "brainClash" | "whosTalking" | "beatDrop" | "storyForge" | "comingSoon" | "lobby" | "victory" | "empty";
 
 export const ART: Record<ArtSlot, { src: string; alt: string } | null> = {
   hero: null,
   brainClash: null,
   whosTalking: null,
+  beatDrop: null,
+  storyForge: null,
   comingSoon: null,
   lobby: null,
   victory: null,

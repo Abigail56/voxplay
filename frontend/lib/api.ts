@@ -245,7 +245,9 @@ export type Clip = { id: string; blob: Blob; filename: string; url: string };
 
 // ---------- Brain Clash ----------
 
-export type BcMode = "battle" | "namefast" | "quickfire" | "association";
+export type BcMode = "battle" | "namefast" | "quickfire" | "association" | "hum" | "story";
+/** The games that run on Brain Clash rooms. */
+export type BcGame = "brain-clash" | "beat-drop" | "story-forge";
 export type BcTeam = "A" | "B";
 export type BcSettings = {
   mode: BcMode;
@@ -256,7 +258,7 @@ export type BcSettings = {
   speed_bonus: boolean;
   steals: boolean;
   team_names: Record<BcTeam, string>;
-  scoring: { correct: number; hard: number; list_item: number; speed_max: number };
+  scoring: { correct: number; hard: number; list_item: number; speed_max: number; hum_bonus: number; spark: number; fire: number };
 };
 export type BcPlayer = { user_id: number; name: string; team: BcTeam; points: number; correct: number; online: boolean };
 export type BcFeed = {
@@ -265,14 +267,33 @@ export type BcFeed = {
   player: string;
   user_id: number;
   said: string;
-  verdict: "correct" | "wrong" | "duplicate" | "item" | "steal";
+  verdict: "correct" | "wrong" | "duplicate" | "item" | "steal" | "line" | "streak";
   points: number;
   items: string[];
+  flag_id: string | null;
 };
+/** Something the fair-play detector thinks may be cheating, waiting for (or after) the host's decision. */
+export type BcFlag = {
+  id: string;
+  round: number;
+  user_id: number;
+  player: string;
+  team: BcTeam;
+  kind: "answer" | "hum" | "line";
+  said: string;
+  reasons: string[];
+  suspicion: number;
+  held: number;
+  status: "pending" | "allowed" | "voided";
+  you_decide: boolean;
+};
+export type BcStoryLine = { round: number; team: BcTeam; player: string; user_id: number; line: string; spark: string; used_spark: boolean; fires: number };
+/** What the answer box saw, for the fair-play detector. */
+export type BcSignals = { away_ms: number; pasted: boolean; typing_ms: number | null };
 export type BcRound = {
   number: number;
-  phase: "open" | "steal" | "reveal";
-  question: { id: string; kind: "question" | "list" | "association"; category: string; category_name: string; difficulty: string; prompt: string; target: number | null; points: number };
+  phase: "hum" | "open" | "steal" | "vote" | "reveal";
+  question: { id: string; kind: "question" | "list" | "association" | "song" | "spark"; category: string; category_name: string; difficulty: string; prompt: string; target: number | null; points: number; spark: string | null };
   opened_at: string;
   closes_at: string;
   turn_team: BcTeam | null;
@@ -284,6 +305,12 @@ export type BcRound = {
   reveal_until: string | null;
   tiebreak: boolean;
   you_tried: boolean;
+  performer_id: number | null; // Beat Drop's hummer, Story Forge's writer
+  has_clip: boolean;
+  line: string | null;
+  fires: number;
+  you_fired: boolean;
+  flag_id: string | null;
   reveal: { answer: string; explanation: string | null; source: string | null; as_of: string | null; more: string[] } | null;
 };
 export type BcRoom = {
@@ -301,10 +328,15 @@ export type BcRoom = {
   winner: BcTeam | "draw" | null;
   finish_reason: string | null;
   notice: string | null;
+  game: BcGame;
+  streaks: Record<BcTeam, number>;
+  flags: BcFlag[];
+  story: BcStoryLine[];
+  opener: string | null;
   server_time: string;
   you: number;
 };
-export type BcCategory = { id: string; name: string; counts: Record<BcMode, number> };
+export type BcCategory = { id: string; name: string; counts: Partial<Record<BcMode, number>> };
 
 /** A fresh random id for every answer, so the server can refuse a replayed one. */
 function answerId(): string {
@@ -433,7 +465,7 @@ export const api = {
     deletePlayer: (id: number) => request<void>(`/admin/players/${id}`, { method: "DELETE" }),
   },
   bc: {
-    categories: () => request<BcCategory[]>("/brain-clash/categories"),
+    categories: (game: BcGame = "brain-clash") => request<BcCategory[]>(`/brain-clash/categories?game=${game}`),
     create: (settings: Partial<BcSettings>, name?: string) =>
       request<BcRoom>("/brain-clash/rooms", { method: "POST", ...json({ settings, name: name || null }) }),
     room: (code: string) => request<BcRoom>(`/brain-clash/rooms/${encodeURIComponent(code)}`),
@@ -448,14 +480,30 @@ export const api = {
     start: (code: string) => request<BcRoom>(`/brain-clash/rooms/${encodeURIComponent(code)}/start`, { method: "POST" }),
     advance: (code: string) => request<BcRoom>(`/brain-clash/rooms/${encodeURIComponent(code)}/advance`, { method: "POST" }),
     end: (code: string) => request<BcRoom>(`/brain-clash/rooms/${encodeURIComponent(code)}/end`, { method: "POST" }),
-    answer(code: string, round: number, answer: { text: string } | { clip: Clip }) {
+    answer(code: string, round: number, answer: { text: string } | { clip: Clip }, signals?: BcSignals) {
       const form = new FormData();
       form.append("round", String(round));
       form.append("answer_id", answerId());
       if ("text" in answer) form.append("text", answer.text);
       else form.append("file", answer.clip.blob, answer.clip.filename);
+      if (signals) {
+        form.append("away_ms", String(Math.round(signals.away_ms)));
+        form.append("pasted", String(signals.pasted));
+        if (signals.typing_ms !== null) form.append("typing_ms", String(Math.round(signals.typing_ms)));
+      }
       return request<{ room: BcRoom; feedback: BcFeed }>(`/brain-clash/rooms/${encodeURIComponent(code)}/answer`, { method: "POST", body: form });
     },
+    hum(code: string, round: number, clip: Clip) {
+      const form = new FormData();
+      form.append("round", String(round));
+      form.append("file", clip.blob, clip.filename);
+      return request<BcRoom>(`/brain-clash/rooms/${encodeURIComponent(code)}/hum`, { method: "POST", body: form });
+    },
+    humClip: (code: string) => audio(`/brain-clash/rooms/${encodeURIComponent(code)}/hum`),
+    fire: (code: string, round: number) => request<BcRoom>(`/brain-clash/rooms/${encodeURIComponent(code)}/fire`, { method: "POST", ...json({ round }) }),
+    decide: (code: string, flagId: string, allow: boolean) =>
+      request<BcRoom>(`/brain-clash/rooms/${encodeURIComponent(code)}/flags/${flagId}`, { method: "POST", ...json({ allow }) }),
+    react: (code: string, emoji: string) => request<void>(`/brain-clash/rooms/${encodeURIComponent(code)}/react`, { method: "POST", ...json({ emoji }) }),
   },
   takeTurn(code: string, clip: Clip, challengeId: string) {
     const form = new FormData();

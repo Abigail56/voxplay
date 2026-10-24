@@ -1,4 +1,5 @@
-"""Brain Clash: answer checking, every mode's rules, the clock, ties, and the rooms API."""
+"""Brain Clash (and Beat Drop and Story Forge, which share its rooms): answer checking, every mode's
+rules, the clock, ties, streaks, the fair-play detector, and the rooms API."""
 
 import json
 import uuid
@@ -9,6 +10,7 @@ from sqlalchemy import text
 from starlette.testclient import TestClient
 
 from app import brain_clash as bc
+from app import fairplay
 from app.routers.brain_clash import QUESTIONS_FILE
 
 from .helpers import tone_wav
@@ -75,10 +77,18 @@ def test_every_question_in_the_bank_is_valid_and_answerable():
     assert len(ids) == len(set(ids))
     parsed = [bc.Question(**x) for x in bank]
     for x in parsed:
-        assert x.category in bc.CATEGORIES
-        if x.kind == "question":
+        assert x.category in bc.ALL_CATEGORIES
+        assert bc.GAME_FOR_MODE[next(m for m, k in bc.KIND_FOR_MODE.items() if k == x.kind)] in bc.GAME_CATEGORIES
+        if x.kind in ("question", "song"):
             for form in [x.answer, *x.accepted]:
                 assert bc.judge_answer(x, form), (x.id, form)
+            if x.kind == "song":  # "Essence by Wizkid" counts too
+                assert bc.judge_answer(x, f"{x.answer} by {x.items[0][0]}"), x.id
+                assert x.category in bc.HUM_CATEGORIES and x.answer in x.prompt
+        elif x.kind == "spark":
+            assert x.category in bc.STORY_CATEGORIES and x.prompt.startswith("Twist:")
+            for form in [x.answer, *x.accepted]:
+                assert bc.uses_spark(x, f"And then came the {form} we feared."), (x.id, form)
         else:
             assert x.items, x.id
             for i, item in enumerate(x.items):
@@ -89,6 +99,11 @@ def test_every_question_in_the_bank_is_valid_and_answerable():
     active = [x for x, raw in zip(parsed, bank) if raw.get("active", True)]
     for cat in bc.CATEGORIES:  # every category can run a Brain Battle
         assert any(x.category == cat and x.kind == "question" for x in active), cat
+    for cat in bc.HUM_CATEGORIES:
+        assert sum(x.category == cat and x.kind == "song" for x in active) >= 8, cat
+    for cat in bc.STORY_CATEGORIES:
+        assert sum(x.category == cat and x.kind == "spark" for x in active) >= 8, cat
+        assert bc.STORY_OPENERS[cat], cat
     assert sum(x.kind == "list" for x in active) >= 10 and sum(x.kind == "association" for x in active) >= 15
     assert all(x.as_of and x.source for x in parsed if x.category == "current_affairs")
 
@@ -236,6 +251,148 @@ def test_choosing_questions_spreads_categories_and_keeps_a_reserve():
     assert len(plan) == 7 and abs(sum(p.category == "a" for p in plan) - 3.5) <= 1
 
 
+# ---------- streaks ----------
+
+
+def test_three_rounds_in_a_row_puts_a_team_on_fire():
+    r = room("quickfire", rounds=6)
+    for n in range(1, 5):
+        at = r.round.opened_at + timedelta(seconds=3)
+        bc.submit_answer(r, 1, f"answer{n - 1}", n, at)
+        bc.advance(r, at + timedelta(seconds=1), by_host=True)
+    assert r.streaks["A"] == 4 and r.history[2].scored["A"] > r.history[1].scored["A"]  # round 3 and 4 get +5
+    assert [f.verdict for f in r.feed].count("streak") == 2
+    bc.advance(r, r.round.closes_at + timedelta(seconds=2))  # nobody scores round 5: the streak breaks
+    assert r.streaks["A"] == 0
+
+
+# ---------- Beat Drop ----------
+
+
+def song(id="s1", title="Essence", artists=("Wizkid", "Tems")):
+    return bc.Question(id=id, kind="song", category="hum_afrobeats", difficulty="easy", prompt=f"{title} ({artists[0]})", answer=title,
+                       items=[[a] for a in artists])
+
+
+def test_song_titles_with_or_without_the_artist():
+    s = song()
+    for said in ("Essence", "essence by wizkid", "Wizkid Essence", "I think it's Essence by Wizkid and Tems"):
+        assert bc.judge_answer(s, said), said
+    assert not bc.judge_answer(s, "Fall") and not bc.judge_answer(s, "Wizkid")
+
+
+def test_beat_drop_hum_then_teammates_guess_and_the_hummer_earns_a_bonus():
+    r = room("hum", players=(("ada", "A"), ("bayo", "B"), ("chidi", "A")), questions=[song(f"s{i}") for i in range(4)])
+    assert r.round.phase == "hum" and r.round.performer_id == 1 and r.round.turn_team == "A"
+    with pytest.raises(bc.GameError, match="Wait for the hum"):
+        bc.submit_answer(r, 3, "essence", 1, sec(1))
+    with pytest.raises(bc.GameError, match="not your turn"):
+        bc.submit_hum(r, 3, 1, "", sec(2))
+    assert bc.submit_hum(r, 1, 1, "mm hmm mm", sec(5)) is None  # a real hum: no flag
+    assert r.round.phase == "open" and r.round.has_clip
+    with pytest.raises(bc.GameError, match="hummer"):
+        bc.submit_answer(r, 1, "essence", 1, sec(6))
+    with pytest.raises(bc.GameError, match="turn to guess"):
+        bc.submit_answer(r, 2, "essence", 1, sec(6))
+    hit = bc.submit_answer(r, 3, "Essence by Wizkid", 1, sec(9))
+    assert hit.verdict == "correct" and r.scores == {"A": 15, "B": 0}  # 10 for Chidi's guess, +5 for Ada's hum
+    bc.advance(r, sec(10), by_host=True)
+    assert r.round.performer_id == 2 and r.round.turn_team == "B"  # team B hums next
+
+
+def test_a_hummer_without_teammates_hums_for_the_other_team():
+    r = room("hum", questions=[song(f"s{i}") for i in range(4)])
+    bc.submit_hum(r, 1, 1, "", sec(3))
+    assert r.round.turn_team == "B"
+    assert bc.submit_answer(r, 2, "essence", 1, sec(5)).points == 10 and r.scores == {"A": 5, "B": 10}
+
+
+def test_saying_the_title_instead_of_humming_is_flagged_and_judged_by_the_other_team():
+    r = room("hum", players=(("ada", "A"), ("bayo", "B"), ("chidi", "A")), questions=[song(f"s{i}") for i in range(4)])
+    flag = bc.submit_hum(r, 1, 1, "Essence! It's Essence", sec(3))  # Whisper heard the title
+    assert flag and flag.kind == "hum" and flag.suspicion >= fairplay.FLAG_AT and "title" in flag.reasons[0]
+    item = bc.submit_answer(r, 3, "essence", 1, sec(5))
+    assert item.flag_id == flag.id and r.scores == {"A": 0, "B": 0} and flag.held == {"A": 15}  # held, not scored
+    with pytest.raises(bc.GameError, match="other team"):
+        bc.decide_flag(r, 1, flag.id, True)  # Ada is the host, but she's the one flagged
+    bc.decide_flag(r, 2, flag.id, False)  # Bayo, on the other team, voids it
+    assert flag.status == "voided" and r.scores == {"A": 0, "B": 0}
+    with pytest.raises(bc.GameError, match="already been decided"):
+        bc.decide_flag(r, 2, flag.id, True)
+
+
+# ---------- Story Forge ----------
+
+
+def spark(id="k1", word="goat", *forms):
+    return bc.Question(id=id, kind="spark", category="story_chaos", prompt="Twist: a goat steals something.", answer=word, accepted=list(forms))
+
+
+def test_story_forge_lines_sparks_and_fire():
+    r = room("story", players=(("ada", "A"), ("bayo", "B"), ("chidi", "A")), questions=[spark(f"k{i}") for i in range(4)])
+    assert r.round.performer_id == 1 and r.round.phase == "open"
+    with pytest.raises(bc.GameError, match="ada's line"):
+        bc.submit_answer(r, 2, "The goat ran off with the cake.", 1, sec(2))
+    with pytest.raises(bc.GameError, match="three words"):
+        bc.submit_answer(r, 1, "Goat!", 1, sec(3))
+    item = bc.submit_answer(r, 1, "Then the goats ate the wedding cake.", 1, sec(10))
+    assert item.verdict == "line" and item.points == 10 and r.round.phase == "vote" and r.story[-1].used_spark
+    with pytest.raises(bc.GameError, match="other team"):
+        bc.fire(r, 3, 1)  # Chidi is on Ada's team
+    bc.fire(r, 2, 1)
+    with pytest.raises(bc.GameError, match="already fired"):
+        bc.fire(r, 2, 1)
+    assert r.scores == {"A": 13, "B": 0} and r.story[-1].fires == 1
+    bc.advance(r, r.round.closes_at + timedelta(seconds=1))
+    assert r.round.phase == "reveal"
+    bc.advance(r, r.round.reveal_until)
+    assert r.round.performer_id == 2  # Bayo writes next
+    assert bc.submit_answer(r, 2, "Nobody noticed anything strange that night.", 2, sec(60)).points == 0  # no spark word
+
+
+def test_copying_an_earlier_line_is_flagged():
+    r = room("story", questions=[spark(f"k{i}") for i in range(4)])
+    bc.submit_answer(r, 1, "The goat walked into the wedding hall.", 1, sec(5))
+    bc.advance(r, r.round.closes_at + timedelta(seconds=1))
+    bc.advance(r, r.round.reveal_until)
+    item = bc.submit_answer(r, 2, "The goat walked into the wedding hall!", 2, sec(60))
+    assert item.flag_id and r.scores["B"] == 0 and r.flag(item.flag_id).held == {"B": 10}
+    bc.decide_flag(r, 1, item.flag_id, True)  # the host lets it stand
+    assert r.scores["B"] == 10
+
+
+# ---------- the fair-play detector ----------
+
+
+def test_fair_play_signs_and_suspicion():
+    opened, at = sec(0), sec(8)
+    clean = fairplay.Signals(typing_ms=2500)
+    assert fairplay.answer_signs(clean, "Kilimanjaro", True, opened, at) == []
+    away_paste = fairplay.Signals(away_ms=12_000, pasted=True)
+    signs = fairplay.answer_signs(away_paste, "Kilimanjaro", True, opened, at)
+    assert fairplay.suspicion(signs) >= fairplay.FLAG_AT and len(signs) == 2
+    assert fairplay.answer_signs(away_paste, "Kilimanjaro", False, opened, at) == []  # wrong answers gain nothing
+    one = fairplay.answer_signs(fairplay.Signals(pasted=True), "Kilimanjaro", True, opened, at)
+    assert 0 < fairplay.suspicion(one) < fairplay.FLAG_AT  # one sign alone is not enough
+    robot = fairplay.answer_signs(fairplay.Signals(typing_ms=200), "Mount Kilimanjaro", True, opened, sec(0.5))
+    assert fairplay.suspicion(robot) >= fairplay.FLAG_AT  # 17 characters in 0.2 s, half a second after the question
+    voice = fairplay.answer_signs(fairplay.Signals(voice=True), "Kilimanjaro", True, opened, sec(0.5))
+    assert voice == []  # speaking fast is fine
+    assert fairplay.hum_signs(["essence"], ["mm", "hmm"]) == []
+    assert fairplay.hum_signs(["lonely", "at", "the", "top"], ["lonely", "at", "the", "top"])[0].weight == 0.9
+
+
+def test_a_flagged_answer_waits_for_the_host():
+    r = room("quickfire")
+    item = bc.submit_answer(r, 2, "answer0", 1, sec(6), fairplay.Signals(away_ms=11_000, pasted=True))
+    flag = r.flag(item.flag_id)
+    assert flag and flag.player == "bayo" and r.scores == {"A": 0, "B": 0} and flag.held["B"] >= 10
+    with pytest.raises(bc.GameError, match="host decides"):
+        bc.decide_flag(r, 2, flag.id, True)  # nobody judges their own flag
+    bc.decide_flag(r, 1, flag.id, True)
+    assert r.scores["B"] == flag.held["B"] and r.player(2).points == flag.held["B"]
+
+
 # ---------- the API ----------
 
 
@@ -374,3 +531,53 @@ def test_live_updates_and_reconnecting():
         assert len(again["players"]) == 2
         for x in h:
             c.delete("/me", headers=x)
+
+
+@needs_db
+async def test_beat_drop_over_the_api(client):
+    ada, bayo = await signup(client, "ada"), await signup(client, "bayo")
+    assert (await client.post("/brain-clash/rooms", headers=ada, json={"settings": {"mode": "hum", "categories": ["everyday"]}})).status_code == 422
+    code = (await bc_room(client, ada, mode="hum", categories=["hum_classics"]))["code"]
+    assert (await client.patch(f"/brain-clash/rooms/{code}/settings", headers=ada, json={"mode": "battle"})).status_code == 409  # stays Beat Drop
+    await client.post(f"/brain-clash/rooms/{code}/join", headers=bayo, json={})
+    room = (await client.post(f"/brain-clash/rooms/{code}/start", headers=ada)).json()
+    title = await cheat_answer(client, code)
+    assert room["game"] == "beat-drop" and room["round"]["phase"] == "hum" and title in room["round"]["question"]["prompt"]  # the hummer sees it
+    seen = (await client.get(f"/brain-clash/rooms/{code}", headers=bayo)).json()
+    assert title not in json.dumps(seen["round"]) and "hummer" in seen["round"]["question"]["prompt"]  # the guesser doesn't
+    hum = {"file": ("hum.wav", tone_wav(300, seconds=2), "audio/wav")}
+    assert (await client.post(f"/brain-clash/rooms/{code}/hum", headers=bayo, data={"round": "1"}, files=hum)).status_code == 409
+    client.app.state.transcriber.text = "hmm mm"
+    res = await client.post(f"/brain-clash/rooms/{code}/hum", headers=ada, data={"round": "1"}, files=hum)
+    assert res.status_code == 200, res.text
+    assert res.json()["round"]["phase"] == "open" and res.json()["round"]["turn_team"] == "B" and not res.json()["flags"]
+    clip = await client.get(f"/brain-clash/rooms/{code}/hum", headers=bayo)
+    assert clip.status_code == 200 and clip.headers["content-type"] == "audio/wav"
+    res = (await send(client, bayo, code, 1, said=f"{title}")).json()
+    assert res["feedback"]["verdict"] == "correct" and res["room"]["scores"]["A"] == 5  # the hummer's bonus
+    cats = (await client.get("/brain-clash/categories?game=beat-drop")).json()
+    assert {c["id"] for c in cats} == set(bc.HUM_CATEGORIES) and all(c["counts"]["hum"] >= 8 for c in cats)
+
+
+@needs_db
+async def test_fair_play_over_the_api(client):
+    ada, bayo = await signup(client, "ada"), await signup(client, "bayo")
+    code = (await bc_room(client, ada, mode="quickfire", categories=["everyday"]))["code"]
+    await client.post(f"/brain-clash/rooms/{code}/join", headers=bayo, json={})
+    await client.post(f"/brain-clash/rooms/{code}/start", headers=ada)
+    right = await cheat_answer(client, code)
+    data = {"round": "1", "answer_id": uuid.uuid4().hex, "text": right, "away_ms": "15000", "pasted": "true"}
+    res = (await client.post(f"/brain-clash/rooms/{code}/answer", headers=bayo, data=data)).json()
+    flag = res["room"]["flags"][0]
+    assert res["feedback"]["flag_id"] == flag["id"] and flag["status"] == "pending" and res["room"]["scores"]["B"] == 0
+    assert any("Left the game" in x for x in flag["reasons"]) and not flag["you_decide"]
+    host_view = (await client.get(f"/brain-clash/rooms/{code}", headers=ada)).json()
+    assert host_view["flags"][0]["you_decide"]
+    assert (await client.post(f"/brain-clash/rooms/{code}/flags/{flag['id']}", headers=bayo, json={"allow": True})).status_code == 403
+    done = (await client.post(f"/brain-clash/rooms/{code}/flags/{flag['id']}", headers=ada, json={"allow": False})).json()
+    assert done["flags"][0]["status"] == "voided" and done["scores"]["B"] == 0
+    assert (await client.post(f"/brain-clash/rooms/{code}/react", headers=bayo, json={"emoji": "🔥"})).status_code == 204
+    await client.post(f"/brain-clash/rooms/{code}/end", headers=ada)
+    async with client.app.state.sessionmaker() as s:
+        rows = (await s.exec(text("SELECT flags FROM bc_results WHERE room_code = :c").bindparams(c=code))).all()
+    assert rows[0][0][0]["status"] == "voided"

@@ -1,10 +1,14 @@
 """Brain Clash rooms: create, join, pick teams, play, answer by voice or text.
 
+The same rooms run Beat Drop (mode "hum") and Story Forge (mode "story"); a room keeps to the game
+it was opened for.
+
 Rooms live in Redis like Who's Talking? rooms, and every change is published on `bc:<code>`,
 which the /ws WebSocket passes on as {"type": "brain_clash"}. Browsers then fetch the room again.
 Players need a VOXPLAY account, but not a recorded voice.
 """
 
+import base64
 import json
 import random
 import time
@@ -13,7 +17,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, Response, UploadFile, status
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import async_sessionmaker
 from sqlmodel import select
@@ -21,18 +25,22 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from starlette.concurrency import run_in_threadpool
 
 from .. import brain_clash as bc
+from .. import fairplay
+from ..audio import AudioError, preprocess
 from ..auth import CurrentUser
 from ..config import Settings, get_settings
 from ..db import get_session
 from ..demo import rate_limit
 from ..models import BrainClashQuestion, BrainClashResult, User
-from ..services import get_transcriber, prepare_upload
+from ..rooms import REACTIONS
+from ..services import get_transcriber, prepare_upload, read_upload
 
 router = APIRouter(prefix="/brain-clash", tags=["brain clash"])
 
 SessionDep = Annotated[AsyncSession, Depends(get_session)]
 SettingsDep = Annotated[Settings, Depends(get_settings)]
 QUESTIONS_FILE = Path(__file__).resolve().parents[1] / "data" / "brain_clash_questions.json"
+HUM_CLIP_SECONDS = 600  # a Beat Drop hum is kept only while the round can still play it
 
 
 def get_rooms(request: Request) -> bc.BrainClashStore:
@@ -77,6 +85,22 @@ class QuestionOut(BaseModel):
     prompt: str
     target: int | None = None
     points: int
+    spark: str | None = None  # Story Forge: the word every line must use this round
+
+
+class FlagOut(BaseModel):
+    id: str
+    round: int
+    user_id: int
+    player: str
+    team: bc.TeamId
+    kind: str
+    said: str
+    reasons: list[str]
+    suspicion: float
+    held: int  # points waiting for the decision
+    status: str
+    you_decide: bool  # this viewer can allow or void it
 
 
 class RevealOut(BaseModel):
@@ -102,6 +126,12 @@ class RoundOut(BaseModel):
     reveal_until: datetime | None
     tiebreak: bool
     you_tried: bool
+    performer_id: int | None = None  # Beat Drop's hummer, Story Forge's writer
+    has_clip: bool = False
+    line: str | None = None
+    fires: int = 0
+    you_fired: bool = False
+    flag_id: str | None = None
     reveal: RevealOut | None = None  # only once the round is over
 
 
@@ -124,6 +154,11 @@ class RoomOut(BaseModel):
     winner: str | None
     finish_reason: str | None
     notice: str | None
+    game: str  # brain-clash | beat-drop | story-forge
+    streaks: dict[str, int]
+    flags: list[FlagOut]
+    story: list[bc.StoryLine]
+    opener: str | None
     server_time: datetime  # so screens can correct for a wrong clock
     you: int
 
@@ -143,8 +178,11 @@ def out(room: bc.BrainClashRoom, viewer: int, online: set[int] = frozenset()) ->
         found = {t: [q.items[i][0] for i in r.found[t]] if over or (me and me.team == t) else [] for t in ("A", "B")}
         reveal = None
         if over:
-            more = [it[0] for i, it in enumerate(q.items) if i not in r.found["A"] + r.found["B"]][:12]
+            more = [] if q.kind == "song" else [it[0] for i, it in enumerate(q.items) if i not in r.found["A"] + r.found["B"]][:12]
             reveal = RevealOut(answer=q.answer, explanation=q.explanation, source=q.source, as_of=q.as_of, more=more)
+        # Beat Drop: only the hummer sees the song until the reveal.
+        secret = q.kind == "song" and not over and viewer != r.performer_id
+        prompt = "🤫 Only the hummer knows the song" if secret else q.prompt
         round_out = RoundOut(
             number=r.number,
             phase=r.phase,
@@ -152,11 +190,12 @@ def out(room: bc.BrainClashRoom, viewer: int, online: set[int] = frozenset()) ->
                 id=q.id,
                 kind=q.kind,
                 category=q.category,
-                category_name=bc.CATEGORIES.get(q.category, q.category),
+                category_name=bc.ALL_CATEGORIES.get(q.category, q.category),
                 difficulty=q.difficulty,
-                prompt=q.prompt,
+                prompt=prompt,
                 target=bc.list_target(q) if q.kind == "list" else None,
-                points=room.settings.scoring.list_item if q.kind == "list" else bc.question_points(room, q),
+                points=room.settings.scoring.list_item if q.kind == "list" else room.settings.scoring.spark if q.kind == "spark" else bc.question_points(room, q),
+                spark=q.answer if q.kind == "spark" else None,
             ),
             opened_at=r.opened_at,
             closes_at=r.closes_at,
@@ -169,6 +208,12 @@ def out(room: bc.BrainClashRoom, viewer: int, online: set[int] = frozenset()) ->
             reveal_until=r.reveal_until,
             tiebreak=r.tiebreak,
             you_tried=viewer in r.tried,
+            performer_id=r.performer_id,
+            has_clip=r.has_clip,
+            line=r.line,
+            fires=len(r.fired),
+            you_fired=viewer in r.fired,
+            flag_id=r.flag_id,
             reveal=reveal,
         )
     # Name It Fast: until the round is over, the other team's answers stay hidden (no copying).
@@ -191,9 +236,26 @@ def out(room: bc.BrainClashRoom, viewer: int, online: set[int] = frozenset()) ->
         winner=room.winner,
         finish_reason=room.finish_reason,
         notice=room.notice,
+        game=bc.GAME_FOR_MODE[room.settings.mode],
+        streaks=room.streaks,
+        flags=[flag_out(room, f, viewer) for f in room.flags],
+        story=room.story,
+        opener=room.opener,
         server_time=bc.now(),
         you=viewer,
     )
+
+
+def can_decide(room: bc.BrainClashRoom, flag: bc.Flag, viewer: int) -> bool:
+    """The host decides, unless the host is the one flagged: then the other team does."""
+    judge = room.player(viewer)
+    if flag.status != "pending" or judge is None:
+        return False
+    return judge.team != flag.team if flag.user_id == room.host_id else viewer == room.host_id
+
+
+def flag_out(room: bc.BrainClashRoom, f: bc.Flag, viewer: int) -> FlagOut:
+    return FlagOut(**f.model_dump(exclude={"held", "held_players"}), held=sum(f.held.values()), you_decide=can_decide(room, f, viewer))
 
 
 async def online_ids(session: AsyncSession, room: bc.BrainClashRoom, settings: Settings) -> set[int]:
@@ -252,6 +314,7 @@ async def save_change(session: AsyncSession, rooms: bc.BrainClashStore, room: bc
                 winner=room.winner or "draw",
                 rounds_played=len(room.history),
                 players=[{"user_id": p.user_id, "name": p.name, "team": p.team, "points": p.points} for p in room.players],
+                flags=[f.model_dump(include={"round", "user_id", "player", "kind", "reasons", "suspicion", "status"}) for f in room.flags],
             )
         )
         await session.commit()
@@ -276,7 +339,8 @@ class TeamIn(BaseModel):
 
 
 def check_settings(settings: bc.RoomSettings) -> bc.RoomSettings:
-    unknown = [c for c in settings.categories if c not in bc.CATEGORIES]
+    offered = bc.GAME_CATEGORIES[bc.GAME_FOR_MODE[settings.mode]]
+    unknown = [c for c in settings.categories if c not in offered]
     if unknown:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, f"Unknown categories: {', '.join(unknown)}")
     names = {t: (settings.team_names.get(t) or bc.DEFAULT_TEAM_NAMES[t]).strip()[:24] for t in ("A", "B")}
@@ -291,14 +355,14 @@ def display_name(name: str | None, user: User) -> str:
 
 
 @router.get("/categories")
-async def categories(session: SessionDep) -> list[dict]:
-    """Every category with how many active questions it has for each mode."""
+async def categories(session: SessionDep, game: str = "brain-clash") -> list[dict]:
+    """A game's categories (brain-clash, beat-drop or story-forge) with how many active challenges each has for each mode."""
+    if game not in bc.GAME_CATEGORIES:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, f"No game called {game}.")
     rows = (await session.exec(select(BrainClashQuestion.category, BrainClashQuestion.kind).where(BrainClashQuestion.active))).all()
     counts = Counter(rows)
-    return [
-        {"id": cid, "name": name, "counts": {mode: counts[(cid, kind)] for mode, kind in bc.KIND_FOR_MODE.items()}}
-        for cid, name in bc.CATEGORIES.items()
-    ]
+    modes = {m: k for m, k in bc.KIND_FOR_MODE.items() if bc.GAME_FOR_MODE[m] == game}
+    return [{"id": cid, "name": name, "counts": {mode: counts[(cid, kind)] for mode, kind in modes.items()}} for cid, name in bc.GAME_CATEGORIES[game].items()]
 
 
 @router.post("/rooms", response_model=RoomOut, status_code=status.HTTP_201_CREATED, dependencies=[Depends(rate_limit)])
@@ -357,6 +421,8 @@ async def change_settings(
         host_only(room, user)
         if room.status == "playing":
             raise HTTPException(status.HTTP_409_CONFLICT, "The match is already running.")
+        if bc.GAME_FOR_MODE[body.mode] != bc.GAME_FOR_MODE[room.settings.mode]:
+            raise HTTPException(status.HTTP_409_CONFLICT, "This room plays a different game. Open a new room for that one.")
         room.settings = check_settings(body)
         await rooms.save(room)
     return await view(session, settings, room, user.id)
@@ -420,12 +486,16 @@ async def answer(
     rooms: RoomsDep,
     round_number: Annotated[int, Form(alias="round", description="The round on screen when you answered")],
     answer_id: Annotated[str, Form(pattern=r"^[A-Za-z0-9_-]{8,64}$", description="A fresh random id for every answer")],
-    text: Annotated[str | None, Form(max_length=200, description="A typed answer")] = None,
+    text: Annotated[str | None, Form(max_length=300, description="A typed answer (Story Forge: the line)")] = None,
     file: Annotated[UploadFile | None, File(description="A spoken answer (instead of text)")] = None,
+    away_ms: Annotated[int, Form(ge=0, le=3_600_000, description="Fair play: ms the game was hidden since the question appeared")] = 0,
+    pasted: Annotated[bool, Form(description="Fair play: the answer was pasted")] = False,
+    typing_ms: Annotated[int | None, Form(ge=0, le=3_600_000, description="Fair play: first key press to Send")] = None,
 ) -> AnswerOut:
     """Answer the question on screen, by text or by voice. The server checks it and keeps the score.
 
     Voice answers are turned into text with Whisper and the recording is discarded straight away.
+    A few facts about how the answer was given feed the fair-play detector (see fairplay.py).
     """
     received = datetime.now(timezone.utc)  # the clock stops when the answer arrives, not after speech-to-text
     store = request.app.state.store
@@ -440,16 +510,20 @@ async def answer(
     if file is not None:
         prepared = await prepare_upload(file, settings, max_seconds=20, min_speech=0.2)
         q = room.round.question
-        same_category = (await session.exec(select(BrainClashQuestion).where(BrainClashQuestion.category == q.category))).all()
-        hint = bc.vocabulary_hint(q, [bc.Question.model_validate(r, from_attributes=True) for r in same_category])
+        if q.kind == "spark":
+            hint = f"A story about {q.answer}."  # so the spark word comes out spelled right
+        else:
+            same_category = (await session.exec(select(BrainClashQuestion).where(BrainClashQuestion.category == q.category))).all()
+            hint = bc.vocabulary_hint(q, [bc.Question.model_validate(r, from_attributes=True) for r in same_category])
         said = await run_in_threadpool(get_transcriber(request).transcribe, prepared.decoded, hint)
     else:
         said = text or ""
+    signals = fairplay.Signals(away_ms=away_ms, pasted=pasted, typing_ms=typing_ms, voice=file is not None)
 
     async with rooms.lock(code):
         room = await get_or_404(rooms, code)
         was = room.status
-        feedback = rules(lambda: bc.submit_answer(room, user.id, said, round_number, received))
+        feedback = rules(lambda: bc.submit_answer(room, user.id, said, round_number, received, signals))
         await save_change(session, rooms, room, was)
     return AnswerOut(room=await view(session, settings, room, user.id), feedback=feedback)
 
@@ -478,3 +552,103 @@ async def end(code: str, user: CurrentUser, session: SessionDep, settings: Setti
         bc.finish(room, "Ended by the host")
         await save_change(session, rooms, room, "playing")
     return await view(session, settings, room, user.id)
+
+
+# ---------- Beat Drop, Story Forge, fair play and reactions ----------
+
+
+def hum_key(room: bc.BrainClashRoom, round_number: int) -> str:
+    return f"bchum:{room.code}:{room.game_no}:{round_number}"
+
+
+@router.post("/rooms/{code}/hum", response_model=RoomOut, dependencies=[Depends(rate_limit)])
+async def hum(
+    code: str,
+    request: Request,
+    user: CurrentUser,
+    session: SessionDep,
+    settings: SettingsDep,
+    rooms: RoomsDep,
+    round_number: Annotated[int, Form(alias="round")],
+    file: Annotated[UploadFile, File(description="The hum: up to 15 seconds")],
+) -> RoomOut:
+    """Beat Drop: the hummer sends their hum. It plays on every screen for this round only (kept 10
+    minutes at most). Whisper listens to it too: a title said out loud instead of hummed is flagged."""
+    received = datetime.now(timezone.utc)
+    room = await get_or_404(rooms, code)
+    member(room, user)
+    r = room.round
+    if room.settings.mode != "hum" or r is None or r.phase != "hum" or r.number != round_number or r.performer_id != user.id:
+        raise HTTPException(status.HTTP_409_CONFLICT, "It's not your turn to hum.")
+    data = await read_upload(file, settings)
+    try:
+        prepared = await run_in_threadpool(preprocess, data, 0.5, 15)
+    except AudioError as exc:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, f"We couldn't hear a hum: {exc}") from exc
+    heard = await run_in_threadpool(get_transcriber(request).transcribe, prepared.decoded)
+    await request.app.state.store.put(
+        hum_key(room, round_number), json.dumps({"type": file.content_type or "audio/webm", "audio": base64.b64encode(data).decode()}), HUM_CLIP_SECONDS
+    )
+    async with rooms.lock(code):
+        room = await get_or_404(rooms, code)
+        rules(lambda: bc.submit_hum(room, user.id, round_number, heard, received))
+        await rooms.save(room)
+    return await view(session, settings, room, user.id)
+
+
+@router.get("/rooms/{code}/hum")
+async def hum_clip(code: str, request: Request, user: CurrentUser, rooms: RoomsDep) -> Response:
+    """Beat Drop: this round's hum, to play."""
+    room = await get_or_404(rooms, code)
+    member(room, user)
+    raw = await request.app.state.store.get(hum_key(room, room.round.number)) if room.round and room.round.has_clip else None
+    if raw is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "There's no hum to play right now.")
+    clip = json.loads(raw)
+    return Response(base64.b64decode(clip["audio"]), media_type=clip["type"], headers={"Cache-Control": "no-store"})
+
+
+class RoundIn(BaseModel):
+    round: int
+
+
+@router.post("/rooms/{code}/fire", response_model=RoomOut)
+async def fire(code: str, body: RoundIn, user: CurrentUser, session: SessionDep, settings: SettingsDep, rooms: RoomsDep) -> RoomOut:
+    """Story Forge: fire 🔥 at the line just written (other team only, once each)."""
+    async with rooms.lock(code):
+        room = await get_or_404(rooms, code)
+        rules(lambda: bc.fire(room, user.id, body.round))
+        await rooms.save(room)
+    return await view(session, settings, room, user.id)
+
+
+class DecisionIn(BaseModel):
+    allow: bool
+
+
+@router.post("/rooms/{code}/flags/{flag_id}", response_model=RoomOut)
+async def decide(code: str, flag_id: str, body: DecisionIn, user: CurrentUser, session: SessionDep, settings: SettingsDep, rooms: RoomsDep) -> RoomOut:
+    """Fair play: allow a flagged answer (its held points are added) or void it (they're dropped)."""
+    async with rooms.lock(code):
+        room = await get_or_404(rooms, code)
+        rules(lambda: bc.decide_flag(room, user.id, flag_id, body.allow))
+        await rooms.save(room)
+    return await view(session, settings, room, user.id)
+
+
+class ReactIn(BaseModel):
+    emoji: str
+
+
+@router.post("/rooms/{code}/react", status_code=status.HTTP_204_NO_CONTENT)
+async def react(code: str, body: ReactIn, request: Request, user: CurrentUser, rooms: RoomsDep) -> Response:
+    """Send an emoji that floats across everyone's screen."""
+    room = await get_or_404(rooms, code)
+    player = member(room, user)
+    if body.emoji not in REACTIONS:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, f"Pick one of {' '.join(REACTIONS)}")
+    store = request.app.state.store
+    if await store.incr(f"react:{user.id}:{int(time.time() // 10)}", 10) > 8:
+        raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, "Easy there! Too many reactions.")
+    await store.publish(f"bc:{room.code}", json.dumps({"reaction": body.emoji, "from": player.name}))
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

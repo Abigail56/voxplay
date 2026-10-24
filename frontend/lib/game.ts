@@ -20,7 +20,7 @@ export function avatarSlot(name: string): number {
 let audio: AudioContext | null = null;
 
 /** Short synthesised sound effects (no audio files needed). Silent if the browser blocks audio. */
-export function sfx(kind: "join" | "turn" | "score" | "zero" | "win", enabled: boolean) {
+export function sfx(kind: "join" | "turn" | "score" | "zero" | "win" | "tick" | "fire" | "flag", enabled: boolean) {
   if (!enabled || typeof window === "undefined") return;
   try {
     audio ??= new AudioContext();
@@ -30,6 +30,9 @@ export function sfx(kind: "join" | "turn" | "score" | "zero" | "win", enabled: b
       score: [523, 659, 784, 1047],
       zero: [330, 247],
       win: [523, 659, 784, 1047, 784, 1047],
+      tick: [880], // the last seconds of a round
+      fire: [392, 523, 784],
+      flag: [220, 208, 196], // the fair-play detector raised a flag
     };
     notes[kind].forEach((freq, i) => {
       const osc = audio!.createOscillator();

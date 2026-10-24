@@ -4,5 +4,5 @@ export const metadata = { title: "Brain Clash room" };
 
 export default async function Room({ params }: { params: Promise<{ code: string }> }) {
   const { code } = await params;
-  return <BrainClashRoomPage code={decodeURIComponent(code).toUpperCase()} />;
+  return <BrainClashRoomPage code={decodeURIComponent(code).toUpperCase()} game="brain-clash" />;
 }

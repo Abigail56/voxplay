@@ -13,6 +13,8 @@ export function Footer() {
         <nav aria-label="Footer" className="footer-links">
           <Link href="/games">Games</Link>
           <Link href="/brain-clash">Brain Clash</Link>
+          <Link href="/beat-drop">Beat Drop</Link>
+          <Link href="/story-forge">Story Forge</Link>
           <Link href="/whos-talking">Who&apos;s Talking?</Link>
           <Link href="/#how">How it works</Link>
           <Link href="/#faq">FAQ</Link>
