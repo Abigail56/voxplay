@@ -96,6 +96,11 @@ export function ClipInput({ onClip, multiple = false, disabled = false, allowUpl
 
   async function start() {
     setError(null);
+    // Browsers only offer the microphone on https pages or localhost (e.g. not on a plain Wi-Fi address).
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setError("This browser only allows the microphone on secure (https) links.");
+      return;
+    }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true },
