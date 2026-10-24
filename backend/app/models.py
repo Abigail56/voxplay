@@ -1,7 +1,7 @@
 from datetime import date, datetime
 
 from pgvector.sqlalchemy import Vector
-from sqlalchemy import Column, DateTime, Index, false, func, true
+from sqlalchemy import JSON, Column, DateTime, Index, false, func, true
 from sqlmodel import Field, Relationship, SQLModel
 
 from .embedding import EMBEDDING_DIM
@@ -150,3 +150,47 @@ class GamePlay(SQLModel, table=True):
         default=None, sa_type=DateTime(timezone=True), sa_column_kwargs={"server_default": func.now()}, index=True
     )
 
+
+
+class BrainClashQuestion(SQLModel, table=True):
+    """One Brain Clash question. Loaded from app/data/brain_clash_questions.json at startup (that file is
+    the source of truth: edit it, restart, and the table follows). Set "active": false to retire one."""
+
+    __tablename__ = "bc_questions"
+
+    id: str = Field(primary_key=True, max_length=60)
+    kind: str = Field(max_length=12, index=True)  # question | list | association
+    category: str = Field(max_length=40, index=True)
+    difficulty: str = Field(max_length=10)
+    prompt: str
+    answer: str
+    accepted: list[str] = Field(default_factory=list, sa_column=Column(JSON, nullable=False))
+    items: list[list[str]] = Field(default_factory=list, sa_column=Column(JSON, nullable=False))
+    target: int | None = None
+    points: int | None = None
+    explanation: str | None = None
+    source: str | None = None
+    as_of: str | None = Field(default=None, max_length=20)
+    active: bool = Field(default=True, index=True)
+
+
+class BrainClashResult(SQLModel, table=True):
+    """A finished Brain Clash match: who played on which team, the score and the winner."""
+
+    __tablename__ = "bc_results"
+
+    id: int | None = Field(default=None, primary_key=True)
+    room_code: str = Field(max_length=20)
+    game_no: int
+    mode: str = Field(max_length=20)
+    categories: list[str] = Field(default_factory=list, sa_column=Column(JSON, nullable=False))
+    team_a: str = Field(max_length=40)
+    team_b: str = Field(max_length=40)
+    score_a: int
+    score_b: int
+    winner: str = Field(max_length=5)  # A | B | draw
+    rounds_played: int
+    players: list[dict] = Field(default_factory=list, sa_column=Column(JSON, nullable=False))  # {user_id, name, team, points}
+    finished_at: datetime | None = Field(
+        default=None, sa_type=DateTime(timezone=True), sa_column_kwargs={"server_default": func.now()}, index=True
+    )

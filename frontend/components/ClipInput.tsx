@@ -29,6 +29,7 @@ type Props = {
   multiple?: boolean;
   disabled?: boolean;
   allowUpload?: boolean; // false: microphone only (the liveness check wants a live voice)
+  label?: string; // the record button's text
 };
 
 const BARS = 28;
@@ -76,7 +77,7 @@ function useLevels() {
 }
 
 /** Record from the microphone or pick audio files. Calls onClip for each clip. */
-export function ClipInput({ onClip, multiple = false, disabled = false, allowUpload = true }: Props) {
+export function ClipInput({ onClip, multiple = false, disabled = false, allowUpload = true, label = "Record" }: Props) {
   const [recording, setRecording] = useState(false);
   const [seconds, setSeconds] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -142,7 +143,7 @@ export function ClipInput({ onClip, multiple = false, disabled = false, allowUpl
         </button>
       ) : (
         <button type="button" className="btn" onClick={start} disabled={disabled}>
-          Record
+          {label}
         </button>
       )}
       {recording && (

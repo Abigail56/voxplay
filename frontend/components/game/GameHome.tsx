@@ -186,12 +186,12 @@ export function GameHome() {
       <VoiceTwins refreshKey={refreshKey} />
       {dashboard && <World dashboard={dashboard} />}
 
-      <footer>
+      <p className="privacy-note">
         <strong>Privacy:</strong> your voiceprint (192 numbers, not a recording) is used only for this game. Game
         recordings are only kept while a game needs them, or for an hour when the host turns on the replay. Your city
         is shown only if you turn it on, rounded to about 10 km, and is deleted after 30 days or when you turn it off.
         Deleting your player deletes everything.
-      </footer>
+      </p>
     </>
   );
 }

@@ -210,10 +210,11 @@ export type AdminRoom = {
 };
 
 /** ws://… for http://…, wss://… for https://… */
-export function liveUrl(token: string, room?: string | null): string {
+export function liveUrl(token: string, room?: string | null, bc?: string | null): string {
   const url = new URL("/ws", API_URL.replace(/^http/, "ws"));
   url.searchParams.set("token", token);
   if (room) url.searchParams.set("room", room);
+  if (bc) url.searchParams.set("bc", bc);
   return url.toString();
 }
 
@@ -241,6 +242,76 @@ export type VoiceMap = {
 
 /** A recorded or uploaded clip waiting to be sent. */
 export type Clip = { id: string; blob: Blob; filename: string; url: string };
+
+// ---------- Brain Clash ----------
+
+export type BcMode = "battle" | "namefast" | "quickfire" | "association";
+export type BcTeam = "A" | "B";
+export type BcSettings = {
+  mode: BcMode;
+  categories: string[]; // empty = all
+  rounds: number;
+  seconds: number | null; // null = the mode's default
+  win_score: number | null;
+  speed_bonus: boolean;
+  steals: boolean;
+  team_names: Record<BcTeam, string>;
+  scoring: { correct: number; hard: number; list_item: number; speed_max: number };
+};
+export type BcPlayer = { user_id: number; name: string; team: BcTeam; points: number; correct: number; online: boolean };
+export type BcFeed = {
+  round: number;
+  team: BcTeam;
+  player: string;
+  user_id: number;
+  said: string;
+  verdict: "correct" | "wrong" | "duplicate" | "item" | "steal";
+  points: number;
+  items: string[];
+};
+export type BcRound = {
+  number: number;
+  phase: "open" | "steal" | "reveal";
+  question: { id: string; kind: "question" | "list" | "association"; category: string; category_name: string; difficulty: string; prompt: string; target: number | null; points: number };
+  opened_at: string;
+  closes_at: string;
+  turn_team: BcTeam | null;
+  attempts: Record<string, number>;
+  found: Record<BcTeam, string[]>;
+  found_count: Record<BcTeam, number>;
+  scored: Record<string, number>;
+  winner_team: BcTeam | null;
+  reveal_until: string | null;
+  tiebreak: boolean;
+  you_tried: boolean;
+  reveal: { answer: string; explanation: string | null; source: string | null; as_of: string | null; more: string[] } | null;
+};
+export type BcRoom = {
+  code: string;
+  host_id: number;
+  status: "lobby" | "playing" | "finished";
+  game_no: number;
+  settings: BcSettings;
+  players: BcPlayer[];
+  scores: Record<BcTeam, number>;
+  round: BcRound | null;
+  rounds_total: number;
+  feed: BcFeed[];
+  history: { number: number; prompt: string; answer: string; scored: Record<string, number>; tiebreak: boolean }[];
+  winner: BcTeam | "draw" | null;
+  finish_reason: string | null;
+  notice: string | null;
+  server_time: string;
+  you: number;
+};
+export type BcCategory = { id: string; name: string; counts: Record<BcMode, number> };
+
+/** A fresh random id for every answer, so the server can refuse a replayed one. */
+function answerId(): string {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+}
 
 // The signed-in player's token (set by useAuthStore). Sent with every request.
 let authToken: string | null = null;
@@ -360,6 +431,31 @@ export const api = {
     rooms: () => request<AdminRoom[]>("/admin/rooms"),
     endRoom: (code: string) => request<AdminRoom>(`/admin/rooms/${encodeURIComponent(code)}/end`, { method: "POST" }),
     deletePlayer: (id: number) => request<void>(`/admin/players/${id}`, { method: "DELETE" }),
+  },
+  bc: {
+    categories: () => request<BcCategory[]>("/brain-clash/categories"),
+    create: (settings: Partial<BcSettings>, name?: string) =>
+      request<BcRoom>("/brain-clash/rooms", { method: "POST", ...json({ settings, name: name || null }) }),
+    room: (code: string) => request<BcRoom>(`/brain-clash/rooms/${encodeURIComponent(code)}`),
+    join: (code: string, name?: string, team?: BcTeam) =>
+      request<BcRoom>(`/brain-clash/rooms/${encodeURIComponent(code)}/join`, { method: "POST", ...json({ name: name || null, team: team ?? null }) }),
+    leave: (code: string) => request<void>(`/brain-clash/rooms/${encodeURIComponent(code)}/leave`, { method: "POST" }),
+    settings: (code: string, settings: BcSettings) =>
+      request<BcRoom>(`/brain-clash/rooms/${encodeURIComponent(code)}/settings`, { method: "PATCH", ...json(settings) }),
+    team: (code: string, userId: number, team: BcTeam) =>
+      request<BcRoom>(`/brain-clash/rooms/${encodeURIComponent(code)}/team`, { method: "POST", ...json({ user_id: userId, team }) }),
+    shuffle: (code: string) => request<BcRoom>(`/brain-clash/rooms/${encodeURIComponent(code)}/shuffle`, { method: "POST" }),
+    start: (code: string) => request<BcRoom>(`/brain-clash/rooms/${encodeURIComponent(code)}/start`, { method: "POST" }),
+    advance: (code: string) => request<BcRoom>(`/brain-clash/rooms/${encodeURIComponent(code)}/advance`, { method: "POST" }),
+    end: (code: string) => request<BcRoom>(`/brain-clash/rooms/${encodeURIComponent(code)}/end`, { method: "POST" }),
+    answer(code: string, round: number, answer: { text: string } | { clip: Clip }) {
+      const form = new FormData();
+      form.append("round", String(round));
+      form.append("answer_id", answerId());
+      if ("text" in answer) form.append("text", answer.text);
+      else form.append("file", answer.clip.blob, answer.clip.filename);
+      return request<{ room: BcRoom; feedback: BcFeed }>(`/brain-clash/rooms/${encodeURIComponent(code)}/answer`, { method: "POST", body: form });
+    },
   },
   takeTurn(code: string, clip: Clip, challengeId: string) {
     const form = new FormData();

@@ -8,12 +8,13 @@ type Handlers = {
   onDashboard?: () => void;
   onRoom?: () => void;
   onReaction?: (emoji: string, from: string) => void;
+  onBrainClash?: () => void;
   onSignedOut?: () => void;
 };
 
 /** Live updates over a WebSocket. The server only says what changed; handlers refetch.
  *  Reconnects with back-off, and pings every 15 s so the player shows as online. */
-export function useLive(token: string | null, room: string | null, handlers: Handlers) {
+export function useLive(token: string | null, room: string | null, handlers: Handlers, bc: string | null = null) {
   const ref = useRef(handlers);
   ref.current = handlers;
 
@@ -26,18 +27,20 @@ export function useLive(token: string | null, room: string | null, handlers: Han
     let stopped = false;
 
     const connect = () => {
-      ws = new WebSocket(liveUrl(token, room));
+      ws = new WebSocket(liveUrl(token, room, bc));
       ws.onopen = () => {
         attempts = 0;
         // Catch up on anything that changed while we were disconnected.
         ref.current.onDashboard?.();
         ref.current.onRoom?.();
+        ref.current.onBrainClash?.();
         ping = setInterval(() => ws?.readyState === WebSocket.OPEN && ws.send(JSON.stringify({ type: "ping" })), 15_000);
       };
       ws.onmessage = (e) => {
         const msg = JSON.parse(e.data) as { type: string; reaction?: string; from?: string };
         if (msg.type === "dashboard") ref.current.onDashboard?.();
         if (msg.type === "room") ref.current.onRoom?.();
+        if (msg.type === "brain_clash") ref.current.onBrainClash?.();
         if (msg.type === "reaction" && msg.reaction) ref.current.onReaction?.(msg.reaction, msg.from ?? "");
       };
       ws.onclose = (e) => {
@@ -55,5 +58,5 @@ export function useLive(token: string | null, room: string | null, handlers: Han
       clearTimeout(retry);
       ws?.close();
     };
-  }, [token, room]);
+  }, [token, room, bc]);
 }

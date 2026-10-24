@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 
 import { Nav } from "@/components/Nav";
+import { Footer } from "@/components/portal/Footer";
 
 import "./globals.css";
 
@@ -30,6 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <Nav />
         <main>{children}</main>
+        <Footer />
       </body>
     </html>
   );

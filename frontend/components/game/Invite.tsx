@@ -9,7 +9,7 @@ export function Invite({ code }: { code: string }) {
   const [canShare, setCanShare] = useState(false);
 
   useEffect(() => {
-    setLink(`${window.location.origin}/?join=${encodeURIComponent(code)}`);
+    setLink(`${window.location.origin}/whos-talking?join=${encodeURIComponent(code)}`);
     setCanShare(typeof navigator.share === "function");
   }, [code]);
 

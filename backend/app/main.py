@@ -20,7 +20,8 @@ from .embedding import EcapaEmbedder, Embedder
 from .geocode import Geocoder, NominatimGeocoder
 from .liveness import ChallengeStore, Transcriber, WhisperTranscriber
 from .models import Speaker
-from .routers import accounts, admin, daily, game, identify, rooms, solo, speakers
+from .brain_clash import BrainClashStore
+from .routers import accounts, admin, brain_clash, daily, game, identify, rooms, solo, speakers
 from .schemas import HealthOut
 from .rooms import RoomStore
 from .store import make_store
@@ -46,6 +47,7 @@ def create_app(
         store = make_store(settings.redis_url)
         app.state.store = store
         app.state.rooms = RoomStore(store, settings.room_ttl_hours)
+        app.state.bc_rooms = BrainClashStore(store, settings.room_ttl_hours)
         app.state.geocoder = geocoder or NominatimGeocoder(store, settings.geocoder_user_agent)
         app.state.jwt_secret = settings.jwt_secret
         if not app.state.jwt_secret:
@@ -68,6 +70,7 @@ def create_app(
             )
             log.info("Speech-to-text ready.")
 
+        log.info("Brain Clash: %d questions in the bank.", await brain_clash.seed_questions(sessionmaker))
         if settings.seed_sample_voices:
             await seed_sample_voices(sessionmaker, app.state.embedder, sample_folder(settings))
 
@@ -106,6 +109,7 @@ def create_app(
     app.include_router(game.router)
     app.include_router(daily.router)
     app.include_router(solo.router)
+    app.include_router(brain_clash.router)
     app.include_router(admin.router)
 
     @app.get("/health", response_model=HealthOut, tags=["health"])

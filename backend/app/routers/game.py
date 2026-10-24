@@ -158,11 +158,12 @@ async def mark_seen(websocket: WebSocket, user_id: int) -> None:
 
 
 @router.websocket("/ws")
-async def live(websocket: WebSocket, token: str = "", room: str | None = None) -> None:
+async def live(websocket: WebSocket, token: str = "", room: str | None = None, bc: str | None = None) -> None:
     """Live updates for the dashboard and (optionally) one room.
 
     The server only says *what* changed ({"type": "dashboard"} or {"type": "room"});
-    the browser then fetches the new state over plain HTTP. Emoji reactions come
+    the browser then fetches the new state over plain HTTP. With `bc=<code>` it also passes on changes
+    to that Brain Clash room as {"type": "brain_clash"}. Emoji reactions come
     through as they are: {"type": "reaction", "reaction": "🔥", "from": "ada"}. Messages come through
     the shared store's pub/sub, so a change made on any API instance arrives here.
     The browser sends {"type": "ping"} every 15 s, which keeps the player "online".
@@ -173,14 +174,15 @@ async def live(websocket: WebSocket, token: str = "", room: str | None = None) -
         return
     await websocket.accept()
     store = websocket.app.state.store
-    channels = ["dashboard"] + ([f"room:{room.upper()}"] if room else [])
+    channels = ["dashboard"] + ([f"room:{room.upper()}"] if room else []) + ([f"bc:{bc.upper()}"] if bc else [])
 
     async def forward(events) -> None:
         async for channel, message in events:
             if message.startswith("{"):  # an emoji reaction: pass it on as it is
                 await websocket.send_json({"type": "reaction", **json.loads(message)})
             else:
-                await websocket.send_json({"type": "room" if channel.startswith("room:") else "dashboard"})
+                kind = "room" if channel.startswith("room:") else "brain_clash" if channel.startswith("bc:") else "dashboard"
+                await websocket.send_json({"type": kind})
 
     async def receive() -> None:
         while True:

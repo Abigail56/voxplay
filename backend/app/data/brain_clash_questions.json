@@ -1,0 +1,5483 @@
+{
+ "version": 1,
+ "questions": [
+  {
+   "id": "african_general-q01",
+   "kind": "question",
+   "category": "african_general",
+   "difficulty": "medium",
+   "prompt": "What is the largest country in Africa by area?",
+   "answer": "Algeria",
+   "explanation": "Algeria has been Africa's largest country since Sudan split in 2011.",
+   "active": true
+  },
+  {
+   "id": "african_general-q02",
+   "kind": "question",
+   "category": "african_general",
+   "difficulty": "easy",
+   "prompt": "What is the most populous country in Africa?",
+   "answer": "Nigeria",
+   "active": true
+  },
+  {
+   "id": "african_general-q03",
+   "kind": "question",
+   "category": "african_general",
+   "difficulty": "easy",
+   "prompt": "What is the longest river in Africa?",
+   "answer": "Nile",
+   "accepted": [
+    "the nile",
+    "river nile",
+    "nile river"
+   ],
+   "active": true
+  },
+  {
+   "id": "african_general-q04",
+   "kind": "question",
+   "category": "african_general",
+   "difficulty": "easy",
+   "prompt": "What is the highest mountain in Africa?",
+   "answer": "Kilimanjaro",
+   "accepted": [
+    "mount kilimanjaro",
+    "mt kilimanjaro"
+   ],
+   "explanation": "Kilimanjaro, in Tanzania, rises about 5,895 metres.",
+   "active": true
+  },
+  {
+   "id": "african_general-q05",
+   "kind": "question",
+   "category": "african_general",
+   "difficulty": "easy",
+   "prompt": "What is the capital of Kenya?",
+   "answer": "Nairobi",
+   "active": true
+  },
+  {
+   "id": "african_general-q06",
+   "kind": "question",
+   "category": "african_general",
+   "difficulty": "easy",
+   "prompt": "What is the capital of Ghana?",
+   "answer": "Accra",
+   "active": true
+  },
+  {
+   "id": "african_general-q07",
+   "kind": "question",
+   "category": "african_general",
+   "difficulty": "easy",
+   "prompt": "What is the capital of Egypt?",
+   "answer": "Cairo",
+   "active": true
+  },
+  {
+   "id": "african_general-q08",
+   "kind": "question",
+   "category": "african_general",
+   "difficulty": "easy",
+   "prompt": "Which desert covers much of North Africa?",
+   "answer": "Sahara",
+   "accepted": [
+    "the sahara",
+    "sahara desert"
+   ],
+   "active": true
+  },
+  {
+   "id": "african_general-q09",
+   "kind": "question",
+   "category": "african_general",
+   "difficulty": "medium",
+   "prompt": "How many countries are there in Africa?",
+   "answer": "54",
+   "accepted": [
+    "fifty four",
+    "fifty-four"
+   ],
+   "explanation": "54 countries are UN members.",
+   "active": true
+  },
+  {
+   "id": "african_general-q10",
+   "kind": "question",
+   "category": "african_general",
+   "difficulty": "medium",
+   "prompt": "What is the capital of Ethiopia?",
+   "answer": "Addis Ababa",
+   "accepted": [
+    "addis"
+   ],
+   "active": true
+  },
+  {
+   "id": "african_general-q11",
+   "kind": "question",
+   "category": "african_general",
+   "difficulty": "medium",
+   "prompt": "Lake Victoria is shared by Kenya, Tanzania and which other country?",
+   "answer": "Uganda",
+   "active": true
+  },
+  {
+   "id": "african_general-q12",
+   "kind": "question",
+   "category": "african_general",
+   "difficulty": "medium",
+   "prompt": "What is the capital of Senegal?",
+   "answer": "Dakar",
+   "active": true
+  },
+  {
+   "id": "african_general-q13",
+   "kind": "question",
+   "category": "african_general",
+   "difficulty": "hard",
+   "prompt": "What is the smallest country on the African mainland?",
+   "answer": "The Gambia",
+   "accepted": [
+    "gambia"
+   ],
+   "active": true
+  },
+  {
+   "id": "african_general-q14",
+   "kind": "question",
+   "category": "african_general",
+   "difficulty": "medium",
+   "prompt": "Which country has three capitals: Pretoria, Cape Town and Bloemfontein?",
+   "answer": "South Africa",
+   "active": true
+  },
+  {
+   "id": "african_general-q15",
+   "kind": "question",
+   "category": "african_general",
+   "difficulty": "medium",
+   "prompt": "Table Mountain overlooks which South African city?",
+   "answer": "Cape Town",
+   "active": true
+  },
+  {
+   "id": "nigerian_general-q01",
+   "kind": "question",
+   "category": "nigerian_general",
+   "difficulty": "easy",
+   "prompt": "What is the capital of Nigeria?",
+   "answer": "Abuja",
+   "active": true
+  },
+  {
+   "id": "nigerian_general-q02",
+   "kind": "question",
+   "category": "nigerian_general",
+   "difficulty": "easy",
+   "prompt": "In what year did Nigeria gain independence?",
+   "answer": "1960",
+   "accepted": [
+    "nineteen sixty"
+   ],
+   "active": true
+  },
+  {
+   "id": "nigerian_general-q03",
+   "kind": "question",
+   "category": "nigerian_general",
+   "difficulty": "easy",
+   "prompt": "How many states does Nigeria have?",
+   "answer": "36",
+   "accepted": [
+    "thirty six",
+    "thirty-six"
+   ],
+   "active": true
+  },
+  {
+   "id": "nigerian_general-q04",
+   "kind": "question",
+   "category": "nigerian_general",
+   "difficulty": "easy",
+   "prompt": "What is the name of Nigeria's currency?",
+   "answer": "Naira",
+   "accepted": [
+    "the naira"
+   ],
+   "active": true
+  },
+  {
+   "id": "nigerian_general-q05",
+   "kind": "question",
+   "category": "nigerian_general",
+   "difficulty": "easy",
+   "prompt": "Which city was Nigeria's capital before Abuja?",
+   "answer": "Lagos",
+   "active": true
+  },
+  {
+   "id": "nigerian_general-q06",
+   "kind": "question",
+   "category": "nigerian_general",
+   "difficulty": "easy",
+   "prompt": "What are the two colours of the Nigerian flag?",
+   "answer": "Green and white",
+   "accepted": [
+    "green white",
+    "white and green",
+    "white green"
+   ],
+   "active": true
+  },
+  {
+   "id": "nigerian_general-q07",
+   "kind": "question",
+   "category": "nigerian_general",
+   "difficulty": "easy",
+   "prompt": "On what date is Nigeria's Independence Day?",
+   "answer": "1 October",
+   "accepted": [
+    "october 1",
+    "october first",
+    "1st october",
+    "first of october",
+    "first october",
+    "october 1st"
+   ],
+   "active": true
+  },
+  {
+   "id": "nigerian_general-q08",
+   "kind": "question",
+   "category": "nigerian_general",
+   "difficulty": "medium",
+   "prompt": "Which river meets the Niger at Lokoja?",
+   "answer": "Benue",
+   "accepted": [
+    "the benue",
+    "river benue",
+    "benue river"
+   ],
+   "active": true
+  },
+  {
+   "id": "nigerian_general-q09",
+   "kind": "question",
+   "category": "nigerian_general",
+   "difficulty": "medium",
+   "prompt": "Who was Nigeria's first President?",
+   "answer": "Nnamdi Azikiwe",
+   "accepted": [
+    "azikiwe",
+    "zik"
+   ],
+   "explanation": "Azikiwe became President when Nigeria became a republic in 1963.",
+   "active": true
+  },
+  {
+   "id": "nigerian_general-q10",
+   "kind": "question",
+   "category": "nigerian_general",
+   "difficulty": "medium",
+   "prompt": "Who was Nigeria's first Prime Minister?",
+   "answer": "Abubakar Tafawa Balewa",
+   "accepted": [
+    "tafawa balewa",
+    "balewa"
+   ],
+   "active": true
+  },
+  {
+   "id": "nigerian_general-q11",
+   "kind": "question",
+   "category": "nigerian_general",
+   "difficulty": "medium",
+   "prompt": "Complete Nigeria's motto: Unity and Faith, Peace and …?",
+   "answer": "Progress",
+   "active": true
+  },
+  {
+   "id": "nigerian_general-q12",
+   "kind": "question",
+   "category": "nigerian_general",
+   "difficulty": "hard",
+   "prompt": "In what year did Abuja officially become Nigeria's capital?",
+   "answer": "1991",
+   "accepted": [
+    "nineteen ninety one"
+   ],
+   "explanation": "The seat of government moved from Lagos on 12 December 1991.",
+   "active": true
+  },
+  {
+   "id": "nigerian_general-q13",
+   "kind": "question",
+   "category": "nigerian_general",
+   "difficulty": "hard",
+   "prompt": "What is the name of Nigeria's highest mountain?",
+   "answer": "Chappal Waddi",
+   "accepted": [
+    "chappal wadi",
+    "gangirwal"
+   ],
+   "explanation": "Chappal Waddi, in Taraba State, is about 2,419 metres high.",
+   "active": true
+  },
+  {
+   "id": "nigerian_general-q14",
+   "kind": "question",
+   "category": "nigerian_general",
+   "difficulty": "medium",
+   "prompt": "Which Nigerian city is famous for its ancient bronze and brass sculptures?",
+   "answer": "Benin City",
+   "accepted": [
+    "benin"
+   ],
+   "active": true
+  },
+  {
+   "id": "nigerian_general-q15",
+   "kind": "question",
+   "category": "nigerian_general",
+   "difficulty": "medium",
+   "prompt": "Which Nigerian state's slogan is 'Centre of Excellence'?",
+   "answer": "Lagos",
+   "accepted": [
+    "lagos state"
+   ],
+   "active": true
+  },
+  {
+   "id": "african_music-q01",
+   "kind": "question",
+   "category": "african_music",
+   "difficulty": "easy",
+   "prompt": "Which Nigerian musician is known as the father of Afrobeat?",
+   "answer": "Fela Kuti",
+   "accepted": [
+    "fela",
+    "fela anikulapo kuti",
+    "fela anikulapo"
+   ],
+   "active": true
+  },
+  {
+   "id": "african_music-q02",
+   "kind": "question",
+   "category": "african_music",
+   "difficulty": "medium",
+   "prompt": "'Pata Pata' was a worldwide hit for which South African singer?",
+   "answer": "Miriam Makeba",
+   "accepted": [
+    "makeba"
+   ],
+   "active": true
+  },
+  {
+   "id": "african_music-q03",
+   "kind": "question",
+   "category": "african_music",
+   "difficulty": "easy",
+   "prompt": "In which country did amapiano music begin?",
+   "answer": "South Africa",
+   "active": true
+  },
+  {
+   "id": "african_music-q04",
+   "kind": "question",
+   "category": "african_music",
+   "difficulty": "medium",
+   "prompt": "E.T. Mensah was called the king of which Ghanaian music style?",
+   "answer": "Highlife",
+   "active": true
+  },
+  {
+   "id": "african_music-q05",
+   "kind": "question",
+   "category": "african_music",
+   "difficulty": "medium",
+   "prompt": "Singer Angélique Kidjo comes from which country?",
+   "answer": "Benin",
+   "accepted": [
+    "republic of benin"
+   ],
+   "active": true
+  },
+  {
+   "id": "african_music-q06",
+   "kind": "question",
+   "category": "african_music",
+   "difficulty": "medium",
+   "prompt": "Singer Youssou N'Dour comes from which country?",
+   "answer": "Senegal",
+   "active": true
+  },
+  {
+   "id": "african_music-q07",
+   "kind": "question",
+   "category": "african_music",
+   "difficulty": "medium",
+   "prompt": "Franco Luambo was a giant of rumba music from which country?",
+   "answer": "DR Congo",
+   "accepted": [
+    "democratic republic of congo",
+    "democratic republic of the congo",
+    "congo",
+    "drc",
+    "zaire"
+   ],
+   "active": true
+  },
+  {
+   "id": "african_music-q08",
+   "kind": "question",
+   "category": "african_music",
+   "difficulty": "hard",
+   "prompt": "Which South African choir sang on Paul Simon's album Graceland?",
+   "answer": "Ladysmith Black Mambazo",
+   "accepted": [
+    "ladysmith"
+   ],
+   "active": true
+  },
+  {
+   "id": "african_music-q09",
+   "kind": "question",
+   "category": "african_music",
+   "difficulty": "hard",
+   "prompt": "What is the title of Burna Boy's Grammy-winning 2020 album?",
+   "answer": "Twice as Tall",
+   "explanation": "It won Best Global Music Album at the 2021 Grammys.",
+   "active": true
+  },
+  {
+   "id": "african_music-q10",
+   "kind": "question",
+   "category": "african_music",
+   "difficulty": "easy",
+   "prompt": "Which Nigerian singer released 'Essence' featuring Tems?",
+   "answer": "Wizkid",
+   "active": true
+  },
+  {
+   "id": "african_music-q11",
+   "kind": "question",
+   "category": "african_music",
+   "difficulty": "medium",
+   "prompt": "Toumani Diabaté of Mali was a master of which stringed instrument?",
+   "answer": "Kora",
+   "accepted": [
+    "the kora"
+   ],
+   "active": true
+  },
+  {
+   "id": "african_music-q12",
+   "kind": "question",
+   "category": "african_music",
+   "difficulty": "medium",
+   "prompt": "King Sunny Adé is a star of which Nigerian music style?",
+   "answer": "Juju",
+   "accepted": [
+    "juju music",
+    "jùjú"
+   ],
+   "active": true
+  },
+  {
+   "id": "african_music-q13",
+   "kind": "question",
+   "category": "african_music",
+   "difficulty": "easy",
+   "prompt": "Which Rema song was remixed with Selena Gomez?",
+   "answer": "Calm Down",
+   "active": true
+  },
+  {
+   "id": "african_music-q14",
+   "kind": "question",
+   "category": "african_music",
+   "difficulty": "medium",
+   "prompt": "Which Tems song is sampled in Future and Drake's 'Wait For U'?",
+   "answer": "Higher",
+   "active": true
+  },
+  {
+   "id": "nigerian_entertainment-q01",
+   "kind": "question",
+   "category": "nigerian_entertainment",
+   "difficulty": "easy",
+   "prompt": "What is Nigeria's film industry popularly called?",
+   "answer": "Nollywood",
+   "active": true
+  },
+  {
+   "id": "nigerian_entertainment-q02",
+   "kind": "question",
+   "category": "nigerian_entertainment",
+   "difficulty": "easy",
+   "prompt": "Mercy Eke and Laycon both won which reality TV show?",
+   "answer": "Big Brother Naija",
+   "accepted": [
+    "bbnaija",
+    "big brother",
+    "bb naija"
+   ],
+   "active": true
+  },
+  {
+   "id": "nigerian_entertainment-q03",
+   "kind": "question",
+   "category": "nigerian_entertainment",
+   "difficulty": "medium",
+   "prompt": "Which Nigerian singer's real name is Ayodeji Balogun?",
+   "answer": "Wizkid",
+   "active": true
+  },
+  {
+   "id": "nigerian_entertainment-q04",
+   "kind": "question",
+   "category": "nigerian_entertainment",
+   "difficulty": "medium",
+   "prompt": "Which Nigerian singer's real name is Damini Ogulu?",
+   "answer": "Burna Boy",
+   "accepted": [
+    "burna"
+   ],
+   "active": true
+  },
+  {
+   "id": "nigerian_entertainment-q05",
+   "kind": "question",
+   "category": "nigerian_entertainment",
+   "difficulty": "easy",
+   "prompt": "Which Nigerian singer's real name is David Adeleke?",
+   "answer": "Davido",
+   "active": true
+  },
+  {
+   "id": "nigerian_entertainment-q06",
+   "kind": "question",
+   "category": "nigerian_entertainment",
+   "difficulty": "medium",
+   "prompt": "Which Nigerian singer's real name is Divine Ikubor?",
+   "answer": "Rema",
+   "active": true
+  },
+  {
+   "id": "nigerian_entertainment-q07",
+   "kind": "question",
+   "category": "nigerian_entertainment",
+   "difficulty": "medium",
+   "prompt": "Which comedian and filmmaker's real name is Ayo Makun?",
+   "answer": "AY",
+   "accepted": [
+    "a y",
+    "ay makun"
+   ],
+   "active": true
+  },
+  {
+   "id": "nigerian_entertainment-q08",
+   "kind": "question",
+   "category": "nigerian_entertainment",
+   "difficulty": "medium",
+   "prompt": "Who sang the 2004 hit 'African Queen'?",
+   "answer": "2Baba",
+   "accepted": [
+    "2face",
+    "2face idibia",
+    "tuface",
+    "two face",
+    "two baba",
+    "tubaba",
+    "innocent idibia"
+   ],
+   "active": true
+  },
+  {
+   "id": "nigerian_entertainment-q09",
+   "kind": "question",
+   "category": "nigerian_entertainment",
+   "difficulty": "easy",
+   "prompt": "The twins in P-Square are Peter and …?",
+   "answer": "Paul",
+   "active": true
+  },
+  {
+   "id": "nigerian_entertainment-q10",
+   "kind": "question",
+   "category": "nigerian_entertainment",
+   "difficulty": "medium",
+   "prompt": "What is the title of Davido's 2023 album?",
+   "answer": "Timeless",
+   "active": true
+  },
+  {
+   "id": "nigerian_entertainment-q11",
+   "kind": "question",
+   "category": "nigerian_entertainment",
+   "difficulty": "hard",
+   "prompt": "Which skit maker plays the character Mr Macaroni?",
+   "answer": "Debo Adedayo",
+   "accepted": [
+    "adebowale adedayo",
+    "adedayo"
+   ],
+   "active": true
+  },
+  {
+   "id": "african_history-q01",
+   "kind": "question",
+   "category": "african_history",
+   "difficulty": "medium",
+   "prompt": "Which country defeated Italy at the Battle of Adwa in 1896?",
+   "answer": "Ethiopia",
+   "active": true
+  },
+  {
+   "id": "african_history-q02",
+   "kind": "question",
+   "category": "african_history",
+   "difficulty": "easy",
+   "prompt": "In what year did Nelson Mandela become President of South Africa?",
+   "answer": "1994",
+   "accepted": [
+    "nineteen ninety four"
+   ],
+   "active": true
+  },
+  {
+   "id": "african_history-q03",
+   "kind": "question",
+   "category": "african_history",
+   "difficulty": "easy",
+   "prompt": "The ruins of Great Zimbabwe are in which modern country?",
+   "answer": "Zimbabwe",
+   "active": true
+  },
+  {
+   "id": "african_history-q04",
+   "kind": "question",
+   "category": "african_history",
+   "difficulty": "easy",
+   "prompt": "Who was the first President of Ghana?",
+   "answer": "Kwame Nkrumah",
+   "accepted": [
+    "nkrumah"
+   ],
+   "active": true
+  },
+  {
+   "id": "african_history-q05",
+   "kind": "question",
+   "category": "african_history",
+   "difficulty": "medium",
+   "prompt": "Mansa Musa ruled which West African empire?",
+   "answer": "Mali",
+   "accepted": [
+    "mali empire",
+    "the mali empire"
+   ],
+   "active": true
+  },
+  {
+   "id": "african_history-q06",
+   "kind": "question",
+   "category": "african_history",
+   "difficulty": "easy",
+   "prompt": "The Pyramids of Giza are in which country?",
+   "answer": "Egypt",
+   "active": true
+  },
+  {
+   "id": "african_history-q07",
+   "kind": "question",
+   "category": "african_history",
+   "difficulty": "easy",
+   "prompt": "Which Nigerian author wrote 'Things Fall Apart'?",
+   "answer": "Chinua Achebe",
+   "accepted": [
+    "achebe"
+   ],
+   "active": true
+  },
+  {
+   "id": "african_history-q08",
+   "kind": "question",
+   "category": "african_history",
+   "difficulty": "medium",
+   "prompt": "In what year did Ghana become independent?",
+   "answer": "1957",
+   "accepted": [
+    "nineteen fifty seven"
+   ],
+   "explanation": "Ghana was the first sub-Saharan African colony to win independence.",
+   "active": true
+  },
+  {
+   "id": "african_history-q09",
+   "kind": "question",
+   "category": "african_history",
+   "difficulty": "hard",
+   "prompt": "Queen Amina was a warrior queen of which Hausa city-state?",
+   "answer": "Zazzau",
+   "accepted": [
+    "zaria"
+   ],
+   "active": true
+  },
+  {
+   "id": "african_history-q10",
+   "kind": "question",
+   "category": "african_history",
+   "difficulty": "medium",
+   "prompt": "In which city was the Organisation of African Unity founded in 1963?",
+   "answer": "Addis Ababa",
+   "accepted": [
+    "addis"
+   ],
+   "active": true
+  },
+  {
+   "id": "african_history-q11",
+   "kind": "question",
+   "category": "african_history",
+   "difficulty": "medium",
+   "prompt": "Which South African archbishop won the Nobel Peace Prize in 1984?",
+   "answer": "Desmond Tutu",
+   "accepted": [
+    "tutu"
+   ],
+   "active": true
+  },
+  {
+   "id": "african_history-q12",
+   "kind": "question",
+   "category": "african_history",
+   "difficulty": "easy",
+   "prompt": "In 1986 Wole Soyinka became the first African to win the Nobel Prize in which field?",
+   "answer": "Literature",
+   "active": true
+  },
+  {
+   "id": "african_history-q13",
+   "kind": "question",
+   "category": "african_history",
+   "difficulty": "medium",
+   "prompt": "Which Kenyan became the first African woman to win the Nobel Peace Prize?",
+   "answer": "Wangari Maathai",
+   "accepted": [
+    "maathai"
+   ],
+   "active": true
+  },
+  {
+   "id": "african_history-q14",
+   "kind": "question",
+   "category": "african_history",
+   "difficulty": "hard",
+   "prompt": "In what year did British troops take the Benin Bronzes?",
+   "answer": "1897",
+   "accepted": [
+    "eighteen ninety seven"
+   ],
+   "active": true
+  },
+  {
+   "id": "current_affairs-q01",
+   "kind": "question",
+   "category": "current_affairs",
+   "difficulty": "medium",
+   "prompt": "Which country won the 2023 Africa Cup of Nations, played in early 2024?",
+   "answer": "Ivory Coast",
+   "accepted": [
+    "cote d'ivoire",
+    "côte d'ivoire",
+    "cote divoire"
+   ],
+   "source": "CAF",
+   "as_of": "2024-02",
+   "active": true
+  },
+  {
+   "id": "current_affairs-q02",
+   "kind": "question",
+   "category": "current_affairs",
+   "difficulty": "medium",
+   "prompt": "Which country hosted the 2023 Africa Cup of Nations?",
+   "answer": "Ivory Coast",
+   "accepted": [
+    "cote d'ivoire",
+    "côte d'ivoire",
+    "cote divoire"
+   ],
+   "source": "CAF",
+   "as_of": "2024-02",
+   "active": true
+  },
+  {
+   "id": "current_affairs-q03",
+   "kind": "question",
+   "category": "current_affairs",
+   "difficulty": "easy",
+   "prompt": "Who was sworn in as Nigeria's President in May 2023?",
+   "answer": "Bola Tinubu",
+   "accepted": [
+    "tinubu",
+    "bola ahmed tinubu",
+    "bat"
+   ],
+   "source": "INEC",
+   "as_of": "2023-05",
+   "active": true
+  },
+  {
+   "id": "current_affairs-q04",
+   "kind": "question",
+   "category": "current_affairs",
+   "difficulty": "easy",
+   "prompt": "Which city hosted the 2024 Summer Olympics?",
+   "answer": "Paris",
+   "source": "IOC",
+   "as_of": "2024-08",
+   "active": true
+  },
+  {
+   "id": "current_affairs-q05",
+   "kind": "question",
+   "category": "current_affairs",
+   "difficulty": "medium",
+   "prompt": "In 2021, which Nigerian became the first woman and first African to lead the World Trade Organization?",
+   "answer": "Ngozi Okonjo-Iweala",
+   "accepted": [
+    "okonjo iweala",
+    "ngozi",
+    "ngozi okonjo iweala"
+   ],
+   "source": "WTO",
+   "as_of": "2021-03",
+   "active": true
+  },
+  {
+   "id": "current_affairs-q06",
+   "kind": "question",
+   "category": "current_affairs",
+   "difficulty": "medium",
+   "prompt": "At the 2022 World Cup, Morocco became the first African team to reach which stage?",
+   "answer": "Semi-finals",
+   "accepted": [
+    "semi final",
+    "semifinal",
+    "semi finals",
+    "semifinals",
+    "the semi finals"
+   ],
+   "source": "FIFA",
+   "as_of": "2022-12",
+   "active": true
+  },
+  {
+   "id": "current_affairs-q07",
+   "kind": "question",
+   "category": "current_affairs",
+   "difficulty": "hard",
+   "prompt": "At the 2025 Grammys, which Nigerian singer won Best African Music Performance for 'Love Me JeJe'?",
+   "answer": "Tems",
+   "source": "Recording Academy",
+   "as_of": "2025-02",
+   "active": false
+  },
+  {
+   "id": "african_football-q01",
+   "kind": "question",
+   "category": "african_football",
+   "difficulty": "medium",
+   "prompt": "Which country has won the most Africa Cup of Nations titles?",
+   "answer": "Egypt",
+   "explanation": "Egypt has won the tournament seven times.",
+   "active": true
+  },
+  {
+   "id": "african_football-q02",
+   "kind": "question",
+   "category": "african_football",
+   "difficulty": "easy",
+   "prompt": "What is the nickname of Nigeria's men's national football team?",
+   "answer": "Super Eagles",
+   "accepted": [
+    "the super eagles"
+   ],
+   "active": true
+  },
+  {
+   "id": "african_football-q03",
+   "kind": "question",
+   "category": "african_football",
+   "difficulty": "easy",
+   "prompt": "What is the nickname of Ghana's men's national football team?",
+   "answer": "Black Stars",
+   "accepted": [
+    "the black stars"
+   ],
+   "active": true
+  },
+  {
+   "id": "african_football-q04",
+   "kind": "question",
+   "category": "african_football",
+   "difficulty": "easy",
+   "prompt": "Cameroon's national team are the Indomitable …?",
+   "answer": "Lions",
+   "active": true
+  },
+  {
+   "id": "african_football-q05",
+   "kind": "question",
+   "category": "african_football",
+   "difficulty": "medium",
+   "prompt": "Which Liberian won the Ballon d'Or in 1995 and later became his country's President?",
+   "answer": "George Weah",
+   "accepted": [
+    "weah"
+   ],
+   "active": true
+  },
+  {
+   "id": "african_football-q06",
+   "kind": "question",
+   "category": "african_football",
+   "difficulty": "easy",
+   "prompt": "Mohamed Salah plays international football for which country?",
+   "answer": "Egypt",
+   "active": true
+  },
+  {
+   "id": "african_football-q07",
+   "kind": "question",
+   "category": "african_football",
+   "difficulty": "easy",
+   "prompt": "Which country hosted the 2010 FIFA World Cup?",
+   "answer": "South Africa",
+   "active": true
+  },
+  {
+   "id": "african_football-q08",
+   "kind": "question",
+   "category": "african_football",
+   "difficulty": "medium",
+   "prompt": "In what year did Nigeria win Olympic men's football gold?",
+   "answer": "1996",
+   "accepted": [
+    "nineteen ninety six"
+   ],
+   "explanation": "The 'Dream Team' won in Atlanta.",
+   "active": true
+  },
+  {
+   "id": "african_football-q09",
+   "kind": "question",
+   "category": "african_football",
+   "difficulty": "medium",
+   "prompt": "Which Ivorian striker scored the winning penalty in Chelsea's 2012 Champions League final?",
+   "answer": "Didier Drogba",
+   "accepted": [
+    "drogba"
+   ],
+   "active": true
+  },
+  {
+   "id": "african_football-q10",
+   "kind": "question",
+   "category": "african_football",
+   "difficulty": "medium",
+   "prompt": "Morocco's national team are the Atlas …?",
+   "answer": "Lions",
+   "active": true
+  },
+  {
+   "id": "african_football-q11",
+   "kind": "question",
+   "category": "african_football",
+   "difficulty": "medium",
+   "prompt": "Which Cameroonian legend scored at the 1994 World Cup aged 42?",
+   "answer": "Roger Milla",
+   "accepted": [
+    "milla"
+   ],
+   "active": true
+  },
+  {
+   "id": "animals_nature-q01",
+   "kind": "question",
+   "category": "animals_nature",
+   "difficulty": "easy",
+   "prompt": "What is the fastest land animal?",
+   "answer": "Cheetah",
+   "accepted": [
+    "the cheetah"
+   ],
+   "active": true
+  },
+  {
+   "id": "animals_nature-q02",
+   "kind": "question",
+   "category": "animals_nature",
+   "difficulty": "easy",
+   "prompt": "What is the largest land animal?",
+   "answer": "African elephant",
+   "accepted": [
+    "elephant",
+    "the elephant",
+    "the african elephant"
+   ],
+   "active": true
+  },
+  {
+   "id": "animals_nature-q03",
+   "kind": "question",
+   "category": "animals_nature",
+   "difficulty": "easy",
+   "prompt": "Which animal is known as the king of the jungle?",
+   "answer": "Lion",
+   "accepted": [
+    "the lion"
+   ],
+   "active": true
+  },
+  {
+   "id": "animals_nature-q04",
+   "kind": "question",
+   "category": "animals_nature",
+   "difficulty": "easy",
+   "prompt": "What is a baby goat called?",
+   "answer": "Kid",
+   "accepted": [
+    "a kid"
+   ],
+   "active": true
+  },
+  {
+   "id": "animals_nature-q05",
+   "kind": "question",
+   "category": "animals_nature",
+   "difficulty": "easy",
+   "prompt": "What is the tallest animal in the world?",
+   "answer": "Giraffe",
+   "accepted": [
+    "the giraffe"
+   ],
+   "active": true
+  },
+  {
+   "id": "animals_nature-q06",
+   "kind": "question",
+   "category": "animals_nature",
+   "difficulty": "easy",
+   "prompt": "What is the largest bird in the world?",
+   "answer": "Ostrich",
+   "accepted": [
+    "the ostrich"
+   ],
+   "active": true
+  },
+  {
+   "id": "animals_nature-q07",
+   "kind": "question",
+   "category": "animals_nature",
+   "difficulty": "easy",
+   "prompt": "How many legs does a spider have?",
+   "answer": "8",
+   "accepted": [
+    "eight"
+   ],
+   "active": true
+  },
+  {
+   "id": "animals_nature-q08",
+   "kind": "question",
+   "category": "animals_nature",
+   "difficulty": "medium",
+   "prompt": "Which animal's name comes from the Greek for 'river horse'?",
+   "answer": "Hippopotamus",
+   "accepted": [
+    "hippo",
+    "hippopotamus"
+   ],
+   "active": true
+  },
+  {
+   "id": "animals_nature-q09",
+   "kind": "question",
+   "category": "animals_nature",
+   "difficulty": "medium",
+   "prompt": "What is a group of lions called?",
+   "answer": "Pride",
+   "accepted": [
+    "a pride"
+   ],
+   "active": true
+  },
+  {
+   "id": "animals_nature-q10",
+   "kind": "question",
+   "category": "animals_nature",
+   "difficulty": "medium",
+   "prompt": "Which gas do plants take from the air to make their food?",
+   "answer": "Carbon dioxide",
+   "accepted": [
+    "co2",
+    "c o 2",
+    "carbon dioxide gas"
+   ],
+   "active": true
+  },
+  {
+   "id": "animals_nature-q11",
+   "kind": "question",
+   "category": "animals_nature",
+   "difficulty": "easy",
+   "prompt": "Which mammal can truly fly?",
+   "answer": "Bat",
+   "accepted": [
+    "a bat",
+    "the bat",
+    "bats"
+   ],
+   "active": true
+  },
+  {
+   "id": "animals_nature-q12",
+   "kind": "question",
+   "category": "animals_nature",
+   "difficulty": "hard",
+   "prompt": "Mountain gorillas live in Rwanda, Uganda and which other country?",
+   "answer": "DR Congo",
+   "accepted": [
+    "democratic republic of congo",
+    "democratic republic of the congo",
+    "congo",
+    "drc"
+   ],
+   "active": true
+  },
+  {
+   "id": "african_food-q01",
+   "kind": "question",
+   "category": "african_food",
+   "difficulty": "easy",
+   "prompt": "Which Nigerian soup is made with ground melon seeds?",
+   "answer": "Egusi",
+   "accepted": [
+    "egusi soup"
+   ],
+   "active": true
+  },
+  {
+   "id": "african_food-q02",
+   "kind": "question",
+   "category": "african_food",
+   "difficulty": "easy",
+   "prompt": "Which West African rice dish is cooked in a tomato and pepper sauce?",
+   "answer": "Jollof rice",
+   "accepted": [
+    "jollof",
+    "jollof rice"
+   ],
+   "active": true
+  },
+  {
+   "id": "african_food-q03",
+   "kind": "question",
+   "category": "african_food",
+   "difficulty": "easy",
+   "prompt": "What is fried ripe plantain called in Nigeria?",
+   "answer": "Dodo",
+   "active": true
+  },
+  {
+   "id": "african_food-q04",
+   "kind": "question",
+   "category": "african_food",
+   "difficulty": "medium",
+   "prompt": "Injera, a spongy sourdough flatbread, comes from which country?",
+   "answer": "Ethiopia",
+   "accepted": [
+    "eritrea"
+   ],
+   "active": true
+  },
+  {
+   "id": "african_food-q05",
+   "kind": "question",
+   "category": "african_food",
+   "difficulty": "medium",
+   "prompt": "Suya is most often made from which meat?",
+   "answer": "Beef",
+   "accepted": [
+    "cow",
+    "cow meat"
+   ],
+   "active": true
+  },
+  {
+   "id": "african_food-q06",
+   "kind": "question",
+   "category": "african_food",
+   "difficulty": "hard",
+   "prompt": "Bobotie, a spiced minced-meat bake, is a classic dish of which country?",
+   "answer": "South Africa",
+   "active": true
+  },
+  {
+   "id": "african_food-q07",
+   "kind": "question",
+   "category": "african_food",
+   "difficulty": "medium",
+   "prompt": "Couscous is a staple food from which region of Africa?",
+   "answer": "North Africa",
+   "accepted": [
+    "the maghreb",
+    "maghreb",
+    "northern africa"
+   ],
+   "active": true
+  },
+  {
+   "id": "african_food-q08",
+   "kind": "question",
+   "category": "african_food",
+   "difficulty": "easy",
+   "prompt": "Akara is made mainly from which ingredient?",
+   "answer": "Beans",
+   "accepted": [
+    "black eyed peas",
+    "black-eyed peas",
+    "cowpeas",
+    "bean"
+   ],
+   "active": true
+  },
+  {
+   "id": "african_food-q09",
+   "kind": "question",
+   "category": "african_food",
+   "difficulty": "easy",
+   "prompt": "Garri is made from which crop?",
+   "answer": "Cassava",
+   "active": true
+  },
+  {
+   "id": "african_food-q10",
+   "kind": "question",
+   "category": "african_food",
+   "difficulty": "easy",
+   "prompt": "Which slippery Nigerian soup is made from a green pod vegetable?",
+   "answer": "Okra soup",
+   "accepted": [
+    "okra",
+    "okro",
+    "okro soup"
+   ],
+   "active": true
+  },
+  {
+   "id": "african_food-q11",
+   "kind": "question",
+   "category": "african_food",
+   "difficulty": "medium",
+   "prompt": "Chin chin is a fried snack made mainly from what?",
+   "answer": "Flour",
+   "accepted": [
+    "wheat flour"
+   ],
+   "active": true
+  },
+  {
+   "id": "african_food-q12",
+   "kind": "question",
+   "category": "african_food",
+   "difficulty": "medium",
+   "prompt": "Ugali, a stiff maize porridge, is a staple in which East African country?",
+   "answer": "Kenya",
+   "accepted": [
+    "tanzania"
+   ],
+   "active": true
+  },
+  {
+   "id": "african_food-q13",
+   "kind": "question",
+   "category": "african_food",
+   "difficulty": "medium",
+   "prompt": "Which Ghanaian dish of rice and beans is often sold wrapped in leaves?",
+   "answer": "Waakye",
+   "accepted": [
+    "waakye"
+   ],
+   "active": true
+  },
+  {
+   "id": "languages-q01",
+   "kind": "question",
+   "category": "languages",
+   "difficulty": "easy",
+   "prompt": "Which language is most widely spoken in South-West Nigeria?",
+   "answer": "Yoruba",
+   "active": true
+  },
+  {
+   "id": "languages-q02",
+   "kind": "question",
+   "category": "languages",
+   "difficulty": "medium",
+   "prompt": "'Sannu' means hello in which Nigerian language?",
+   "answer": "Hausa",
+   "active": true
+  },
+  {
+   "id": "languages-q03",
+   "kind": "question",
+   "category": "languages",
+   "difficulty": "medium",
+   "prompt": "'Ndewo' is a greeting in which Nigerian language?",
+   "answer": "Igbo",
+   "active": true
+  },
+  {
+   "id": "languages-q04",
+   "kind": "question",
+   "category": "languages",
+   "difficulty": "easy",
+   "prompt": "In which part of Africa is Swahili most widely spoken?",
+   "answer": "East Africa",
+   "accepted": [
+    "eastern africa",
+    "the east"
+   ],
+   "active": true
+  },
+  {
+   "id": "languages-q05",
+   "kind": "question",
+   "category": "languages",
+   "difficulty": "medium",
+   "prompt": "What does 'asante' mean in Swahili?",
+   "answer": "Thank you",
+   "accepted": [
+    "thanks"
+   ],
+   "active": true
+  },
+  {
+   "id": "languages-q06",
+   "kind": "question",
+   "category": "languages",
+   "difficulty": "medium",
+   "prompt": "What is the official language of Mozambique?",
+   "answer": "Portuguese",
+   "active": true
+  },
+  {
+   "id": "languages-q07",
+   "kind": "question",
+   "category": "languages",
+   "difficulty": "medium",
+   "prompt": "'E kaaro' means good morning in which language?",
+   "answer": "Yoruba",
+   "active": true
+  },
+  {
+   "id": "languages-q08",
+   "kind": "question",
+   "category": "languages",
+   "difficulty": "easy",
+   "prompt": "What is the opposite of 'ancient'?",
+   "answer": "Modern",
+   "accepted": [
+    "new"
+   ],
+   "active": true
+  },
+  {
+   "id": "languages-q09",
+   "kind": "question",
+   "category": "languages",
+   "difficulty": "medium",
+   "prompt": "Give a word that means the same as 'happy'.",
+   "answer": "Joyful",
+   "accepted": [
+    "glad",
+    "cheerful",
+    "content",
+    "pleased",
+    "delighted",
+    "merry",
+    "jolly"
+   ],
+   "active": true
+  },
+  {
+   "id": "languages-q10",
+   "kind": "question",
+   "category": "languages",
+   "difficulty": "medium",
+   "prompt": "Amharic is the main working language of which country?",
+   "answer": "Ethiopia",
+   "active": true
+  },
+  {
+   "id": "languages-q11",
+   "kind": "question",
+   "category": "languages",
+   "difficulty": "easy",
+   "prompt": "What does the Swahili phrase 'hakuna matata' mean?",
+   "answer": "No worries",
+   "accepted": [
+    "no worry",
+    "no problem",
+    "no problems"
+   ],
+   "active": true
+  },
+  {
+   "id": "pidgin-q01",
+   "kind": "question",
+   "category": "pidgin",
+   "difficulty": "easy",
+   "prompt": "In Pidgin, what does 'How far?' usually mean?",
+   "answer": "How are you",
+   "accepted": [
+    "how are you doing",
+    "what's up",
+    "whats up",
+    "hello",
+    "how is it going"
+   ],
+   "active": true
+  },
+  {
+   "id": "pidgin-q02",
+   "kind": "question",
+   "category": "pidgin",
+   "difficulty": "easy",
+   "prompt": "In Pidgin, what does 'chop' mean?",
+   "answer": "Eat",
+   "accepted": [
+    "to eat",
+    "food"
+   ],
+   "active": true
+  },
+  {
+   "id": "pidgin-q03",
+   "kind": "question",
+   "category": "pidgin",
+   "difficulty": "easy",
+   "prompt": "In Pidgin, what does 'wahala' mean?",
+   "answer": "Trouble",
+   "accepted": [
+    "problem",
+    "problems",
+    "wahala"
+   ],
+   "active": true
+  },
+  {
+   "id": "pidgin-q04",
+   "kind": "question",
+   "category": "pidgin",
+   "difficulty": "easy",
+   "prompt": "In Pidgin, what does 'sabi' mean?",
+   "answer": "Know",
+   "accepted": [
+    "to know",
+    "know how",
+    "understand"
+   ],
+   "active": true
+  },
+  {
+   "id": "pidgin-q05",
+   "kind": "question",
+   "category": "pidgin",
+   "difficulty": "easy",
+   "prompt": "In Pidgin, what does 'pikin' mean?",
+   "answer": "Child",
+   "accepted": [
+    "kid",
+    "baby",
+    "children",
+    "a child"
+   ],
+   "active": true
+  },
+  {
+   "id": "pidgin-q06",
+   "kind": "question",
+   "category": "pidgin",
+   "difficulty": "easy",
+   "prompt": "In Pidgin, what does 'abeg' mean?",
+   "answer": "Please",
+   "accepted": [
+    "i beg",
+    "i beg you"
+   ],
+   "active": true
+  },
+  {
+   "id": "pidgin-q07",
+   "kind": "question",
+   "category": "pidgin",
+   "difficulty": "medium",
+   "prompt": "In Pidgin, what does 'japa' mean?",
+   "answer": "Run away",
+   "accepted": [
+    "run",
+    "escape",
+    "leave",
+    "emigrate",
+    "relocate",
+    "travel out",
+    "leave the country"
+   ],
+   "active": true
+  },
+  {
+   "id": "pidgin-q08",
+   "kind": "question",
+   "category": "pidgin",
+   "difficulty": "easy",
+   "prompt": "In Pidgin, what does 'I no get' mean?",
+   "answer": "I don't have",
+   "accepted": [
+    "i do not have",
+    "i have none",
+    "i don't have it",
+    "i have nothing"
+   ],
+   "active": true
+  },
+  {
+   "id": "pidgin-q09",
+   "kind": "question",
+   "category": "pidgin",
+   "difficulty": "easy",
+   "prompt": "In Pidgin, what does 'gist' mean?",
+   "answer": "Gossip",
+   "accepted": [
+    "chat",
+    "story",
+    "news",
+    "talk",
+    "conversation"
+   ],
+   "active": true
+  },
+  {
+   "id": "pidgin-q10",
+   "kind": "question",
+   "category": "pidgin",
+   "difficulty": "medium",
+   "prompt": "In Pidgin, what does 'ojoro' mean?",
+   "answer": "Cheating",
+   "accepted": [
+    "cheat",
+    "fraud",
+    "unfairness",
+    "trickery"
+   ],
+   "active": true
+  },
+  {
+   "id": "pidgin-q11",
+   "kind": "question",
+   "category": "pidgin",
+   "difficulty": "easy",
+   "prompt": "In Pidgin, what does 'I dey' mean when someone asks how you are?",
+   "answer": "I'm fine",
+   "accepted": [
+    "i am fine",
+    "i am okay",
+    "i'm okay",
+    "i'm here",
+    "i am here",
+    "fine",
+    "i am around"
+   ],
+   "active": true
+  },
+  {
+   "id": "african_movies-q01",
+   "kind": "question",
+   "category": "african_movies",
+   "difficulty": "medium",
+   "prompt": "Which 2018 film by Genevieve Nnaji became Netflix's first original film from Nigeria?",
+   "answer": "Lionheart",
+   "accepted": [
+    "lion heart"
+   ],
+   "active": true
+  },
+  {
+   "id": "african_movies-q02",
+   "kind": "question",
+   "category": "african_movies",
+   "difficulty": "easy",
+   "prompt": "The 2016 comedy 'The Wedding Party' was made in which country?",
+   "answer": "Nigeria",
+   "active": true
+  },
+  {
+   "id": "african_movies-q03",
+   "kind": "question",
+   "category": "african_movies",
+   "difficulty": "hard",
+   "prompt": "Which South African film won the Oscar for Best Foreign Language Film in 2006?",
+   "answer": "Tsotsi",
+   "active": true
+  },
+  {
+   "id": "african_movies-q04",
+   "kind": "question",
+   "category": "african_movies",
+   "difficulty": "hard",
+   "prompt": "Who directed the Nigerian crime drama 'King of Boys'?",
+   "answer": "Kemi Adetiba",
+   "accepted": [
+    "adetiba"
+   ],
+   "active": true
+  },
+  {
+   "id": "african_movies-q05",
+   "kind": "question",
+   "category": "african_movies",
+   "difficulty": "easy",
+   "prompt": "What is the name of the fictional African nation in 'Black Panther'?",
+   "answer": "Wakanda",
+   "active": true
+  },
+  {
+   "id": "african_movies-q06",
+   "kind": "question",
+   "category": "african_movies",
+   "difficulty": "easy",
+   "prompt": "In 'The Lion King', what is the name of Simba's father?",
+   "answer": "Mufasa",
+   "active": true
+  },
+  {
+   "id": "african_movies-q07",
+   "kind": "question",
+   "category": "african_movies",
+   "difficulty": "medium",
+   "prompt": "Which Funke Akindele film, released in December 2023, became the first Nollywood film to gross over ₦1 billion?",
+   "answer": "A Tribe Called Judah",
+   "accepted": [
+    "tribe called judah"
+   ],
+   "active": true
+  },
+  {
+   "id": "african_movies-q08",
+   "kind": "question",
+   "category": "african_movies",
+   "difficulty": "medium",
+   "prompt": "Which classic 1992 Nollywood film got a 2019 sequel called 'Breaking Free'?",
+   "answer": "Living in Bondage",
+   "active": true
+  },
+  {
+   "id": "riddles-q01",
+   "kind": "question",
+   "category": "riddles",
+   "difficulty": "easy",
+   "prompt": "What has keys but can't open locks?",
+   "answer": "A piano",
+   "accepted": [
+    "piano",
+    "keyboard",
+    "a keyboard"
+   ],
+   "active": true
+  },
+  {
+   "id": "riddles-q02",
+   "kind": "question",
+   "category": "riddles",
+   "difficulty": "easy",
+   "prompt": "What gets wetter the more it dries?",
+   "answer": "A towel",
+   "accepted": [
+    "towel"
+   ],
+   "active": true
+  },
+  {
+   "id": "riddles-q03",
+   "kind": "question",
+   "category": "riddles",
+   "difficulty": "easy",
+   "prompt": "What has hands but cannot clap?",
+   "answer": "A clock",
+   "accepted": [
+    "clock",
+    "watch",
+    "a watch"
+   ],
+   "active": true
+  },
+  {
+   "id": "riddles-q04",
+   "kind": "question",
+   "category": "riddles",
+   "difficulty": "easy",
+   "prompt": "What has to be broken before you can use it?",
+   "answer": "An egg",
+   "accepted": [
+    "egg"
+   ],
+   "active": true
+  },
+  {
+   "id": "riddles-q05",
+   "kind": "question",
+   "category": "riddles",
+   "difficulty": "easy",
+   "prompt": "I'm tall when I'm young and short when I'm old. What am I?",
+   "answer": "A candle",
+   "accepted": [
+    "candle"
+   ],
+   "active": true
+  },
+  {
+   "id": "riddles-q06",
+   "kind": "question",
+   "category": "riddles",
+   "difficulty": "medium",
+   "prompt": "What can you catch but not throw?",
+   "answer": "A cold",
+   "accepted": [
+    "cold",
+    "the flu",
+    "flu"
+   ],
+   "active": true
+  },
+  {
+   "id": "riddles-q07",
+   "kind": "question",
+   "category": "riddles",
+   "difficulty": "medium",
+   "prompt": "What has a neck but no head?",
+   "answer": "A bottle",
+   "accepted": [
+    "bottle",
+    "shirt",
+    "a shirt"
+   ],
+   "active": true
+  },
+  {
+   "id": "riddles-q08",
+   "kind": "question",
+   "category": "riddles",
+   "difficulty": "medium",
+   "prompt": "Which month has 28 days?",
+   "answer": "All of them",
+   "accepted": [
+    "all",
+    "every month",
+    "all months",
+    "all the months"
+   ],
+   "active": true
+  },
+  {
+   "id": "riddles-q09",
+   "kind": "question",
+   "category": "riddles",
+   "difficulty": "medium",
+   "prompt": "The more of them you take, the more you leave behind. What are they?",
+   "answer": "Footsteps",
+   "accepted": [
+    "steps",
+    "footprints"
+   ],
+   "active": true
+  },
+  {
+   "id": "riddles-q10",
+   "kind": "question",
+   "category": "riddles",
+   "difficulty": "medium",
+   "prompt": "What goes up but never comes down?",
+   "answer": "Your age",
+   "accepted": [
+    "age"
+   ],
+   "active": true
+  },
+  {
+   "id": "riddles-q11",
+   "kind": "question",
+   "category": "riddles",
+   "difficulty": "hard",
+   "prompt": "If you have me, you want to share me. If you share me, you don't have me. What am I?",
+   "answer": "A secret",
+   "accepted": [
+    "secret"
+   ],
+   "active": true
+  },
+  {
+   "id": "riddles-q12",
+   "kind": "question",
+   "category": "riddles",
+   "difficulty": "medium",
+   "prompt": "What has one eye but cannot see?",
+   "answer": "A needle",
+   "accepted": [
+    "needle"
+   ],
+   "active": true
+  },
+  {
+   "id": "word_challenges-q01",
+   "kind": "question",
+   "category": "word_challenges",
+   "difficulty": "easy",
+   "prompt": "What is the plural of 'mouse'?",
+   "answer": "Mice",
+   "active": true
+  },
+  {
+   "id": "word_challenges-q02",
+   "kind": "question",
+   "category": "word_challenges",
+   "difficulty": "easy",
+   "prompt": "What is the plural of 'child'?",
+   "answer": "Children",
+   "active": true
+  },
+  {
+   "id": "word_challenges-q03",
+   "kind": "question",
+   "category": "word_challenges",
+   "difficulty": "medium",
+   "prompt": "What is the opposite of 'generous'?",
+   "answer": "Stingy",
+   "accepted": [
+    "mean",
+    "selfish",
+    "miserly",
+    "tight"
+   ],
+   "active": true
+  },
+  {
+   "id": "word_challenges-q04",
+   "kind": "question",
+   "category": "word_challenges",
+   "difficulty": "easy",
+   "prompt": "Which of these reads the same backwards: level, lever or label?",
+   "answer": "Level",
+   "active": true
+  },
+  {
+   "id": "word_challenges-q05",
+   "kind": "question",
+   "category": "word_challenges",
+   "difficulty": "hard",
+   "prompt": "What do you call a word that sounds like another word but has a different meaning?",
+   "answer": "Homophone",
+   "accepted": [
+    "a homophone"
+   ],
+   "active": true
+  },
+  {
+   "id": "word_challenges-q06",
+   "kind": "question",
+   "category": "word_challenges",
+   "difficulty": "easy",
+   "prompt": "What is the past tense of 'go'?",
+   "answer": "Went",
+   "active": true
+  },
+  {
+   "id": "word_challenges-q07",
+   "kind": "question",
+   "category": "word_challenges",
+   "difficulty": "easy",
+   "prompt": "How many vowels are in the English alphabet, not counting Y?",
+   "answer": "5",
+   "accepted": [
+    "five"
+   ],
+   "active": true
+  },
+  {
+   "id": "word_challenges-q08",
+   "kind": "question",
+   "category": "word_challenges",
+   "difficulty": "medium",
+   "prompt": "Unscramble these letters to make a fruit: N-A-A-N-A-B.",
+   "answer": "Banana",
+   "active": true
+  },
+  {
+   "id": "word_challenges-q09",
+   "kind": "question",
+   "category": "word_challenges",
+   "difficulty": "medium",
+   "prompt": "What is the opposite of 'victory'?",
+   "answer": "Defeat",
+   "accepted": [
+    "loss",
+    "failure"
+   ],
+   "active": true
+  },
+  {
+   "id": "word_challenges-q10",
+   "kind": "question",
+   "category": "word_challenges",
+   "difficulty": "medium",
+   "prompt": "What is the past tense of 'catch'?",
+   "answer": "Caught",
+   "active": true
+  },
+  {
+   "id": "everyday-q01",
+   "kind": "question",
+   "category": "everyday",
+   "difficulty": "easy",
+   "prompt": "How many days are there in a leap year?",
+   "answer": "366",
+   "accepted": [
+    "three hundred and sixty six",
+    "three hundred sixty six"
+   ],
+   "active": true
+  },
+  {
+   "id": "everyday-q02",
+   "kind": "question",
+   "category": "everyday",
+   "difficulty": "easy",
+   "prompt": "How many minutes are in an hour?",
+   "answer": "60",
+   "accepted": [
+    "sixty"
+   ],
+   "active": true
+  },
+  {
+   "id": "everyday-q03",
+   "kind": "question",
+   "category": "everyday",
+   "difficulty": "easy",
+   "prompt": "What is 12 times 12?",
+   "answer": "144",
+   "accepted": [
+    "one hundred and forty four",
+    "one hundred forty four"
+   ],
+   "active": true
+  },
+  {
+   "id": "everyday-q04",
+   "kind": "question",
+   "category": "everyday",
+   "difficulty": "easy",
+   "prompt": "At what temperature in Celsius does water boil at sea level?",
+   "answer": "100",
+   "accepted": [
+    "one hundred",
+    "100 degrees",
+    "a hundred"
+   ],
+   "active": true
+  },
+  {
+   "id": "everyday-q05",
+   "kind": "question",
+   "category": "everyday",
+   "difficulty": "easy",
+   "prompt": "How many continents are there?",
+   "answer": "7",
+   "accepted": [
+    "seven"
+   ],
+   "active": true
+  },
+  {
+   "id": "everyday-q06",
+   "kind": "question",
+   "category": "everyday",
+   "difficulty": "easy",
+   "prompt": "Which planet is known as the Red Planet?",
+   "answer": "Mars",
+   "active": true
+  },
+  {
+   "id": "everyday-q07",
+   "kind": "question",
+   "category": "everyday",
+   "difficulty": "easy",
+   "prompt": "What is the largest ocean on Earth?",
+   "answer": "Pacific",
+   "accepted": [
+    "the pacific",
+    "pacific ocean"
+   ],
+   "active": true
+  },
+  {
+   "id": "everyday-q08",
+   "kind": "question",
+   "category": "everyday",
+   "difficulty": "easy",
+   "prompt": "Which organ pumps blood around the body?",
+   "answer": "Heart",
+   "accepted": [
+    "the heart"
+   ],
+   "active": true
+  },
+  {
+   "id": "everyday-q09",
+   "kind": "question",
+   "category": "everyday",
+   "difficulty": "easy",
+   "prompt": "How many sides does a hexagon have?",
+   "answer": "6",
+   "accepted": [
+    "six"
+   ],
+   "active": true
+  },
+  {
+   "id": "everyday-q10",
+   "kind": "question",
+   "category": "everyday",
+   "difficulty": "medium",
+   "prompt": "What is the chemical formula for water?",
+   "answer": "H2O",
+   "accepted": [
+    "h 2 o",
+    "h two o"
+   ],
+   "active": true
+  },
+  {
+   "id": "everyday-q11",
+   "kind": "question",
+   "category": "everyday",
+   "difficulty": "medium",
+   "prompt": "What is the square root of 81?",
+   "answer": "9",
+   "accepted": [
+    "nine"
+   ],
+   "active": true
+  },
+  {
+   "id": "everyday-q12",
+   "kind": "question",
+   "category": "everyday",
+   "difficulty": "medium",
+   "prompt": "Which planet is closest to the Sun?",
+   "answer": "Mercury",
+   "active": true
+  },
+  {
+   "id": "everyday-q13",
+   "kind": "question",
+   "category": "everyday",
+   "difficulty": "hard",
+   "prompt": "How many hours are there in a week?",
+   "answer": "168",
+   "accepted": [
+    "one hundred and sixty eight",
+    "one hundred sixty eight"
+   ],
+   "active": true
+  },
+  {
+   "id": "funny-q01",
+   "kind": "question",
+   "category": "funny",
+   "difficulty": "easy",
+   "prompt": "In many Nigerian homes, what is really inside the ice cream container in the freezer?",
+   "answer": "Soup",
+   "accepted": [
+    "stew",
+    "egusi",
+    "meat"
+   ],
+   "active": true
+  },
+  {
+   "id": "funny-q02",
+   "kind": "question",
+   "category": "funny",
+   "difficulty": "easy",
+   "prompt": "Complete the warning many Nigerian parents give: 'Keep crying and I'll give you something to …'",
+   "answer": "Cry for",
+   "accepted": [
+    "cry about"
+   ],
+   "active": true
+  },
+  {
+   "id": "funny-q03",
+   "kind": "question",
+   "category": "funny",
+   "difficulty": "medium",
+   "prompt": "What has four wheels and flies?",
+   "answer": "A rubbish truck",
+   "accepted": [
+    "rubbish truck",
+    "garbage truck",
+    "refuse truck",
+    "dustbin truck",
+    "bin lorry",
+    "a garbage truck"
+   ],
+   "active": true
+  },
+  {
+   "id": "funny-q04",
+   "kind": "question",
+   "category": "funny",
+   "difficulty": "easy",
+   "prompt": "Why did the scarecrow win an award? Because he was outstanding in his …",
+   "answer": "Field",
+   "active": true
+  },
+  {
+   "id": "funny-q05",
+   "kind": "question",
+   "category": "funny",
+   "difficulty": "medium",
+   "prompt": "What do you call a sleeping bull?",
+   "answer": "A bulldozer",
+   "accepted": [
+    "bulldozer"
+   ],
+   "active": true
+  },
+  {
+   "id": "funny-q06",
+   "kind": "question",
+   "category": "funny",
+   "difficulty": "medium",
+   "prompt": "What kind of tree fits in your hand?",
+   "answer": "A palm tree",
+   "accepted": [
+    "palm",
+    "palm tree"
+   ],
+   "active": true
+  },
+  {
+   "id": "funny-q07",
+   "kind": "question",
+   "category": "funny",
+   "difficulty": "hard",
+   "prompt": "Which word becomes shorter when you add two letters to it?",
+   "answer": "Short",
+   "active": true
+  },
+  {
+   "id": "funny-q08",
+   "kind": "question",
+   "category": "funny",
+   "difficulty": "medium",
+   "prompt": "What did the zero say to the eight?",
+   "answer": "Nice belt",
+   "active": true
+  },
+  {
+   "id": "funny-q09",
+   "kind": "question",
+   "category": "funny",
+   "difficulty": "medium",
+   "prompt": "What is always in front of you but can't be seen?",
+   "answer": "The future",
+   "accepted": [
+    "future"
+   ],
+   "active": true
+  },
+  {
+   "id": "african_general-l16",
+   "kind": "list",
+   "category": "african_general",
+   "difficulty": "easy",
+   "prompt": "Name five African countries",
+   "answer": "Algeria, Angola, Benin, Botswana, Burkina Faso",
+   "items": [
+    [
+     "Algeria"
+    ],
+    [
+     "Angola"
+    ],
+    [
+     "Benin"
+    ],
+    [
+     "Botswana"
+    ],
+    [
+     "Burkina Faso"
+    ],
+    [
+     "Burundi"
+    ],
+    [
+     "Cape Verde",
+     "Cabo Verde"
+    ],
+    [
+     "Cameroon"
+    ],
+    [
+     "Central African Republic",
+     "CAR"
+    ],
+    [
+     "Chad"
+    ],
+    [
+     "Comoros"
+    ],
+    [
+     "DR Congo",
+     "Democratic Republic of Congo",
+     "Democratic Republic of the Congo",
+     "DRC"
+    ],
+    [
+     "Republic of the Congo",
+     "Congo Brazzaville",
+     "Congo"
+    ],
+    [
+     "Djibouti"
+    ],
+    [
+     "Egypt"
+    ],
+    [
+     "Equatorial Guinea"
+    ],
+    [
+     "Eritrea"
+    ],
+    [
+     "Eswatini",
+     "Swaziland"
+    ],
+    [
+     "Ethiopia"
+    ],
+    [
+     "Gabon"
+    ],
+    [
+     "Gambia",
+     "The Gambia"
+    ],
+    [
+     "Ghana"
+    ],
+    [
+     "Guinea"
+    ],
+    [
+     "Guinea-Bissau"
+    ],
+    [
+     "Ivory Coast",
+     "Cote d'Ivoire",
+     "Côte d'Ivoire"
+    ],
+    [
+     "Kenya"
+    ],
+    [
+     "Lesotho"
+    ],
+    [
+     "Liberia"
+    ],
+    [
+     "Libya"
+    ],
+    [
+     "Madagascar"
+    ],
+    [
+     "Malawi"
+    ],
+    [
+     "Mali"
+    ],
+    [
+     "Mauritania"
+    ],
+    [
+     "Mauritius"
+    ],
+    [
+     "Morocco"
+    ],
+    [
+     "Mozambique"
+    ],
+    [
+     "Namibia"
+    ],
+    [
+     "Niger"
+    ],
+    [
+     "Nigeria"
+    ],
+    [
+     "Rwanda"
+    ],
+    [
+     "Sao Tome and Principe",
+     "São Tomé and Príncipe",
+     "Sao Tome"
+    ],
+    [
+     "Senegal"
+    ],
+    [
+     "Seychelles"
+    ],
+    [
+     "Sierra Leone"
+    ],
+    [
+     "Somalia"
+    ],
+    [
+     "South Africa"
+    ],
+    [
+     "South Sudan"
+    ],
+    [
+     "Sudan"
+    ],
+    [
+     "Tanzania"
+    ],
+    [
+     "Togo"
+    ],
+    [
+     "Tunisia"
+    ],
+    [
+     "Uganda"
+    ],
+    [
+     "Zambia"
+    ],
+    [
+     "Zimbabwe"
+    ]
+   ],
+   "target": 5,
+   "active": true
+  },
+  {
+   "id": "african_general-l17",
+   "kind": "list",
+   "category": "african_general",
+   "difficulty": "medium",
+   "prompt": "Name five African capital cities",
+   "answer": "Abuja, Accra, Nairobi, Cairo, Addis Ababa",
+   "items": [
+    [
+     "Abuja"
+    ],
+    [
+     "Accra"
+    ],
+    [
+     "Nairobi"
+    ],
+    [
+     "Cairo"
+    ],
+    [
+     "Addis Ababa"
+    ],
+    [
+     "Dakar"
+    ],
+    [
+     "Pretoria"
+    ],
+    [
+     "Cape Town"
+    ],
+    [
+     "Bloemfontein"
+    ],
+    [
+     "Kampala"
+    ],
+    [
+     "Kigali"
+    ],
+    [
+     "Dodoma"
+    ],
+    [
+     "Lusaka"
+    ],
+    [
+     "Harare"
+    ],
+    [
+     "Maputo"
+    ],
+    [
+     "Luanda"
+    ],
+    [
+     "Kinshasa"
+    ],
+    [
+     "Brazzaville"
+    ],
+    [
+     "Yaounde"
+    ],
+    [
+     "Libreville"
+    ],
+    [
+     "Lome"
+    ],
+    [
+     "Porto-Novo"
+    ],
+    [
+     "Ouagadougou"
+    ],
+    [
+     "Bamako"
+    ],
+    [
+     "Niamey"
+    ],
+    [
+     "Ndjamena"
+    ],
+    [
+     "Khartoum"
+    ],
+    [
+     "Juba"
+    ],
+    [
+     "Mogadishu"
+    ],
+    [
+     "Djibouti"
+    ],
+    [
+     "Asmara"
+    ],
+    [
+     "Tripoli"
+    ],
+    [
+     "Tunis"
+    ],
+    [
+     "Algiers"
+    ],
+    [
+     "Rabat"
+    ],
+    [
+     "Nouakchott"
+    ],
+    [
+     "Banjul"
+    ],
+    [
+     "Bissau"
+    ],
+    [
+     "Conakry"
+    ],
+    [
+     "Freetown"
+    ],
+    [
+     "Monrovia"
+    ],
+    [
+     "Yamoussoukro"
+    ],
+    [
+     "Windhoek"
+    ],
+    [
+     "Gaborone"
+    ],
+    [
+     "Maseru"
+    ],
+    [
+     "Mbabane"
+    ],
+    [
+     "Lilongwe"
+    ],
+    [
+     "Antananarivo"
+    ],
+    [
+     "Port Louis"
+    ],
+    [
+     "Victoria"
+    ],
+    [
+     "Moroni"
+    ],
+    [
+     "Praia"
+    ],
+    [
+     "Malabo"
+    ],
+    [
+     "Bangui"
+    ],
+    [
+     "Gitega"
+    ],
+    [
+     "Sao Tome"
+    ]
+   ],
+   "target": 5,
+   "active": true
+  },
+  {
+   "id": "nigerian_general-l16",
+   "kind": "list",
+   "category": "nigerian_general",
+   "difficulty": "easy",
+   "prompt": "Name five Nigerian states",
+   "answer": "Abia, Adamawa, Akwa Ibom, Anambra, Bauchi",
+   "items": [
+    [
+     "Abia"
+    ],
+    [
+     "Adamawa"
+    ],
+    [
+     "Akwa Ibom"
+    ],
+    [
+     "Anambra"
+    ],
+    [
+     "Bauchi"
+    ],
+    [
+     "Bayelsa"
+    ],
+    [
+     "Benue"
+    ],
+    [
+     "Borno"
+    ],
+    [
+     "Cross River"
+    ],
+    [
+     "Delta"
+    ],
+    [
+     "Ebonyi"
+    ],
+    [
+     "Edo"
+    ],
+    [
+     "Ekiti"
+    ],
+    [
+     "Enugu"
+    ],
+    [
+     "Gombe"
+    ],
+    [
+     "Imo"
+    ],
+    [
+     "Jigawa"
+    ],
+    [
+     "Kaduna"
+    ],
+    [
+     "Kano"
+    ],
+    [
+     "Katsina"
+    ],
+    [
+     "Kebbi"
+    ],
+    [
+     "Kogi"
+    ],
+    [
+     "Kwara"
+    ],
+    [
+     "Lagos"
+    ],
+    [
+     "Nasarawa"
+    ],
+    [
+     "Niger"
+    ],
+    [
+     "Ogun"
+    ],
+    [
+     "Ondo"
+    ],
+    [
+     "Osun"
+    ],
+    [
+     "Oyo"
+    ],
+    [
+     "Plateau"
+    ],
+    [
+     "Rivers"
+    ],
+    [
+     "Sokoto"
+    ],
+    [
+     "Taraba"
+    ],
+    [
+     "Yobe"
+    ],
+    [
+     "Zamfara"
+    ]
+   ],
+   "target": 5,
+   "active": true
+  },
+  {
+   "id": "african_music-l15",
+   "kind": "list",
+   "category": "african_music",
+   "difficulty": "easy",
+   "prompt": "Name five Nigerian musicians",
+   "answer": "Wizkid, Davido, Burna Boy, Tiwa Savage, Yemi Alade",
+   "items": [
+    [
+     "Wizkid"
+    ],
+    [
+     "Davido"
+    ],
+    [
+     "Burna Boy",
+     "Burna"
+    ],
+    [
+     "Tiwa Savage"
+    ],
+    [
+     "Yemi Alade"
+    ],
+    [
+     "Rema"
+    ],
+    [
+     "Asake"
+    ],
+    [
+     "Tems"
+    ],
+    [
+     "Ayra Starr"
+    ],
+    [
+     "Olamide"
+    ],
+    [
+     "Fela Kuti",
+     "Fela"
+    ],
+    [
+     "King Sunny Ade",
+     "Sunny Ade"
+    ],
+    [
+     "2Baba",
+     "2face",
+     "Tuface",
+     "2face Idibia"
+    ],
+    [
+     "Flavour"
+    ],
+    [
+     "Phyno"
+    ],
+    [
+     "Simi"
+    ],
+    [
+     "Adekunle Gold"
+    ],
+    [
+     "Kizz Daniel"
+    ],
+    [
+     "Fireboy",
+     "Fireboy DML"
+    ],
+    [
+     "Omah Lay"
+    ],
+    [
+     "Mr Eazi"
+    ],
+    [
+     "P-Square",
+     "Psquare"
+    ],
+    [
+     "D'banj",
+     "Dbanj"
+    ],
+    [
+     "Don Jazzy"
+    ],
+    [
+     "Patoranking"
+    ],
+    [
+     "Timaya"
+    ],
+    [
+     "Seun Kuti"
+    ],
+    [
+     "Femi Kuti"
+    ],
+    [
+     "Ebenezer Obey"
+    ],
+    [
+     "Onyeka Onwenu"
+    ],
+    [
+     "Sade",
+     "Sade Adu"
+    ],
+    [
+     "Wande Coal"
+    ],
+    [
+     "Iyanya"
+    ],
+    [
+     "CKay",
+     "C Kay"
+    ],
+    [
+     "Joeboy"
+    ],
+    [
+     "Zlatan"
+    ],
+    [
+     "Naira Marley"
+    ],
+    [
+     "Falz"
+    ],
+    [
+     "Teni"
+    ],
+    [
+     "Niniola"
+    ],
+    [
+     "Waje"
+    ],
+    [
+     "Chike"
+    ],
+    [
+     "Johnny Drille"
+    ],
+    [
+     "Oliver De Coque"
+    ],
+    [
+     "Osita Osadebe"
+    ],
+    [
+     "Lagbaja"
+    ],
+    [
+     "Sound Sultan"
+    ],
+    [
+     "9ice"
+    ],
+    [
+     "Mayorkun"
+    ],
+    [
+     "Pheelz"
+    ],
+    [
+     "Ruger"
+    ],
+    [
+     "Bnxn",
+     "Buju"
+    ],
+    [
+     "Victony"
+    ],
+    [
+     "Seyi Vibez"
+    ],
+    [
+     "Lojay"
+    ],
+    [
+     "Oxlade"
+    ],
+    [
+     "Yinka Ayefele"
+    ],
+    [
+     "Brymo"
+    ],
+    [
+     "Asa"
+    ],
+    [
+     "Darey"
+    ],
+    [
+     "Banky W"
+    ],
+    [
+     "Tekno"
+    ],
+    [
+     "Runtown"
+    ],
+    [
+     "Peruzzi"
+    ],
+    [
+     "Kcee"
+    ]
+   ],
+   "target": 5,
+   "active": true
+  },
+  {
+   "id": "animals_nature-l13",
+   "kind": "list",
+   "category": "animals_nature",
+   "difficulty": "easy",
+   "prompt": "Name five animals beginning with S",
+   "answer": "snake, spider, shark, sheep, squirrel",
+   "items": [
+    [
+     "snake"
+    ],
+    [
+     "spider"
+    ],
+    [
+     "shark"
+    ],
+    [
+     "sheep"
+    ],
+    [
+     "squirrel"
+    ],
+    [
+     "seal"
+    ],
+    [
+     "snail"
+    ],
+    [
+     "sparrow"
+    ],
+    [
+     "swan"
+    ],
+    [
+     "salmon"
+    ],
+    [
+     "scorpion"
+    ],
+    [
+     "sloth"
+    ],
+    [
+     "skunk"
+    ],
+    [
+     "starfish"
+    ],
+    [
+     "stingray"
+    ],
+    [
+     "swallow"
+    ],
+    [
+     "sardine"
+    ],
+    [
+     "stork"
+    ],
+    [
+     "seahorse"
+    ],
+    [
+     "shrimp"
+    ],
+    [
+     "slug"
+    ],
+    [
+     "springbok"
+    ],
+    [
+     "serval"
+    ],
+    [
+     "sea lion"
+    ],
+    [
+     "salamander"
+    ],
+    [
+     "sea turtle"
+    ],
+    [
+     "sheepdog"
+    ],
+    [
+     "spaniel"
+    ],
+    [
+     "sturgeon"
+    ],
+    [
+     "swordfish"
+    ],
+    [
+     "sunbird"
+    ],
+    [
+     "secretary bird"
+    ],
+    [
+     "silverback"
+    ]
+   ],
+   "target": 5,
+   "active": true
+  },
+  {
+   "id": "african_food-l14",
+   "kind": "list",
+   "category": "african_food",
+   "difficulty": "easy",
+   "prompt": "Name five African dishes",
+   "answer": "jollof rice, egusi, fufu, pounded yam, suya",
+   "items": [
+    [
+     "jollof rice"
+    ],
+    [
+     "egusi",
+     "egusi soup"
+    ],
+    [
+     "fufu"
+    ],
+    [
+     "pounded yam"
+    ],
+    [
+     "suya"
+    ],
+    [
+     "injera"
+    ],
+    [
+     "couscous"
+    ],
+    [
+     "bobotie"
+    ],
+    [
+     "ugali"
+    ],
+    [
+     "banku"
+    ],
+    [
+     "kenkey"
+    ],
+    [
+     "moi moi",
+     "moimoi"
+    ],
+    [
+     "akara"
+    ],
+    [
+     "efo riro",
+     "efo"
+    ],
+    [
+     "ogbono",
+     "ogbono soup"
+    ],
+    [
+     "banga",
+     "banga soup"
+    ],
+    [
+     "pepper soup"
+    ],
+    [
+     "nkwobi"
+    ],
+    [
+     "tagine",
+     "tajine"
+    ],
+    [
+     "bunny chow"
+    ],
+    [
+     "biltong"
+    ],
+    [
+     "chakalaka"
+    ],
+    [
+     "pap"
+    ],
+    [
+     "nyama choma"
+    ],
+    [
+     "kelewele"
+    ],
+    [
+     "waakye"
+    ],
+    [
+     "thieboudienne",
+     "ceebu jen"
+    ],
+    [
+     "yassa"
+    ],
+    [
+     "mafe"
+    ],
+    [
+     "shakshuka"
+    ],
+    [
+     "ful medames"
+    ],
+    [
+     "koshari"
+    ],
+    [
+     "amala"
+    ],
+    [
+     "tuwo"
+    ],
+    [
+     "tuwo shinkafa"
+    ],
+    [
+     "masa"
+    ],
+    [
+     "kilishi"
+    ],
+    [
+     "dodo"
+    ],
+    [
+     "boli"
+    ],
+    [
+     "abacha"
+    ],
+    [
+     "ofada rice"
+    ],
+    [
+     "edikang ikong"
+    ],
+    [
+     "afang",
+     "afang soup"
+    ],
+    [
+     "gbegiri"
+    ],
+    [
+     "chapati"
+    ],
+    [
+     "matoke"
+    ],
+    [
+     "peri peri chicken",
+     "piri piri chicken"
+    ],
+    [
+     "potjiekos"
+    ],
+    [
+     "sadza"
+    ],
+    [
+     "nshima"
+    ],
+    [
+     "attieke"
+    ],
+    [
+     "alloco"
+    ],
+    [
+     "garri"
+    ],
+    [
+     "red red"
+    ],
+    [
+     "ewa agoyin"
+    ],
+    [
+     "ofe nsala"
+    ],
+    [
+     "oha soup",
+     "oha"
+    ],
+    [
+     "fried rice"
+    ]
+   ],
+   "target": 5,
+   "active": true
+  },
+  {
+   "id": "african_football-l12",
+   "kind": "list",
+   "category": "african_football",
+   "difficulty": "easy",
+   "prompt": "Name five football clubs",
+   "answer": "Arsenal, Chelsea, Liverpool, Manchester United, Manchester City",
+   "items": [
+    [
+     "Arsenal"
+    ],
+    [
+     "Chelsea"
+    ],
+    [
+     "Liverpool"
+    ],
+    [
+     "Manchester United",
+     "Man United",
+     "Man U"
+    ],
+    [
+     "Manchester City",
+     "Man City"
+    ],
+    [
+     "Tottenham",
+     "Spurs"
+    ],
+    [
+     "Real Madrid"
+    ],
+    [
+     "Barcelona",
+     "Barca"
+    ],
+    [
+     "Atletico Madrid",
+     "Atletico"
+    ],
+    [
+     "Bayern Munich",
+     "Bayern"
+    ],
+    [
+     "Borussia Dortmund",
+     "Dortmund"
+    ],
+    [
+     "Juventus"
+    ],
+    [
+     "AC Milan",
+     "Milan"
+    ],
+    [
+     "Inter Milan",
+     "Inter"
+    ],
+    [
+     "Napoli"
+    ],
+    [
+     "Roma"
+    ],
+    [
+     "PSG",
+     "Paris Saint-Germain"
+    ],
+    [
+     "Marseille"
+    ],
+    [
+     "Ajax"
+    ],
+    [
+     "Porto"
+    ],
+    [
+     "Benfica"
+    ],
+    [
+     "Celtic"
+    ],
+    [
+     "Al Ahly"
+    ],
+    [
+     "Zamalek"
+    ],
+    [
+     "Enyimba"
+    ],
+    [
+     "Kano Pillars"
+    ],
+    [
+     "Rangers International",
+     "Enugu Rangers"
+    ],
+    [
+     "Shooting Stars"
+    ],
+    [
+     "Kaizer Chiefs"
+    ],
+    [
+     "Orlando Pirates"
+    ],
+    [
+     "Mamelodi Sundowns",
+     "Sundowns"
+    ],
+    [
+     "TP Mazembe"
+    ],
+    [
+     "Esperance"
+    ],
+    [
+     "Wydad"
+    ],
+    [
+     "Raja Casablanca"
+    ],
+    [
+     "Asante Kotoko"
+    ],
+    [
+     "Hearts of Oak"
+    ],
+    [
+     "Newcastle"
+    ],
+    [
+     "Everton"
+    ],
+    [
+     "Aston Villa"
+    ],
+    [
+     "West Ham"
+    ],
+    [
+     "Leicester"
+    ],
+    [
+     "Lyon"
+    ],
+    [
+     "Monaco"
+    ],
+    [
+     "Sevilla"
+    ],
+    [
+     "Valencia"
+    ],
+    [
+     "Inter Miami"
+    ],
+    [
+     "Al Nassr"
+    ],
+    [
+     "Galatasaray"
+    ],
+    [
+     "Remo Stars"
+    ],
+    [
+     "Plateau United"
+    ],
+    [
+     "Rivers United"
+    ]
+   ],
+   "target": 5,
+   "active": true
+  },
+  {
+   "id": "african_movies-l09",
+   "kind": "list",
+   "category": "african_movies",
+   "difficulty": "medium",
+   "prompt": "Name five Nollywood actors",
+   "answer": "Genevieve Nnaji, Funke Akindele, Ramsey Nouah, Richard Mofe-Damijo, Omotola Jalade-Ekeinde",
+   "items": [
+    [
+     "Genevieve Nnaji"
+    ],
+    [
+     "Funke Akindele"
+    ],
+    [
+     "Ramsey Nouah"
+    ],
+    [
+     "Richard Mofe-Damijo",
+     "RMD"
+    ],
+    [
+     "Omotola Jalade-Ekeinde",
+     "Omotola"
+    ],
+    [
+     "Nkem Owoh"
+    ],
+    [
+     "Osita Iheme"
+    ],
+    [
+     "Chinedu Ikedieze"
+    ],
+    [
+     "Pete Edochie"
+    ],
+    [
+     "Kanayo O. Kanayo"
+    ],
+    [
+     "Mercy Johnson"
+    ],
+    [
+     "Rita Dominic"
+    ],
+    [
+     "Joke Silva"
+    ],
+    [
+     "Olu Jacobs"
+    ],
+    [
+     "Desmond Elliot"
+    ],
+    [
+     "Jim Iyke"
+    ],
+    [
+     "Zack Orji"
+    ],
+    [
+     "Ini Edo"
+    ],
+    [
+     "Stella Damasus"
+    ],
+    [
+     "Tonto Dikeh"
+    ],
+    [
+     "Patience Ozokwor"
+    ],
+    [
+     "Kate Henshaw"
+    ],
+    [
+     "Nse Ikpe-Etim"
+    ],
+    [
+     "Ireti Doyle"
+    ],
+    [
+     "Sola Sobowale"
+    ],
+    [
+     "Toyin Abraham"
+    ],
+    [
+     "Bimbo Ademoye"
+    ],
+    [
+     "Timini Egbuson"
+    ],
+    [
+     "Kunle Remi"
+    ],
+    [
+     "Odunlade Adekola"
+    ],
+    [
+     "Femi Adebayo"
+    ],
+    [
+     "Mercy Aigbe"
+    ],
+    [
+     "Uche Jombo"
+    ],
+    [
+     "Chioma Akpotha"
+    ],
+    [
+     "Ngozi Ezeonu"
+    ],
+    [
+     "Adesua Etomi"
+    ],
+    [
+     "Osas Ighodaro"
+    ],
+    [
+     "Nancy Isime"
+    ],
+    [
+     "Lateef Adedimeji"
+    ],
+    [
+     "Mike Ezuruonye"
+    ],
+    [
+     "Van Vicker"
+    ],
+    [
+     "Majid Michel"
+    ],
+    [
+     "Yul Edochie"
+    ],
+    [
+     "Bimbo Akintola"
+    ],
+    [
+     "Saidi Balogun"
+    ],
+    [
+     "Segun Arinze"
+    ],
+    [
+     "Liz Benson"
+    ]
+   ],
+   "target": 5,
+   "active": true
+  },
+  {
+   "id": "everyday-l14",
+   "kind": "list",
+   "category": "everyday",
+   "difficulty": "easy",
+   "prompt": "Name five fruits",
+   "answer": "mango, banana, orange, apple, pineapple",
+   "items": [
+    [
+     "mango"
+    ],
+    [
+     "banana"
+    ],
+    [
+     "orange"
+    ],
+    [
+     "apple"
+    ],
+    [
+     "pineapple"
+    ],
+    [
+     "pawpaw",
+     "papaya"
+    ],
+    [
+     "watermelon"
+    ],
+    [
+     "guava"
+    ],
+    [
+     "grape"
+    ],
+    [
+     "lemon"
+    ],
+    [
+     "lime"
+    ],
+    [
+     "coconut"
+    ],
+    [
+     "cashew"
+    ],
+    [
+     "avocado"
+    ],
+    [
+     "pear"
+    ],
+    [
+     "strawberry"
+    ],
+    [
+     "cherry"
+    ],
+    [
+     "plum"
+    ],
+    [
+     "peach"
+    ],
+    [
+     "tangerine"
+    ],
+    [
+     "grapefruit"
+    ],
+    [
+     "kiwi"
+    ],
+    [
+     "soursop"
+    ],
+    [
+     "agbalumo",
+     "african star apple",
+     "udara"
+    ],
+    [
+     "date"
+    ],
+    [
+     "fig"
+    ],
+    [
+     "pomegranate"
+    ],
+    [
+     "passion fruit"
+    ],
+    [
+     "jackfruit"
+    ],
+    [
+     "blueberry"
+    ],
+    [
+     "raspberry"
+    ],
+    [
+     "apricot"
+    ],
+    [
+     "lychee"
+    ],
+    [
+     "melon"
+    ],
+    [
+     "mandarin"
+    ],
+    [
+     "tomato"
+    ]
+   ],
+   "target": 5,
+   "active": true
+  },
+  {
+   "id": "funny-l10",
+   "kind": "list",
+   "category": "funny",
+   "difficulty": "easy",
+   "prompt": "Name five colours, fast!",
+   "answer": "red, blue, green, yellow, orange",
+   "items": [
+    [
+     "red"
+    ],
+    [
+     "blue"
+    ],
+    [
+     "green"
+    ],
+    [
+     "yellow"
+    ],
+    [
+     "orange"
+    ],
+    [
+     "purple"
+    ],
+    [
+     "pink"
+    ],
+    [
+     "black"
+    ],
+    [
+     "white"
+    ],
+    [
+     "brown"
+    ],
+    [
+     "grey",
+     "gray"
+    ],
+    [
+     "gold"
+    ],
+    [
+     "silver"
+    ],
+    [
+     "violet"
+    ],
+    [
+     "indigo"
+    ],
+    [
+     "maroon"
+    ],
+    [
+     "navy"
+    ],
+    [
+     "turquoise"
+    ],
+    [
+     "beige"
+    ],
+    [
+     "cream"
+    ],
+    [
+     "teal"
+    ],
+    [
+     "magenta"
+    ],
+    [
+     "cyan"
+    ],
+    [
+     "lavender"
+    ],
+    [
+     "lilac"
+    ],
+    [
+     "peach"
+    ],
+    [
+     "coral"
+    ],
+    [
+     "burgundy"
+    ]
+   ],
+   "target": 5,
+   "active": true
+  },
+  {
+   "id": "word_challenges-l11",
+   "kind": "list",
+   "category": "word_challenges",
+   "difficulty": "easy",
+   "prompt": "Name five words that rhyme with 'cat'",
+   "answer": "hat, bat, mat, rat, sat",
+   "items": [
+    [
+     "hat"
+    ],
+    [
+     "bat"
+    ],
+    [
+     "mat"
+    ],
+    [
+     "rat"
+    ],
+    [
+     "sat"
+    ],
+    [
+     "fat"
+    ],
+    [
+     "pat"
+    ],
+    [
+     "flat"
+    ],
+    [
+     "chat"
+    ],
+    [
+     "that"
+    ],
+    [
+     "brat"
+    ],
+    [
+     "splat"
+    ],
+    [
+     "spat"
+    ],
+    [
+     "vat"
+    ],
+    [
+     "gnat"
+    ],
+    [
+     "cravat"
+    ],
+    [
+     "acrobat"
+    ],
+    [
+     "format"
+    ],
+    [
+     "diplomat"
+    ],
+    [
+     "habitat"
+    ],
+    [
+     "thermostat"
+    ],
+    [
+     "combat"
+    ],
+    [
+     "doormat"
+    ],
+    [
+     "wombat"
+    ],
+    [
+     "laundromat"
+    ],
+    [
+     "democrat"
+    ],
+    [
+     "aristocrat"
+    ],
+    [
+     "kitkat"
+    ]
+   ],
+   "target": 5,
+   "active": true
+  },
+  {
+   "id": "languages-l12",
+   "kind": "list",
+   "category": "languages",
+   "difficulty": "medium",
+   "prompt": "Name five African languages",
+   "answer": "Yoruba, Igbo, Hausa, Swahili, Zulu",
+   "items": [
+    [
+     "Yoruba"
+    ],
+    [
+     "Igbo"
+    ],
+    [
+     "Hausa"
+    ],
+    [
+     "Swahili"
+    ],
+    [
+     "Zulu"
+    ],
+    [
+     "Xhosa"
+    ],
+    [
+     "Amharic"
+    ],
+    [
+     "Somali"
+    ],
+    [
+     "Twi"
+    ],
+    [
+     "Akan"
+    ],
+    [
+     "Ewe"
+    ],
+    [
+     "Wolof"
+    ],
+    [
+     "Fula",
+     "Fulani",
+     "Fulfulde"
+    ],
+    [
+     "Lingala"
+    ],
+    [
+     "Shona"
+    ],
+    [
+     "Afrikaans"
+    ],
+    [
+     "Berber",
+     "Tamazight",
+     "Amazigh"
+    ],
+    [
+     "Oromo"
+    ],
+    [
+     "Tigrinya"
+    ],
+    [
+     "Kinyarwanda"
+    ],
+    [
+     "Kirundi"
+    ],
+    [
+     "Luganda"
+    ],
+    [
+     "Sesotho",
+     "Sotho"
+    ],
+    [
+     "Setswana",
+     "Tswana"
+    ],
+    [
+     "Malagasy"
+    ],
+    [
+     "Efik"
+    ],
+    [
+     "Ibibio"
+    ],
+    [
+     "Tiv"
+    ],
+    [
+     "Kanuri"
+    ],
+    [
+     "Edo"
+    ],
+    [
+     "Urhobo"
+    ],
+    [
+     "Ijaw"
+    ],
+    [
+     "Nupe"
+    ],
+    [
+     "Igala"
+    ],
+    [
+     "Idoma"
+    ],
+    [
+     "Ga"
+    ],
+    [
+     "Fante"
+    ],
+    [
+     "Kikuyu"
+    ],
+    [
+     "Luo"
+    ],
+    [
+     "Kamba"
+    ],
+    [
+     "Chichewa"
+    ],
+    [
+     "Bemba"
+    ],
+    [
+     "Ndebele"
+    ],
+    [
+     "Tsonga"
+    ],
+    [
+     "Venda"
+    ],
+    [
+     "Mandinka"
+    ],
+    [
+     "Bambara"
+    ],
+    [
+     "Arabic"
+    ],
+    [
+     "Pidgin",
+     "Nigerian Pidgin"
+    ]
+   ],
+   "target": 5,
+   "active": true
+  },
+  {
+   "id": "word_challenges-a12",
+   "kind": "association",
+   "category": "word_challenges",
+   "difficulty": "easy",
+   "prompt": "Rain",
+   "answer": "umbrella, water, cloud, clouds",
+   "items": [
+    [
+     "umbrella"
+    ],
+    [
+     "water"
+    ],
+    [
+     "cloud"
+    ],
+    [
+     "clouds"
+    ],
+    [
+     "storm"
+    ],
+    [
+     "thunder"
+    ],
+    [
+     "lightning"
+    ],
+    [
+     "wet"
+    ],
+    [
+     "rainbow"
+    ],
+    [
+     "raincoat"
+    ],
+    [
+     "puddle"
+    ],
+    [
+     "drizzle"
+    ],
+    [
+     "flood"
+    ],
+    [
+     "drops"
+    ],
+    [
+     "weather"
+    ],
+    [
+     "rainy season"
+    ],
+    [
+     "shower"
+    ],
+    [
+     "sky"
+    ],
+    [
+     "season"
+    ]
+   ],
+   "active": true
+  },
+  {
+   "id": "nigerian_general-a17",
+   "kind": "association",
+   "category": "nigerian_general",
+   "difficulty": "easy",
+   "prompt": "Lagos",
+   "answer": "traffic, eko, island, lekki",
+   "items": [
+    [
+     "traffic"
+    ],
+    [
+     "eko"
+    ],
+    [
+     "island"
+    ],
+    [
+     "lekki"
+    ],
+    [
+     "ikeja"
+    ],
+    [
+     "victoria island"
+    ],
+    [
+     "danfo"
+    ],
+    [
+     "okada"
+    ],
+    [
+     "beach"
+    ],
+    [
+     "bridge"
+    ],
+    [
+     "third mainland bridge"
+    ],
+    [
+     "hustle"
+    ],
+    [
+     "city"
+    ],
+    [
+     "yaba"
+    ],
+    [
+     "surulere"
+    ],
+    [
+     "ajah"
+    ],
+    [
+     "keke"
+    ],
+    [
+     "molue"
+    ],
+    [
+     "lagoon"
+    ],
+    [
+     "nigeria"
+    ],
+    [
+     "brt"
+    ],
+    [
+     "oshodi"
+    ],
+    [
+     "apapa"
+    ],
+    [
+     "port"
+    ],
+    [
+     "owambe"
+    ]
+   ],
+   "active": true
+  },
+  {
+   "id": "african_football-a13",
+   "kind": "association",
+   "category": "african_football",
+   "difficulty": "easy",
+   "prompt": "Football",
+   "answer": "goal, ball, messi, ronaldo",
+   "items": [
+    [
+     "goal"
+    ],
+    [
+     "ball"
+    ],
+    [
+     "messi"
+    ],
+    [
+     "ronaldo"
+    ],
+    [
+     "pitch"
+    ],
+    [
+     "stadium"
+    ],
+    [
+     "referee"
+    ],
+    [
+     "penalty"
+    ],
+    [
+     "striker"
+    ],
+    [
+     "goalkeeper"
+    ],
+    [
+     "super eagles"
+    ],
+    [
+     "world cup"
+    ],
+    [
+     "afcon"
+    ],
+    [
+     "kick"
+    ],
+    [
+     "team"
+    ],
+    [
+     "jersey"
+    ],
+    [
+     "boots"
+    ],
+    [
+     "coach"
+    ],
+    [
+     "fans"
+    ],
+    [
+     "offside"
+    ],
+    [
+     "red card"
+    ],
+    [
+     "yellow card"
+    ],
+    [
+     "league"
+    ],
+    [
+     "match"
+    ],
+    [
+     "corner"
+    ],
+    [
+     "header"
+    ],
+    [
+     "premier league"
+    ],
+    [
+     "osimhen"
+    ]
+   ],
+   "active": true
+  },
+  {
+   "id": "african_food-a15",
+   "kind": "association",
+   "category": "african_food",
+   "difficulty": "easy",
+   "prompt": "Jollof",
+   "answer": "rice, party, ghana, nigeria",
+   "items": [
+    [
+     "rice"
+    ],
+    [
+     "party"
+    ],
+    [
+     "ghana"
+    ],
+    [
+     "nigeria"
+    ],
+    [
+     "tomato"
+    ],
+    [
+     "pepper"
+    ],
+    [
+     "chicken"
+    ],
+    [
+     "stew"
+    ],
+    [
+     "owambe"
+    ],
+    [
+     "plantain"
+    ],
+    [
+     "dodo"
+    ],
+    [
+     "senegal"
+    ],
+    [
+     "smoky"
+    ],
+    [
+     "food"
+    ],
+    [
+     "onion"
+    ],
+    [
+     "beef"
+    ],
+    [
+     "salad"
+    ],
+    [
+     "coleslaw"
+    ]
+   ],
+   "active": true
+  },
+  {
+   "id": "everyday-a15",
+   "kind": "association",
+   "category": "everyday",
+   "difficulty": "easy",
+   "prompt": "School",
+   "answer": "teacher, student, pupil, class",
+   "items": [
+    [
+     "teacher"
+    ],
+    [
+     "student"
+    ],
+    [
+     "pupil"
+    ],
+    [
+     "class"
+    ],
+    [
+     "classroom"
+    ],
+    [
+     "book"
+    ],
+    [
+     "books"
+    ],
+    [
+     "exam"
+    ],
+    [
+     "homework"
+    ],
+    [
+     "pen"
+    ],
+    [
+     "pencil"
+    ],
+    [
+     "uniform"
+    ],
+    [
+     "principal"
+    ],
+    [
+     "headmaster"
+    ],
+    [
+     "lesson"
+    ],
+    [
+     "blackboard"
+    ],
+    [
+     "chalk"
+    ],
+    [
+     "desk"
+    ],
+    [
+     "bell"
+    ],
+    [
+     "university"
+    ],
+    [
+     "test"
+    ],
+    [
+     "study"
+    ],
+    [
+     "assembly"
+    ],
+    [
+     "library"
+    ]
+   ],
+   "active": true
+  },
+  {
+   "id": "african_history-a15",
+   "kind": "association",
+   "category": "african_history",
+   "difficulty": "easy",
+   "prompt": "Wedding",
+   "answer": "bride, groom, ring, rings",
+   "items": [
+    [
+     "bride"
+    ],
+    [
+     "groom"
+    ],
+    [
+     "ring"
+    ],
+    [
+     "rings"
+    ],
+    [
+     "cake"
+    ],
+    [
+     "aso ebi"
+    ],
+    [
+     "asoebi"
+    ],
+    [
+     "dance"
+    ],
+    [
+     "party"
+    ],
+    [
+     "love"
+    ],
+    [
+     "marriage"
+    ],
+    [
+     "church"
+    ],
+    [
+     "mosque"
+    ],
+    [
+     "dress"
+    ],
+    [
+     "gown"
+    ],
+    [
+     "veil"
+    ],
+    [
+     "reception"
+    ],
+    [
+     "owambe"
+    ],
+    [
+     "spray"
+    ],
+    [
+     "money"
+    ],
+    [
+     "husband"
+    ],
+    [
+     "wife"
+    ],
+    [
+     "vows"
+    ],
+    [
+     "kiss"
+    ],
+    [
+     "honeymoon"
+    ],
+    [
+     "bridesmaid"
+    ],
+    [
+     "best man"
+    ]
+   ],
+   "active": true
+  },
+  {
+   "id": "african_music-a16",
+   "kind": "association",
+   "category": "african_music",
+   "difficulty": "easy",
+   "prompt": "Music",
+   "answer": "song, beat, dance, singer",
+   "items": [
+    [
+     "song"
+    ],
+    [
+     "beat"
+    ],
+    [
+     "dance"
+    ],
+    [
+     "singer"
+    ],
+    [
+     "guitar"
+    ],
+    [
+     "drum"
+    ],
+    [
+     "drums"
+    ],
+    [
+     "afrobeats"
+    ],
+    [
+     "album"
+    ],
+    [
+     "concert"
+    ],
+    [
+     "sound"
+    ],
+    [
+     "microphone"
+    ],
+    [
+     "mic"
+    ],
+    [
+     "radio"
+    ],
+    [
+     "dj"
+    ],
+    [
+     "rhythm"
+    ],
+    [
+     "melody"
+    ],
+    [
+     "lyrics"
+    ],
+    [
+     "band"
+    ],
+    [
+     "piano"
+    ],
+    [
+     "studio"
+    ],
+    [
+     "headphones"
+    ],
+    [
+     "playlist"
+    ],
+    [
+     "amapiano"
+    ]
+   ],
+   "active": true
+  },
+  {
+   "id": "everyday-a16",
+   "kind": "association",
+   "category": "everyday",
+   "difficulty": "easy",
+   "prompt": "Night",
+   "answer": "dark, moon, stars, sleep",
+   "items": [
+    [
+     "dark"
+    ],
+    [
+     "moon"
+    ],
+    [
+     "stars"
+    ],
+    [
+     "sleep"
+    ],
+    [
+     "bed"
+    ],
+    [
+     "dream"
+    ],
+    [
+     "owl"
+    ],
+    [
+     "evening"
+    ],
+    [
+     "midnight"
+    ],
+    [
+     "darkness"
+    ],
+    [
+     "quiet"
+    ],
+    [
+     "bat"
+    ],
+    [
+     "lamp"
+    ],
+    [
+     "torch"
+    ],
+    [
+     "cold"
+    ],
+    [
+     "nightfall"
+    ]
+   ],
+   "active": true
+  },
+  {
+   "id": "nigerian_general-a18",
+   "kind": "association",
+   "category": "nigerian_general",
+   "difficulty": "easy",
+   "prompt": "Market",
+   "answer": "buy, sell, trader, money",
+   "items": [
+    [
+     "buy"
+    ],
+    [
+     "sell"
+    ],
+    [
+     "trader"
+    ],
+    [
+     "money"
+    ],
+    [
+     "price"
+    ],
+    [
+     "haggle"
+    ],
+    [
+     "food"
+    ],
+    [
+     "stall"
+    ],
+    [
+     "shop"
+    ],
+    [
+     "customer"
+    ],
+    [
+     "goods"
+    ],
+    [
+     "balogun"
+    ],
+    [
+     "oshodi"
+    ],
+    [
+     "onitsha"
+    ],
+    [
+     "basket"
+    ],
+    [
+     "tomatoes"
+    ],
+    [
+     "bargain"
+    ],
+    [
+     "change"
+    ],
+    [
+     "crowd"
+    ]
+   ],
+   "active": true
+  },
+  {
+   "id": "everyday-a17",
+   "kind": "association",
+   "category": "everyday",
+   "difficulty": "easy",
+   "prompt": "Phone",
+   "answer": "call, text, message, whatsapp",
+   "items": [
+    [
+     "call"
+    ],
+    [
+     "text"
+    ],
+    [
+     "message"
+    ],
+    [
+     "whatsapp"
+    ],
+    [
+     "charger"
+    ],
+    [
+     "battery"
+    ],
+    [
+     "screen"
+    ],
+    [
+     "iphone"
+    ],
+    [
+     "android"
+    ],
+    [
+     "samsung"
+    ],
+    [
+     "network"
+    ],
+    [
+     "data"
+    ],
+    [
+     "airtime"
+    ],
+    [
+     "selfie"
+    ],
+    [
+     "camera"
+    ],
+    [
+     "app"
+    ],
+    [
+     "apps"
+    ],
+    [
+     "ringtone"
+    ],
+    [
+     "contact"
+    ],
+    [
+     "instagram"
+    ],
+    [
+     "tiktok"
+    ]
+   ],
+   "active": true
+  },
+  {
+   "id": "animals_nature-a14",
+   "kind": "association",
+   "category": "animals_nature",
+   "difficulty": "easy",
+   "prompt": "Ocean",
+   "answer": "sea, water, waves, beach",
+   "items": [
+    [
+     "sea"
+    ],
+    [
+     "water"
+    ],
+    [
+     "waves"
+    ],
+    [
+     "beach"
+    ],
+    [
+     "fish"
+    ],
+    [
+     "shark"
+    ],
+    [
+     "whale"
+    ],
+    [
+     "salt"
+    ],
+    [
+     "sand"
+    ],
+    [
+     "ship"
+    ],
+    [
+     "boat"
+    ],
+    [
+     "blue"
+    ],
+    [
+     "deep"
+    ],
+    [
+     "atlantic"
+    ],
+    [
+     "pacific"
+    ],
+    [
+     "coral"
+    ],
+    [
+     "surf"
+    ],
+    [
+     "tide"
+    ],
+    [
+     "swim"
+    ],
+    [
+     "sailor"
+    ]
+   ],
+   "active": true
+  },
+  {
+   "id": "funny-a11",
+   "kind": "association",
+   "category": "funny",
+   "difficulty": "easy",
+   "prompt": "Fire",
+   "answer": "hot, heat, flame, flames",
+   "items": [
+    [
+     "hot"
+    ],
+    [
+     "heat"
+    ],
+    [
+     "flame"
+    ],
+    [
+     "flames"
+    ],
+    [
+     "smoke"
+    ],
+    [
+     "burn"
+    ],
+    [
+     "burning"
+    ],
+    [
+     "red"
+    ],
+    [
+     "firewood"
+    ],
+    [
+     "wood"
+    ],
+    [
+     "match"
+    ],
+    [
+     "matches"
+    ],
+    [
+     "fireman"
+    ],
+    [
+     "firefighter"
+    ],
+    [
+     "ash"
+    ],
+    [
+     "ashes"
+    ],
+    [
+     "cook"
+    ],
+    [
+     "cooking"
+    ],
+    [
+     "candle"
+    ],
+    [
+     "danger"
+    ],
+    [
+     "campfire"
+    ]
+   ],
+   "active": true
+  },
+  {
+   "id": "everyday-a18",
+   "kind": "association",
+   "category": "everyday",
+   "difficulty": "easy",
+   "prompt": "Money",
+   "answer": "naira, dollar, cash, bank",
+   "items": [
+    [
+     "naira"
+    ],
+    [
+     "dollar"
+    ],
+    [
+     "cash"
+    ],
+    [
+     "bank"
+    ],
+    [
+     "rich"
+    ],
+    [
+     "wealth"
+    ],
+    [
+     "salary"
+    ],
+    [
+     "pay"
+    ],
+    [
+     "coin"
+    ],
+    [
+     "coins"
+    ],
+    [
+     "notes"
+    ],
+    [
+     "atm"
+    ],
+    [
+     "transfer"
+    ],
+    [
+     "pos"
+    ],
+    [
+     "spend"
+    ],
+    [
+     "save"
+    ],
+    [
+     "savings"
+    ],
+    [
+     "wallet"
+    ],
+    [
+     "budget"
+    ],
+    [
+     "price"
+    ],
+    [
+     "owo"
+    ]
+   ],
+   "active": true
+  },
+  {
+   "id": "everyday-a19",
+   "kind": "association",
+   "category": "everyday",
+   "difficulty": "easy",
+   "prompt": "Doctor",
+   "answer": "hospital, nurse, medicine, patient",
+   "items": [
+    [
+     "hospital"
+    ],
+    [
+     "nurse"
+    ],
+    [
+     "medicine"
+    ],
+    [
+     "patient"
+    ],
+    [
+     "sick"
+    ],
+    [
+     "stethoscope"
+    ],
+    [
+     "clinic"
+    ],
+    [
+     "drugs"
+    ],
+    [
+     "injection"
+    ],
+    [
+     "health"
+    ],
+    [
+     "surgeon"
+    ],
+    [
+     "surgery"
+    ],
+    [
+     "prescription"
+    ],
+    [
+     "illness"
+    ],
+    [
+     "treatment"
+    ],
+    [
+     "appointment"
+    ],
+    [
+     "ambulance"
+    ],
+    [
+     "white coat"
+    ]
+   ],
+   "active": true
+  },
+  {
+   "id": "animals_nature-a15",
+   "kind": "association",
+   "category": "animals_nature",
+   "difficulty": "easy",
+   "prompt": "Sun",
+   "answer": "hot, heat, light, sunshine",
+   "items": [
+    [
+     "hot"
+    ],
+    [
+     "heat"
+    ],
+    [
+     "light"
+    ],
+    [
+     "sunshine"
+    ],
+    [
+     "day"
+    ],
+    [
+     "sky"
+    ],
+    [
+     "summer"
+    ],
+    [
+     "bright"
+    ],
+    [
+     "yellow"
+    ],
+    [
+     "star"
+    ],
+    [
+     "sunset"
+    ],
+    [
+     "sunrise"
+    ],
+    [
+     "sunlight"
+    ],
+    [
+     "solar"
+    ],
+    [
+     "morning"
+    ],
+    [
+     "warm"
+    ],
+    [
+     "sunny"
+    ],
+    [
+     "dry season"
+    ],
+    [
+     "harmattan"
+    ]
+   ],
+   "active": true
+  },
+  {
+   "id": "african_history-a16",
+   "kind": "association",
+   "category": "african_history",
+   "difficulty": "easy",
+   "prompt": "Christmas",
+   "answer": "santa, december, gifts, presents",
+   "items": [
+    [
+     "santa"
+    ],
+    [
+     "december"
+    ],
+    [
+     "gifts"
+    ],
+    [
+     "presents"
+    ],
+    [
+     "tree"
+    ],
+    [
+     "carol"
+    ],
+    [
+     "carols"
+    ],
+    [
+     "church"
+    ],
+    [
+     "jesus"
+    ],
+    [
+     "rice"
+    ],
+    [
+     "chicken"
+    ],
+    [
+     "holiday"
+    ],
+    [
+     "family"
+    ],
+    [
+     "village"
+    ],
+    [
+     "celebration"
+    ],
+    [
+     "decorations"
+    ],
+    [
+     "lights"
+    ],
+    [
+     "reindeer"
+    ]
+   ],
+   "active": true
+  },
+  {
+   "id": "everyday-a20",
+   "kind": "association",
+   "category": "everyday",
+   "difficulty": "easy",
+   "prompt": "Road",
+   "answer": "car, cars, traffic, pothole",
+   "items": [
+    [
+     "car"
+    ],
+    [
+     "cars"
+    ],
+    [
+     "traffic"
+    ],
+    [
+     "pothole"
+    ],
+    [
+     "potholes"
+    ],
+    [
+     "street"
+    ],
+    [
+     "highway"
+    ],
+    [
+     "bus"
+    ],
+    [
+     "driver"
+    ],
+    [
+     "journey"
+    ],
+    [
+     "travel"
+    ],
+    [
+     "bridge"
+    ],
+    [
+     "tarmac"
+    ],
+    [
+     "junction"
+    ],
+    [
+     "roundabout"
+    ],
+    [
+     "path"
+    ],
+    [
+     "expressway"
+    ],
+    [
+     "okada"
+    ],
+    [
+     "keke"
+    ]
+   ],
+   "active": true
+  },
+  {
+   "id": "pidgin-a12",
+   "kind": "association",
+   "category": "pidgin",
+   "difficulty": "easy",
+   "prompt": "Wahala",
+   "answer": "trouble, problem, problems, palava",
+   "items": [
+    [
+     "trouble"
+    ],
+    [
+     "problem"
+    ],
+    [
+     "problems"
+    ],
+    [
+     "palava"
+    ],
+    [
+     "wahala dey"
+    ],
+    [
+     "fight"
+    ],
+    [
+     "quarrel"
+    ],
+    [
+     "issue"
+    ],
+    [
+     "stress"
+    ],
+    [
+     "drama"
+    ],
+    [
+     "gbege"
+    ],
+    [
+     "katakata"
+    ]
+   ],
+   "active": true
+  },
+  {
+   "id": "african_movies-a10",
+   "kind": "association",
+   "category": "african_movies",
+   "difficulty": "easy",
+   "prompt": "Nollywood",
+   "answer": "film, films, movie, movies",
+   "items": [
+    [
+     "film"
+    ],
+    [
+     "films"
+    ],
+    [
+     "movie"
+    ],
+    [
+     "movies"
+    ],
+    [
+     "actor"
+    ],
+    [
+     "actress"
+    ],
+    [
+     "director"
+    ],
+    [
+     "drama"
+    ],
+    [
+     "lagos"
+    ],
+    [
+     "nigeria"
+    ],
+    [
+     "genevieve"
+    ],
+    [
+     "funke akindele"
+    ],
+    [
+     "cinema"
+    ],
+    [
+     "netflix"
+    ],
+    [
+     "comedy"
+    ],
+    [
+     "script"
+    ],
+    [
+     "set"
+    ],
+    [
+     "camera"
+    ],
+    [
+     "asaba"
+    ],
+    [
+     "enugu"
+    ]
+   ],
+   "active": true
+  },
+  {
+   "id": "riddles-a13",
+   "kind": "association",
+   "category": "riddles",
+   "difficulty": "easy",
+   "prompt": "Puzzle",
+   "answer": "riddle, game, pieces, jigsaw",
+   "items": [
+    [
+     "riddle"
+    ],
+    [
+     "game"
+    ],
+    [
+     "pieces"
+    ],
+    [
+     "jigsaw"
+    ],
+    [
+     "brain"
+    ],
+    [
+     "think"
+    ],
+    [
+     "crossword"
+    ],
+    [
+     "sudoku"
+    ],
+    [
+     "solve"
+    ],
+    [
+     "solution"
+    ],
+    [
+     "clue"
+    ],
+    [
+     "mystery"
+    ],
+    [
+     "answer"
+    ],
+    [
+     "maze"
+    ],
+    [
+     "logic"
+    ]
+   ],
+   "active": true
+  }
+ ]
+}
