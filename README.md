@@ -13,9 +13,12 @@ and internal names still say `voiceid`, so existing data and deployments keep wo
 | `/sign-in` | One player for every game |
 | `/admin` | Admins only |
 
-The look is original: a midnight/violet/neon design system in `frontend/app/globals.css` (colour tokens checked
-for contrast), the Chakra Petch font (SIL OFL, bundled), and hand-drawn SVG scenes in
-`frontend/components/art/Scenes.tsx` (a hero facing the Nexus portal, the Brain Clash arena, a victory scene).
+The look is original and anime-styled: a night-sky design system in `frontend/app/globals.css` (violet, hot pink
+and neon blue, manga halftone dots, glowing card frames; colour tokens checked for contrast), Kanit Black Italic
+for headings and Nunito for text (both SIL OFL, bundled), and two cel-shaded mascots drawn in SVG,
+**Nova** and **Pulse**, the Brain Clash captains (`frontend/components/art/Characters.tsx`). They star in the scenes
+in `frontend/components/art/Scenes.tsx`: the Nexus portal at dusk, a fighting-game VS screen, Nova singing for
+Who's Talking?, and the victory podium.
 Every artwork spot is a named slot in `frontend/lib/art.ts`: put a licensed image in `frontend/public/art/` and
 set its path there to replace a scene, no other code changes needed.
 

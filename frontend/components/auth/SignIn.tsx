@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 
 import { useAuthStore } from "@/store/useAuthStore";
 
+import { Art } from "../art/Scenes";
 import { Loader } from "../brand/Loader";
 import { AuthForm } from "./AuthForm";
 
@@ -28,6 +29,9 @@ export function SignIn() {
   return (
     <div className="welcome">
       <section className="hero">
+        <div className="hero-banner">
+          <Art slot="hero" className="art-fill" />
+        </div>
         <p className="eyebrow">Join VOXPLAY</p>
         <h1>
           Your player. <span className="grad">Every game.</span>

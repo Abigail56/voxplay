@@ -1,5 +1,6 @@
 "use client";
 
+import { Art } from "../art/Scenes";
 import { AuthForm } from "../auth/AuthForm";
 
 /** The title screen: what the game is, plus sign up / sign in. */
@@ -7,6 +8,9 @@ export function Welcome({ invite }: { invite: string | null }) {
   return (
     <div className="welcome">
       <section className="hero">
+        <div className="hero-banner">
+          <Art slot="whosTalking" className="art-fill" />
+        </div>
         {invite && (
           <p className="invite-banner">
             You&apos;ve been invited to game <strong className="code">{invite}</strong>. Make a player (or sign in) and

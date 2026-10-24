@@ -6,15 +6,20 @@ import { Footer } from "@/components/portal/Footer";
 
 import "./globals.css";
 
-// Chakra Petch (SIL OFL, see fonts/ChakraPetch-OFL.txt), bundled so the build never needs the network.
-// Headings, the wordmark and numbers; body text stays in the system font.
+// Both fonts are SIL OFL (see fonts/*-OFL.txt) and bundled, so the build never needs the network.
+// Kanit italic: headings, the wordmark and numbers, with the punch of an anime title card.
 const display = localFont({
   src: [
-    { path: "./fonts/chakra-petch-latin-500-normal.woff2", weight: "500", style: "normal" },
-    { path: "./fonts/chakra-petch-latin-600-normal.woff2", weight: "600", style: "normal" },
-    { path: "./fonts/chakra-petch-latin-700-normal.woff2", weight: "700", style: "normal" },
+    { path: "./fonts/kanit-latin-700-italic.woff2", weight: "700", style: "italic" },
+    { path: "./fonts/kanit-latin-800-italic.woff2", weight: "800", style: "italic" },
+    { path: "./fonts/kanit-latin-900-italic.woff2", weight: "900", style: "italic" },
   ],
   variable: "--font-display",
+});
+// Nunito: rounded and friendly body text (one variable file covers every weight).
+const body = localFont({
+  src: [{ path: "./fonts/nunito-latin-variable.woff2", weight: "200 1000", style: "normal" }],
+  variable: "--font-body",
 });
 
 export const metadata: Metadata = {
@@ -27,7 +32,7 @@ export const viewport: Viewport = { themeColor: "#080a16", colorScheme: "dark" }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={display.variable}>
+    <html lang="en" className={`${display.variable} ${body.variable}`}>
       <body>
         <Nav />
         <main>{children}</main>
