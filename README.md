@@ -561,6 +561,17 @@ and short, easily misheard words ("goat" → "got", "brave" → "brain") were sw
 **60/60 lines passed** at the 70 % needed (5 of 7 words), against 26/30 digit phrases in the same run, while
 unrelated speech still matched at most 29 % of a line.
 
+**Nine shapes, not one.** Every line used to be "the ___ ___ ___ my ___ ___", so after a few turns they all
+sounded alike. Now there are nine patterns ("at the market the hungry pirate tickled my sandals", "my neighbour
+said the sleepy wizard painted her golden lanterns", "on sunday the …"), with places and words like plantains
+added. Because the patterns repeat their own words ("the", "my", "at the"), a line is now scored on its
+**random words only**: a recording of a different line gets nothing for those. Every pattern has at least 5
+random words, so one misheard word never fails a turn. Tuned with the same robot-voice test, 80 lines a run,
+every pattern and every word at least twice: the first draft passed 80/86, and lost points to patterns like
+"last night a" (heard "last item") and "my aunty said" ("my aunt is") and to words such as "motorbikes" (missed
+5/5); those were replaced. The final patterns passed **239 of 245 lines (97.6 %) over three runs**, the misses
+being two words garbled at once by the robot voice, and unrelated speech matched at most 40 %.
+
 **It does not stop a live voice clone.** Someone with an AI clone of Ada's voice could make it say the
 phrase within the 2 minutes. Catching that needs an anti-spoofing model trained to tell real from
 synthetic speech (for example AASIST, trained on the ASVspoof challenge data). That's the next step

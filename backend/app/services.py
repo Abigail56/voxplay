@@ -15,7 +15,7 @@ from .audio import AudioError, ClipQuality, PreparedAudio, preprocess
 from .config import Settings
 from .demo import is_active
 from .embedding import Embedder
-from .liveness import ChallengeStore, Transcriber, is_line, phrase_match
+from .liveness import ChallengeStore, Transcriber, is_line, line_match, phrase_match
 from .matching import Candidate
 from .models import Speaker
 from .schemas import LivenessOut
@@ -122,8 +122,9 @@ async def live_clip(
     if phrase is None:
         return clip, None
     heard = clip.transcript or ""
-    match = phrase_match(phrase, heard)
-    needed = settings.line_min_match if is_line(phrase) else settings.liveness_min_match
+    line = is_line(phrase)
+    match = line_match(phrase, heard) if line else phrase_match(phrase, heard)
+    needed = settings.line_min_match if line else settings.liveness_min_match
     return clip, LivenessOut(passed=match >= needed, phrase=phrase, heard=heard, match=round(match, 2))
 
 

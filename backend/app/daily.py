@@ -46,6 +46,38 @@ PHRASES = (
     "Sheep should sleep in a shed",
     "Two tried and true tridents",
     "Kitty caught the kitten in the kitchen",
+    # Naija flavour
+    "Tunde tried to teach ten tortoises to tango",
+    "Danfo drivers dodge dozens of daring donkeys",
+    "Bola bought bigger bags of beans for Bisi",
+    "Pepper soup simmers slowly on a sleepy Sunday",
+    "Kemi keeps cooking crunchy cassava cakes",
+    "Funke found five fresh fish at the farm",
+    "Mama made moi moi for many merry neighbours",
+    "Lagos lights look lovely late at night",
+    "Ngozi knits neat nets near the narrow river",
+    "Sade sells sweet suya on the side street",
+    "A plate of plantain pleases plenty of people",
+    "Chika chose cheap cheese and chips for church",
+    "Bright blue buses bounce along bumpy roads",
+    "Jolly Joy juggles jollof in a giant jar",
+    "Okada riders rarely ride right round the roundabout",
+    # More classics
+    "Fred fed Ted bread and Ted fed Fred bread",
+    "I saw Susie sitting in a shoeshine shop",
+    "Rubber baby buggy bumpers",
+    "Which witch is which",
+    "A skunk sat on a stump and thunk the stump stunk",
+    "Crisp crusts crackle crunchily",
+    "Three free throws for three fresh friends",
+    "Six sick slick slim sycamore saplings",
+    "Greek grapes, Greek grapes, Greek grapes",
+    "An Irish wristwatch and a Swiss wristwatch",
+    "Seventy seven benevolent elephants",
+    "Gobbling gargoyles gobbled gobbling goblins",
+    "Fuzzy feathers flutter freely in the fall",
+    "Slick silk socks sit silently in the sock shop",
+    "Quick kiss, quick kiss, quick kiss",
 )
 
 
@@ -53,8 +85,13 @@ def today() -> date:
     return datetime.now(timezone.utc).date()
 
 
+# Shifts the rotation so that adding phrases (30 -> 60 on 25 October 2026) didn't change that day's phrase
+# for people already playing it.
+ROTATION_OFFSET = 30
+
+
 def phrase_for(day: date) -> str:
-    return PHRASES[day.toordinal() % len(PHRASES)]
+    return PHRASES[(day.toordinal() - ROTATION_OFFSET) % len(PHRASES)]
 
 
 def seconds_left(day: date) -> int:

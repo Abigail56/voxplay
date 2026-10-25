@@ -8,7 +8,7 @@ import pytest
 from sqlalchemy import text
 
 from app.demo import sample_folder, seed_sample_voices
-from app.liveness import ADJECTIVES, CHARACTERS, THINGS, is_line, make_line, phrase_match, same_word
+from app.liveness import LINE_GLUE, LINE_PATTERNS, is_line, line_match, make_line, phrase_match, same_word
 from app.rooms import (
     TWISTS,
     Room,
@@ -31,16 +31,31 @@ SOLO = 3000  # far above any reader's pitch, so the fake voice model never mixes
 
 
 def test_lines_are_silly_random_and_checked_like_digits():
-    words = make_line().split()
-    assert len(words) == 7 and words[0] == "the" and words[4] == "my"
-    assert words[1] in ADJECTIVES and words[2] in CHARACTERS and words[6] in THINGS
-    assert len({make_line() for _ in range(50)}) == 50
+    lines = [make_line() for _ in range(400)]
+    assert len(set(lines)) == 400 and all(line == line.lower() and "{" not in line for line in lines)
+    starts = {" ".join(line.split()[:2]) for line in lines}
+    assert len(starts) >= 7  # many shapes, not one sentence with the words swapped
+    # Every line has at least 5 random words, so one misheard word never fails it.
+    assert all(sum(w not in LINE_GLUE for w in line.split()) >= 5 for line in lines)
+    duo = [line for line in lines if " and the " in line]
+    assert duo and all(line.split()[1] != line.split()[4] for line in duo)  # two different characters
+    assert len(LINE_PATTERNS) >= 8
     line = "the sleepy penguin stole my shiny pizzas"
     assert is_line(line) and not is_line("four seven two nine one six")
     assert phrase_match(line, "The sleepy penguin stole my shiny pizzas!") == 1.0
     assert phrase_match(line, "the sleepy pelican stole my shiny pizzas") == pytest.approx(6 / 7)  # still passes at 0.7
     assert phrase_match(line, "The sleeping penguin stole my shiny pizza.") == 1.0  # how Whisper usually slips
     assert phrase_match(line, "hello it's me") == 0.0
+
+
+def test_lines_are_scored_on_their_random_words_only():
+    line = "at the market the hungry pirate tickled my sandals"
+    assert line_match(line, "At the market, the hungry pirate tickled my sandals.") == 1.0
+    assert line_match(line, "market hungry pirate tickled sandals") == 1.0  # only the random words count
+    # An old recording of another line in the same pattern gets nothing for "at the … the … my".
+    other = "at the airport the sleepy wizard painted my rabbits"
+    assert phrase_match(line, other) >= 0.4 and line_match(line, other) == 0.0
+    assert line_match(line, "at the market the hungry pirate stole my wallets") == pytest.approx(3 / 5)  # fails at 0.7
 
 
 def test_near_misses_count_for_long_words_only():

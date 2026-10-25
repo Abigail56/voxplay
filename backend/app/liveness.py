@@ -75,31 +75,71 @@ class WhisperTranscriber:
 
 
 # Game turns read a silly line instead: more fun to say, and just as impossible to
-# have recorded in advance (about 2 million lines). Mostly 2-3 syllable words: in tests
-# with a robot voice, Whisper misheard short ones ("goat" -> "got", "brave" -> "brain")
-# and number words ("nine" -> "I'm") far more often.
+# have recorded in advance (millions of lines, in several shapes so they don't all sound
+# alike). Mostly 2-3 syllable words: in tests with a robot voice, Whisper misheard short
+# ones ("goat" -> "got", "brave" -> "brain") and number words ("nine" -> "I'm") far more
+# often. Every pattern and word here passed that test (README, "Liveness check").
 ADJECTIVES = (
-    "purple", "sleepy", "angry", "hungry", "fancy", "grumpy", "happy", "noisy", "shiny", "crazy",
+    "purple", "sleepy", "angry", "hungry", "fancy", "happy", "noisy", "shiny", "crazy",
     "silly", "golden", "frozen", "dancing", "famous", "magic", "lucky", "smelly", "wobbly", "sparkly",
 )
 CHARACTERS = (
     "penguin", "pirate", "robot", "dragon", "teacher", "monkey", "chicken", "wizard", "giraffe", "cowboy",
-    "unicorn", "pumpkin", "grandma", "kangaroo", "gorilla", "octopus", "princess", "vampire", "farmer", "landlord",
+    "unicorn", "pumpkin", "kangaroo", "gorilla", "octopus", "princess", "vampire", "farmer",
 )
 VERBS = (
-    "stole", "painted", "hugged", "licked", "kicked", "washed", "borrowed", "cooked", "tickled", "buried",
-    "juggled", "swallowed", "delivered", "decorated", "cuddled",
+    "stole", "painted", "licked", "kicked", "washed", "borrowed", "cooked", "tickled", "buried",
+    "swallowed", "delivered", "decorated", "cuddled",
 )
 THINGS = (
     "pizzas", "slippers", "trumpets", "wallets", "tomatoes", "sausages", "guitars", "pancakes", "cupcakes", "phones",
-    "balloons", "footballs", "pillows", "carpets", "motorbikes", "bananas", "noodles", "bicycles", "umbrellas", "laptops",
+    "balloons", "footballs", "pillows", "carpets", "bananas", "noodles", "bicycles", "umbrellas", "laptops",
+    "plantains", "sandals", "lanterns", "rabbits",
 )
+PLACES = (
+    "market", "wedding", "airport", "stadium", "cinema", "barbershop", "carnival", "library",
+    "football match",
+)
+# {a} adjective, {c} character, {v} verb, {t} things, {p} place. Every pattern has at least 5 random
+# words, so one misheard word never fails a line. Removed after the robot-voice test: "last night a"
+# (heard "last item"), "my aunty said" ("my aunt is"), and the words motorbikes, hugged, grandma,
+# grumpy, juggled, landlord, bus station, village square, birthday party.
+LINE_PATTERNS = (
+    "the {a} {c} {v} my {a} {t}",
+    "yesterday the {a} {c} {v} all my {a} {t}",
+    "at the {p} the {a} {c} {v} my {t}",
+    "my {a} {c} {v} the {t} at the {p}",
+    "the {c} and the {c} {v} my {a} {t}",
+    "nobody believed the {a} {c} {v} the {a} {t}",
+    "everybody knows the {a} {c} {v} my {a} {t}",
+    "my neighbour said the {a} {c} {v} her {a} {t}",
+    "on sunday the {a} {c} {v} my {t} at the {p}",
+)
+# The patterns' own words. A line is scored on its random words only, so a recording of a
+# different line gets nothing for also saying "the", "my" or "at the".
+LINE_GLUE = frozenset(w for p in LINE_PATTERNS for w in p.split() if not w.startswith("{"))
 
 
 def make_line() -> str:
-    """A random silly sentence, e.g. 'the sleepy penguin stole my shiny pizzas'."""
+    """A random silly sentence in one of several shapes, e.g. 'the sleepy penguin stole my shiny pizzas'
+    or 'at the market the hungry pirate tickled my sandals'. A pattern that names two characters gets
+    two different ones."""
     pick = secrets.choice
-    return f"the {pick(ADJECTIVES)} {pick(CHARACTERS)} {pick(VERBS)} my {pick(ADJECTIVES)} {pick(THINGS)}"
+    line = pick(LINE_PATTERNS)
+    for slot, words in (("{a}", ADJECTIVES), ("{v}", VERBS), ("{t}", THINGS), ("{p}", PLACES)):
+        while slot in line:
+            line = line.replace(slot, pick(words), 1)
+    cast = list(CHARACTERS)
+    while "{c}" in line:
+        who = pick(cast)
+        cast.remove(who)
+        line = line.replace("{c}", who, 1)
+    return line.lower()
+
+
+def line_match(expected: str, heard: str) -> float:
+    """How much of a game line was heard, counting its random words only."""
+    return phrase_match(expected, heard, LINE_GLUE)
 
 
 def is_line(phrase: str) -> bool:
@@ -133,14 +173,15 @@ def same_word(want: str, got: str) -> bool:
     return want.rstrip("s") == got.rstrip("s") or SequenceMatcher(None, want, got).ratio() >= 0.7
 
 
-def phrase_match(expected: str, heard: str) -> float:
+def phrase_match(expected: str, heard: str, skip: frozenset[str] = frozenset()) -> float:
     """Share of the expected words that were heard, in the right order (0..1).
 
     Uses the longest common subsequence, so extra words ("um", "okay") and a
     single misheard word only cost a little, but saying the words in a
-    different order doesn't count.
+    different order doesn't count. Words in `skip` (a line's pattern words) aren't
+    counted, so only the random words decide.
     """
-    want, got = normalise(expected), normalise(heard)
+    want, got = [w for w in normalise(expected) if w not in skip], normalise(heard)
     if not want:
         return 0.0
     # Classic dynamic-programming LCS on words.
