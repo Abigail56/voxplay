@@ -714,7 +714,6 @@ body:has(.adm) { background: #f6f7f9; }
 .footer-links { display: flex; flex-wrap: wrap; gap: 8px 18px; }
 .footer-links a { color: var(--muted); text-decoration: none; padding: 4px 0; }
 .footer-links a:hover { color: var(--text); }
-.footer-note { flex: 1 1 100%; }
 
 /* Navigation menu (desktop row, mobile drop-down) */
 .nav-menu { display: flex; align-items: center; gap: 20px; flex: 1; justify-content: space-between; margin-left: 24px; }

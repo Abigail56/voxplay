@@ -50,7 +50,11 @@ export function Solo({ sound, onPlayed }: { sound: boolean; onPlayed: () => void
           </span>
         )}
       </div>
-      <p className="hint">No one around? Play against {info.voices.length} built-in voices: real people reading audiobooks (LibriSpeech).</p>
+      <p className="hint">No one around? Play against {info.voices.length} built-in voices: real people reading audiobooks (from{" "}
+        <a href="https://www.openslr.org/12" target="_blank" rel="noreferrer">
+          LibriSpeech
+        </a>
+        , CC BY 4.0).</p>
       <div className="tabs" role="tablist">
         {TABS.map((t) => (
           <button key={t.id} type="button" role="tab" aria-selected={tab === t.id} className={tab === t.id ? "on" : ""} onClick={() => setTab(t.id)}>

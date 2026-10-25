@@ -11,7 +11,7 @@ export function GameCard({ game }: { game: GameInfo }) {
     <article className={`game-card ${live ? "" : "soon"}`}>
       <div className="game-art">
         <Art slot={game.art} />
-        <span className={`status-pill ${live ? "live" : ""}`}>{live ? "Play now" : "Coming soon"}</span>
+        {!live && <span className="status-pill">Coming soon</span>}
       </div>
       <div className="game-body">
         <span className="eyebrow">{game.category}</span>

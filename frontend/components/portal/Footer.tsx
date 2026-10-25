@@ -20,9 +20,6 @@ export function Footer() {
           <Link href="/#how">How it works</Link>
           <Link href="/#faq">FAQ</Link>
         </nav>
-        <p className="hint footer-note">
-          Original artwork. Built-in voices from LibriSpeech (CC BY 4.0). Your voice, your victory.
-        </p>
       </div>
     </footer>
   );
