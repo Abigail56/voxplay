@@ -1,0 +1,44 @@
+# Production overrides for one server (e.g. Oracle Cloud Always Free), on top of docker-compose.yml:
+#   docker compose -f docker-compose.yml -f deploy/oracle/docker-compose.prod.yml up -d --build
+# Caddy takes 80/443 and gets an HTTPS certificate for $DOMAIN (browsers only allow the
+# microphone over HTTPS). The site is at /, the API at /api; nothing else is published.
+
+services:
+  db:
+    ports: !reset []
+
+  redis:
+    ports: !reset []
+
+  api:
+    ports: !reset []
+    environment:
+      CORS_ORIGINS: https://${DOMAIN}
+      # Caddy sets X-Forwarded-For, so rate limits see each visitor's IP.
+      TRUST_PROXY_HEADERS: "true"
+      RATE_LIMIT_PER_MINUTE: ${RATE_LIMIT_PER_MINUTE:-20}
+
+  web:
+    ports: !reset []
+    build:
+      args:
+        # Same origin as the site: no address baked in, so the domain can change without a rebuild.
+        NEXT_PUBLIC_API_URL: /api
+
+  caddy:
+    image: caddy:2.8-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN}
+    volumes:
+      - ./deploy/oracle/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddydata:/data
+    depends_on:
+      - api
+      - web
+
+volumes:
+  caddydata:

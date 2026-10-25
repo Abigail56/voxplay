@@ -211,9 +211,10 @@ export type AdminRoom = {
   updated_at: string;
 };
 
-/** ws://… for http://…, wss://… for https://… (keeps a path prefix such as https://host/api) */
+/** ws://… for http://…, wss://… for https://… (keeps a path prefix such as https://host/api; a bare /api is this site) */
 export function liveUrl(token: string, room?: string | null, bc?: string | null, screen?: string | null): string {
-  const url = new URL(`${API_URL.replace(/^http/, "ws").replace(/\/$/, "")}/ws`);
+  const url = new URL(`${API_URL.replace(/\/$/, "")}/ws`, window.location.href);
+  url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
   if (token) url.searchParams.set("token", token);
   if (screen) url.searchParams.set("screen", screen);
   if (room) url.searchParams.set("room", room);

@@ -1,0 +1,14 @@
+{$DOMAIN} {
+	request_body {
+		max_size 100MB
+	}
+
+	# /api/... -> the API without the /api prefix (WebSockets included).
+	handle_path /api/* {
+		reverse_proxy api:8000
+	}
+
+	handle {
+		reverse_proxy web:3000
+	}
+}

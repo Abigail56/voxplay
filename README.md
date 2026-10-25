@@ -735,6 +735,17 @@ are in the portfolio's `docs/DEPLOY.md`. Free Spaces can't reach outside databas
 under the Space's *Settings → Secrets*, or players are signed out whenever the Space restarts. Data lasts only while the Space
 runs, which suits a demo with 24-hour enrollments.
 
+**Deploying the whole app to one free Hugging Face Space:** run `sh deploy/make-hf-fullstack.sh`, create a Docker
+Space and upload `dist/hf-voxplay/`. That image (`deploy/huggingface-fullstack/`) runs the site, the API, PostgreSQL
+and Redis behind nginx: the site at `/`, the API at `/api`. Add `JWT_SECRET` under *Settings → Secrets* and
+`ADMIN_USERNAMES` under *Variables*. As with the API-only Space, data is cleared when the Space restarts.
+
+**Deploying to one server (Oracle Cloud Always Free or any Ubuntu VPS):** on the server, run
+`curl -fsSL https://raw.githubusercontent.com/Abigail56/voxplay/main/deploy/oracle/setup.sh | sh`. It installs Docker,
+opens ports 80/443, clones the repo and starts everything with `deploy/oracle/docker-compose.prod.yml`: Caddy serves
+HTTPS at `https://<server-ip>.sslip.io` (or a domain passed as the first argument), the site at `/` and the API at
+`/api`. Data is kept in Docker volumes. Run the same command again to update.
+
 **Deploying to Render:** `render.yaml` is a Blueprint for the API, the site, PostgreSQL (pgvector is built in) and
 Key Value. In the Render dashboard choose *New → Blueprint* and pick this repo. The API needs the Standard plan
 (2 GB), because the models don't fit in 512 MB. If Render renames a service, update the URLs at the top of the file.
