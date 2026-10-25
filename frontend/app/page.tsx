@@ -136,9 +136,14 @@ export default function Landing() {
             <li>Quick-Fire</li>
             <li>Word Association</li>
           </ul>
-          <Link href="/brain-clash" className="btn primary big">
-            Enter the arena
-          </Link>
+          <div className="row">
+            <Link href="/brain-clash" className="btn primary big">
+              Enter the arena
+            </Link>
+            <Link href="/brain-clash#categories" className="btn big">
+              See all 16 categories
+            </Link>
+          </div>
         </div>
       </section>
 

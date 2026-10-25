@@ -27,7 +27,21 @@ export function GameEntry({ game }: { game: BcGame }) {
 
   useEffect(() => {
     restore();
-    api.bc.categories(game).then(setCats).catch(() => setCats([]));
+    // Keep trying until the categories arrive (the server may be restarting), every 3 seconds.
+    let stop = false;
+    let retry: ReturnType<typeof setTimeout> | undefined;
+    const load = () =>
+      api.bc
+        .categories(game)
+        .then((cs) => !stop && setCats(cs))
+        .catch(() => {
+          if (!stop) retry = setTimeout(load, 3000);
+        });
+    load();
+    return () => {
+      stop = true;
+      clearTimeout(retry);
+    };
   }, [restore, game]);
 
   const available = cats.filter((c) => (c.counts[mode] ?? 0) > 0);
@@ -179,11 +193,12 @@ export function GameEntry({ game }: { game: BcGame }) {
         )}
       </section>
 
-      <section className="landing-section" aria-labelledby="cats-bc">
+      <section className="landing-section" id="categories" aria-labelledby="cats-bc">
         <div className="section-title">
           <p className="eyebrow">Categories</p>
           <h2 id="cats-bc">{g.catsTitle}</h2>
         </div>
+        {!cats.length && <p className="hint">Loading the categories…</p>}
         <ul className="art-tile-grid small">
           {cats.map((c) => (
             <li key={c.id}>
