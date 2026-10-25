@@ -735,6 +735,10 @@ are in the portfolio's `docs/DEPLOY.md`. Free Spaces can't reach outside databas
 under the Space's *Settings → Secrets*, or players are signed out whenever the Space restarts. Data lasts only while the Space
 runs, which suits a demo with 24-hour enrollments.
 
+**Deploying to Render:** `render.yaml` is a Blueprint for the API, the site, PostgreSQL (pgvector is built in) and
+Key Value. In the Render dashboard choose *New → Blueprint* and pick this repo. The API needs the Standard plan
+(2 GB), because the models don't fit in 512 MB. If Render renames a service, update the URLs at the top of the file.
+
 `DATABASE_URL` also accepts the plain `postgresql://…?sslmode=require` strings that hosts like Neon give you;
 `app/config.py` converts them for asyncpg.
 
