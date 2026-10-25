@@ -161,6 +161,7 @@ class RoomOut(BaseModel):
     opener: str | None
     server_time: datetime  # so screens can correct for a wrong clock
     you: int
+    screen_key: str | None = None  # the host's key to open the party screen
 
 
 class AnswerOut(BaseModel):
@@ -243,6 +244,7 @@ def out(room: bc.BrainClashRoom, viewer: int, online: set[int] = frozenset()) ->
         opener=room.opener,
         server_time=bc.now(),
         you=viewer,
+        screen_key=room.screen_key if viewer == room.host_id else None,
     )
 
 
@@ -348,7 +350,7 @@ def check_settings(settings: bc.RoomSettings) -> bc.RoomSettings:
 
 
 def display_name(name: str | None, user: User) -> str:
-    return (name or user.username).strip()[:20] or user.username
+    return (name or user.nickname or user.username).strip()[:20] or user.username
 
 
 # ---------- endpoints ----------
@@ -376,6 +378,20 @@ async def create_room(body: CreateIn, user: CurrentUser, session: SessionDep, se
 @router.get("/rooms/{code}", response_model=RoomOut)
 async def get_room(code: str, user: CurrentUser, session: SessionDep, settings: SettingsDep, rooms: RoomsDep) -> RoomOut:
     return await view(session, settings, await get_or_404(rooms, code), user.id)
+
+
+async def screen_room(rooms: bc.BrainClashStore, code: str, key: str) -> bc.BrainClashRoom:
+    room = await get_or_404(rooms, code)
+    if not room.screen_key_ok(key):
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "This party-screen link has expired. Ask the host for a new one.")
+    return room
+
+
+@router.get("/rooms/{code}/screen", response_model=RoomOut)
+async def get_screen(code: str, key: str, session: SessionDep, settings: SettingsDep, rooms: RoomsDep) -> RoomOut:
+    """The party screen: the room as a spectator sees it (no secrets: no hummer's song, no team's hidden list).
+    Opened with the host's screen key instead of a sign-in, so a TV needs no account."""
+    return await view(session, settings, await screen_room(rooms, code, key), 0)
 
 
 @router.post("/rooms/{code}/join", response_model=RoomOut, dependencies=[Depends(rate_limit)])
@@ -541,6 +557,18 @@ async def advance(code: str, user: CurrentUser, session: SessionDep, settings: S
     return await view(session, settings, room, user.id)
 
 
+@router.post("/rooms/{code}/screen/advance", response_model=RoomOut)
+async def screen_advance(code: str, key: str, session: SessionDep, settings: SettingsDep, rooms: RoomsDep) -> RoomOut:
+    """The party screen's "time's up?", so the match moves on even when every phone is locked. Like a
+    player's screen, it can only move a round on once the server's own clock says its time is over."""
+    async with rooms.lock(code):
+        room = await screen_room(rooms, code, key)
+        was = room.status
+        rules(lambda: bc.advance(room, bc.now(), by_host=False))
+        await save_change(session, rooms, room, was)
+    return await view(session, settings, room, 0)
+
+
 @router.post("/rooms/{code}/end", response_model=RoomOut)
 async def end(code: str, user: CurrentUser, session: SessionDep, settings: SettingsDep, rooms: RoomsDep) -> RoomOut:
     """The host ends the match now. The team ahead wins (level scores: a draw)."""
@@ -601,6 +629,16 @@ async def hum_clip(code: str, request: Request, user: CurrentUser, rooms: RoomsD
     """Beat Drop: this round's hum, to play."""
     room = await get_or_404(rooms, code)
     member(room, user)
+    return await hum_response(request, room)
+
+
+@router.get("/rooms/{code}/screen/hum")
+async def screen_hum_clip(code: str, key: str, request: Request, rooms: RoomsDep) -> Response:
+    """Beat Drop: this round's hum, for the party screen's big speaker."""
+    return await hum_response(request, await screen_room(rooms, code, key))
+
+
+async def hum_response(request: Request, room: bc.BrainClashRoom) -> Response:
     raw = await request.app.state.store.get(hum_key(room, room.round.number)) if room.round and room.round.has_clip else None
     if raw is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "There's no hum to play right now.")

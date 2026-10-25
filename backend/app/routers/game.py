@@ -196,7 +196,9 @@ async def mark_seen(websocket: WebSocket, user_id: int) -> None:
 
 
 @router.websocket("/ws")
-async def live(websocket: WebSocket, token: str = "", room: str | None = None, bc: str | None = None) -> None:
+async def live(
+    websocket: WebSocket, token: str = "", room: str | None = None, bc: str | None = None, screen: str = ""
+) -> None:
     """Live updates for the dashboard and (optionally) one room.
 
     The server only says *what* changed ({"type": "dashboard"} or {"type": "room"});
@@ -205,14 +207,25 @@ async def live(websocket: WebSocket, token: str = "", room: str | None = None, b
     through as they are: {"type": "reaction", "reaction": "🔥", "from": "ada"}. Messages come through
     the shared store's pub/sub, so a change made on any API instance arrives here.
     The browser sends {"type": "ping"} every 15 s, which keeps the player "online".
+
+    A party screen connects with `bc=<code>&screen=<the host's screen key>` instead of a token: it hears
+    only that room, and doesn't count as a player.
     """
     user_id = user_id_from_token(token, websocket.app.state.jwt_secret)
-    if user_id is None:
+    on_screen = None
+    if user_id is None and bc and screen:
+        on_screen = await websocket.app.state.bc_rooms.get(bc)
+        if on_screen is not None and not on_screen.screen_key_ok(screen):
+            on_screen = None
+    if user_id is None and on_screen is None:
         await websocket.close(code=4401)  # 4401: "please sign in again"
         return
     await websocket.accept()
     store = websocket.app.state.store
-    channels = ["dashboard"] + ([f"room:{room.upper()}"] if room else []) + ([f"bc:{bc.upper()}"] if bc else [])
+    if on_screen is not None:
+        channels = [f"bc:{bc.upper()}"]
+    else:
+        channels = ["dashboard"] + ([f"room:{room.upper()}"] if room else []) + ([f"bc:{bc.upper()}"] if bc else [])
 
     async def forward(events) -> None:
         async for channel, message in events:
@@ -225,13 +238,14 @@ async def live(websocket: WebSocket, token: str = "", room: str | None = None, b
     async def receive() -> None:
         while True:
             message = await websocket.receive_json()
-            if message.get("type") == "ping":
+            if message.get("type") == "ping" and user_id is not None:
                 await mark_seen(websocket, user_id)
 
     # Listen first, then say we're here, so no update can slip through in between.
     async with store.subscribe(*channels) as events:
-        await mark_seen(websocket, user_id)
-        await store.publish("dashboard", "changed")  # someone came online
+        if user_id is not None:
+            await mark_seen(websocket, user_id)
+            await store.publish("dashboard", "changed")  # someone came online
         tasks = [asyncio.create_task(forward(events)), asyncio.create_task(receive())]
         try:
             # Ends when the browser goes away (receive fails) or sending fails.

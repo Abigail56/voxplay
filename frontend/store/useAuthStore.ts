@@ -29,6 +29,7 @@ type AuthState = {
   ready: boolean; // false until we've checked a remembered token
   restore: () => Promise<void>;
   signIn: (mode: "signup" | "login", username: string, password: string, where?: { country: string; place: string }) => Promise<void>;
+  playAsGuest: (name: string) => Promise<void>;
   setMe: (me: Me) => void;
   refreshMe: () => Promise<void>;
   signOut: () => void;
@@ -55,6 +56,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const { token, user } = await (mode === "signup"
       ? api.signup(username, password, where?.country ?? "", where?.place ?? "")
       : api.login(username, password));
+    setAuthToken(token);
+    writeToken(token);
+    set({ token, me: user, ready: true });
+  },
+
+  playAsGuest: async (name) => {
+    const { token, user } = await api.guest(name);
     setAuthToken(token);
     writeToken(token);
     set({ token, me: user, ready: true });

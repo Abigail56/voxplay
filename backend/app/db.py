@@ -32,6 +32,8 @@ async def init_db(engine: AsyncEngine) -> None:
         # Players' country and area (sign-up asks for them), and cheat attempts for the admin page.
         await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS country VARCHAR(2)"))
         await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS place VARCHAR(120)"))
+        await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_guest BOOLEAN NOT NULL DEFAULT false"))
+        await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS nickname VARCHAR(20)"))
         await conn.execute(text("ALTER TABLE users ALTER COLUMN share_location SET DEFAULT true"))
         await conn.execute(text("ALTER TABLE game_plays ADD COLUMN IF NOT EXISTS live_passed BOOLEAN"))
         await conn.execute(text("ALTER TABLE voice_samples ADD COLUMN IF NOT EXISTS source VARCHAR(10) NOT NULL DEFAULT 'enroll'"))

@@ -21,6 +21,9 @@ import { announce, loadSoundSetting, sfx } from "@/lib/game";
 import { useLive } from "@/lib/useLive";
 import { useAuthStore } from "@/store/useAuthStore";
 
+import { GuestJoin } from "../auth/GuestJoin";
+import { ShareCard } from "./ShareCard";
+
 import { ART, artSrc } from "@/lib/art";
 
 import { Art } from "../art/Scenes";
@@ -80,10 +83,8 @@ export function BrainClashRoomPage({ code, game = "brain-clash" }: { code: strin
           {g.title} · room {code}
         </p>
         <h1>You&apos;re invited!</h1>
-        <p className="tagline">Make a VOXPLAY player (or sign in) and you&apos;ll come straight back to this room. No voice setup needed.</p>
-        <Link href={`/sign-in?next=${encodeURIComponent(`${g.path}/${code}`)}`} className="btn primary big">
-          Sign in to join
-        </Link>
+        <p className="tagline">Type your name and you&apos;re in. No sign-up, no voice setup.</p>
+        <GuestJoin next={`${g.path}/${code}`} cta="Join the game" />
       </section>
     );
   }
@@ -109,7 +110,7 @@ export function BrainClashRoomPage({ code, game = "brain-clash" }: { code: strin
         <Art slot={room.status === "finished" ? "victory" : room.game === "brain-clash" ? "lobby" : g.art} className="art-fill" />
       </div>
       <Floaters reactions={reactions} />
-      {!mine && room.status === "lobby" && <JoinPanel room={room} name={me.username} onRoom={show} />}
+      {!mine && room.status === "lobby" && <JoinPanel room={room} name={me.nickname ?? me.username} onRoom={show} />}
       {!mine && room.status !== "lobby" && <p className="notice">You&apos;re watching. This match started before you arrived; join the next one!</p>}
       {room.status === "lobby" && <Lobby room={room} me={me.id} onRoom={show} />}
       {room.status === "playing" && <Match room={room} me={mine} offset={offset} sound={sound} onRoom={show} />}
@@ -210,6 +211,7 @@ function Lobby({ room, me, onRoom }: { room: BcRoom; me: number; onRoom: (r: BcR
           <div className="code big-code">{room.code}</div>
         </div>
         <RoomInvite code={room.code} game={room.game} />
+        {isHost && room.screen_key && <ScreenLink room={room} />}
       </section>
 
       <div className="bc-teams">
@@ -423,6 +425,46 @@ function RoomInvite({ code, game }: { code: string; game: BcGame }) {
         </a>
         <button className="btn small" onClick={copy}>
           Copy link
+        </button>
+      </div>
+      {note && (
+        <p className="hint" role="status">
+          {note}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/** Host only: open the party screen on a TV or laptop that everyone can see. */
+function ScreenLink({ room }: { room: BcRoom }) {
+  const [link, setLink] = useState("");
+  const [note, setNote] = useState<string | null>(null);
+  useEffect(() => {
+    const path = `${ROOM_GAMES[room.game].path}/${encodeURIComponent(room.code)}/screen`;
+    setLink(`${window.location.origin}${path}?key=${encodeURIComponent(room.screen_key ?? "")}`);
+  }, [room.game, room.code, room.screen_key]);
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(link);
+      setNote("Screen link copied. Open it on the TV or laptop.");
+    } catch {
+      setNote("Your browser blocked copying. Use Open instead.");
+    }
+    setTimeout(() => setNote(null), 3000);
+  }
+  return (
+    <div className="screen-link">
+      <p className="hint">
+        <strong>📺 Party screen:</strong> show the questions, timer and scores on a TV or laptop everyone can see. Players still
+        answer on their phones.
+      </p>
+      <div className="row">
+        <a className="btn small primary" href={link} target="_blank" rel="noreferrer">
+          Open party screen
+        </a>
+        <button className="btn small" onClick={copy}>
+          Copy screen link
         </button>
       </div>
       {note && (
@@ -1048,6 +1090,7 @@ function Feed({ room }: { room: BcRoom }) {
 
 function Victory({ room, me, sound, onRoom }: { room: BcRoom; me: number; sound: boolean; onRoom: (r: BcRoom) => void }) {
   const isHost = room.host_id === me;
+  const guest = useAuthStore((s) => s.me?.is_guest);
   const { act, error, busy } = useAct(onRoom);
   const draw = room.winner === "draw";
   const champ = draw ? null : (room.winner as BcTeam);
@@ -1086,6 +1129,14 @@ function Victory({ room, me, sound, onRoom }: { room: BcRoom; me: number; sound:
       {mvp && mvp.points > 0 && (
         <p className="tagline">
           ⭐ Star player: <strong>{mvp.name}</strong> with {mvp.points} points ({mvp.correct} right)
+        </p>
+      )}
+      <ShareCard room={room} />
+      {guest && (
+        <p className="tagline guest-save">
+          {room.players.find((p) => p.user_id === me)?.points ? "Keep your points: " : "Like it? "}
+          <Link href={`/sign-in?next=${encodeURIComponent(`${ROOM_GAMES[room.game].path}/${room.code}`)}`}>save your player</Link> (a name
+          and a password).
         </p>
       )}
       <FlagPanel room={room} onRoom={onRoom} />

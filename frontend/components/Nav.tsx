@@ -73,7 +73,11 @@ export function Nav() {
             )}
           </ul>
           <div className="nav-actions">
-            {me ? (
+            {me?.is_guest ? (
+              <Link href={`/sign-in?next=${encodeURIComponent(path)}`} className="nav-user" title="Playing as a guest: save your player">
+                <span className="presence on" aria-hidden /> {me.nickname} · Save player
+              </Link>
+            ) : me ? (
               <span className="nav-user" title="Signed in">
                 <span className="presence on" aria-hidden /> {me.username}
               </span>

@@ -7,6 +7,7 @@ import { loadSoundSetting, saveSoundSetting, sfx } from "@/lib/game";
 import { useLive } from "@/lib/useLive";
 import { useAuthStore } from "@/store/useAuthStore";
 
+import { SaveGuest } from "../auth/SaveGuest";
 import { Loader } from "../brand/Loader";
 import { DailyChallenge } from "./DailyChallenge";
 import { Leaderboards } from "./Leaderboards";
@@ -132,6 +133,21 @@ export function GameHome() {
 
   if (!ready) return <Loader label="Entering the game…" />;
   if (!token || !me) return <Welcome invite={invite} />;
+  if (me.is_guest) {
+    return (
+      <div className="setup-page">
+        <h1>Hi {me.nickname}! Save your player first.</h1>
+        <p className="tagline">
+          Who&apos;s Talking? keeps a voiceprint of you, so it needs a saved player (a name and a password). Your
+          points from the other games come with you.
+        </p>
+        <SaveGuest />
+        <button className="link" onClick={signOut}>
+          Not {me.nickname}? Start over
+        </button>
+      </div>
+    );
+  }
   if (!me.has_voice) {
     return (
       <div className="setup-page">

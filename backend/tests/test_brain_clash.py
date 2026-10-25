@@ -60,6 +60,23 @@ def test_judging_answers():
     assert not bc.judge_answer(q("s", "36"), "63")
 
 
+def test_nigerian_english_and_pidgin_answers():
+    a = q("a", "Abuja")
+    for said in ("na Abuja", "Na Abuja, oh.", "Abuja o", "Abuja sha", "Abuja abi?", "e be Abuja", "na im be Abuja",
+                 "I tink na Abuja", "na Abuja jare", "Oya, Abuja", "Ehn, Abuja", "it should be Abuja", "I believe it's Abuja",
+                 "Abuja now", "my guy na Abuja", "e fit be Abuja", "I'm sure it's Abuja", "Abeg na Abuja",
+                 "the answer na Abuja", "na Abuja be di answer", "Abuja, Abuja!", "Oh, Abuja."):
+        assert bc.judge_answer(a, said), said
+    for said in ("na Lagos", "Lagos o", "Abuja or Lagos", "not Abuja", "is it not Abuja"):
+        assert not bc.judge_answer(a, said), said
+    assert bc.judge_answer(q("l", "Last Last"), "Last Last")  # a repeated title isn't halved
+    assert not bc.judge_answer(q("l", "Last Last"), "Last")
+    song = q("s", "Essence", kind="song", items=[["Wizkid"]])
+    assert bc.judge_answer(song, "na Essence by Wizkid o")
+    countries = q("c", kind="list", items=[["Ghana"], ["Kenya"], ["Togo"]])
+    assert bc.find_items(countries, "na Ghana, Kenya and Togo o") == [0, 1, 2]
+
+
 def test_name_it_fast_finds_several_items_at_once():
     countries = q("c", kind="list", items=[["Ghana"], ["Kenya"], ["Togo"], ["Ivory Coast", "Cote d'Ivoire"], ["Nigeria"]])
     assert bc.find_items(countries, "Ghana, Kenya and Togo!") == [0, 1, 2]
@@ -537,6 +554,49 @@ def test_live_updates_and_reconnecting():
         assert len(again["players"]) == 2
         for x in h:
             c.delete("/me", headers=x)
+
+
+@needs_db
+async def test_party_screen_sees_the_room_without_its_secrets(client):
+    ada, bayo = await signup(client, "ada"), await signup(client, "bayo")
+    room = await bc_room(client, ada, mode="hum", categories=["hum_classics"])
+    code, key = room["code"], room["screen_key"]
+    assert key and (await client.post(f"/brain-clash/rooms/{code}/join", headers=bayo, json={})).json()["screen_key"] is None
+    assert (await client.get(f"/brain-clash/rooms/{code}/screen?key=wrong")).status_code == 403
+    assert (await client.get(f"/brain-clash/rooms/{code}/screen")).status_code == 422
+    await client.post(f"/brain-clash/rooms/{code}/start", headers=ada)
+    title = await cheat_answer(client, code)
+    # The screen may ask "time's up?", but only the server's clock moves the round on.
+    assert (await client.post(f"/brain-clash/rooms/{code}/screen/advance?key=wrong")).status_code == 403
+    assert (await client.post(f"/brain-clash/rooms/{code}/screen/advance?key={key}")).status_code == 409
+    screen = (await client.get(f"/brain-clash/rooms/{code}/screen?key={key}")).json()
+    assert screen["round"]["phase"] == "hum" and title not in json.dumps(screen["round"])  # the song stays secret
+    assert screen["you"] == 0 and screen["screen_key"] is None and len(screen["players"]) == 2
+    client.app.state.transcriber.text = "hmm mm"
+    hum = {"file": ("hum.wav", tone_wav(300, seconds=2), "audio/wav")}
+    assert (await client.post(f"/brain-clash/rooms/{code}/hum", headers=ada, data={"round": "1"}, files=hum)).status_code == 200
+    played = await client.get(f"/brain-clash/rooms/{code}/screen/hum?key={key}")
+    assert played.status_code == 200 and played.headers["content-type"] == "audio/wav"  # the hum on the big speaker
+    assert (await client.get(f"/brain-clash/rooms/{code}/screen/hum?key=wrong")).status_code == 403
+
+
+@needs_db
+def test_party_screen_gets_live_updates_with_its_key():
+    app = make_app()
+    with TestClient(app) as c:
+        token = c.post("/auth/guest", json={"name": "Host"}).json()["token"]
+        h = {"Authorization": f"Bearer {token}"}
+        room = c.post("/brain-clash/rooms", headers=h, json={}).json()
+        code = room["code"]
+        with pytest.raises(Exception):
+            with c.websocket_connect(f"/ws?bc={code}&screen=wrong") as ws:
+                ws.receive_json()
+        with c.websocket_connect(f"/ws?bc={code}&screen={room['screen_key']}") as ws:
+            c.post(f"/brain-clash/rooms/{code}/react", headers=h, json={"emoji": "🔥"})
+            assert ws.receive_json()["type"] == "reaction"
+            c.post(f"/brain-clash/rooms/{code}/leave", headers=h)
+            assert ws.receive_json()["type"] == "brain_clash"
+        c.delete("/me", headers=h)
 
 
 @needs_db

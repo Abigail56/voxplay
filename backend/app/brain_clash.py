@@ -39,6 +39,7 @@ after that: a draw.
 
 from __future__ import annotations
 
+import hmac
 import random
 import re
 import secrets
@@ -198,7 +199,17 @@ class RoomSettings(BaseModel):
 
 FILLERS = (
     "i think it is", "i think its", "i think", "the answer is", "my answer is", "answer is", "it is", "its", "is it", "i guess",
+    "i believe it is", "i believe its", "i believe", "im sure it is", "im sure its", "im sure", "i am sure", "i know",
+    "it should be", "should be", "it must be", "must be",
     "maybe", "um", "umm", "uh", "erm", "er", "hmm", "ok", "okay", "so", "well", "please", "abeg", "and",
+    "oh", "ah", "eh", "ehn", "ehen", "oya", "omo", "chai", "haba", "my guy",
+    # Nigerian Pidgin: "na Abuja" / "e be Abuja" / "I tink na Abuja" = "it's Abuja"
+    "the answer na", "answer na", "i tink na", "i think na", "i tink", "na im be", "na him be", "e fit be", "e be", "na",
+)
+# Said after the answer: "Abuja o", "Abuja sha", "na Abuja be di answer".
+TRAILERS = (
+    "be di answer", "be the answer", "na di answer", "na the answer", "is the answer", "na im", "na him",
+    "o", "oh", "sha", "abi", "jare", "now", "nau", "na", "ehn", "please", "abeg",
 )
 ARTICLES = ("the", "a", "an")
 UNITS = {w: i for i, w in enumerate("zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen "
@@ -250,7 +261,8 @@ def tokens(text: str) -> list[str]:
     text = "".join(c for c in text if not unicodedata.combining(c))
     text = text.replace("&", " and ").replace("'", "").replace("’", "")
     words = re.findall(r"[a-z0-9]+", text)
-    # Strip "um, I think it's" and a trailing "please", but never the whole answer ("Please" is an answer too).
+    # Strip "um, I think it's" / "na" and a trailing "please" / "o", but never the whole answer ("Please" is an
+    # answer too). Answers go through the same steps, so an answer that starts or ends with one still matches.
     changed = True
     while changed:
         changed = False
@@ -260,8 +272,12 @@ def tokens(text: str) -> list[str]:
                 words = words[len(fw) :]
                 changed = True
                 break
-        if len(words) > 1 and words[-1] in ("please", "abeg"):
-            words, changed = words[:-1], True
+        for f in TRAILERS:
+            fw = f.split()
+            if words[-len(fw) :] == fw and len(words) > len(fw):
+                words = words[: -len(fw)]
+                changed = True
+                break
     while len(words) > 1 and words[0] in ARTICLES:
         words = words[1:]
     return numbers_to_digits(words)
@@ -284,7 +300,11 @@ def same_answer(said: list[str], want: list[str]) -> bool:
         return True
     # Run-together or split words ("bulldozer" / "bull dozer", "jollof rice" said fast).
     joined_s, joined_w = "".join(said), "".join(want)
-    return len(joined_w) >= 6 and SequenceMatcher(None, joined_s, joined_w).ratio() >= 0.88
+    if len(joined_w) >= 6 and SequenceMatcher(None, joined_s, joined_w).ratio() >= 0.88:
+        return True
+    # Said twice: "Abuja, Abuja!" (but "Last Last" is matched whole above).
+    half = len(said) // 2
+    return len(said) % 2 == 0 and said[:half] == said[half:] and same_answer(said[:half], want)
 
 
 def answer_forms(q: Question) -> list[list[str]]:
@@ -471,8 +491,14 @@ class BrainClashRoom(BaseModel):
     opener: str | None = None  # Story Forge: the game's first line
     finish_reason: str | None = None
     notice: str | None = None  # e.g. "Only 6 questions match those categories"
+    # The party screen (a TV or laptop everyone watches) opens the room with this instead of signing in.
+    # Only the host is shown it, so nobody can guess their way onto another room's screen.
+    screen_key: str = Field(default_factory=lambda: secrets.token_urlsafe(12))
     created_at: datetime
     updated_at: datetime
+
+    def screen_key_ok(self, key: str) -> bool:
+        return bool(key) and hmac.compare_digest(key.encode(), self.screen_key.encode())
 
     def player(self, user_id: int) -> Player | None:
         return next((p for p in self.players if p.user_id == user_id), None)

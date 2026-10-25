@@ -1,3 +1,6 @@
+import re
+import secrets
+import unicodedata
 from datetime import datetime, timedelta, timezone
 from typing import Annotated
 
@@ -18,7 +21,7 @@ from ..matching import compute_centroid
 from ..models import DailyAttempt, GamePlay, GameResult, Speaker, User, VoiceSample
 from ..rooms import IMPERSONATION_BONUS
 from ..adaptation import inconsistent_takes
-from ..schemas import BadgeOut, ClipCheckOut, LocationIn, LoginIn, MeOut, PlaceOut, SignupIn, TokenOut
+from ..schemas import BadgeOut, ClaimIn, ClipCheckOut, GuestIn, LocationIn, LoginIn, MeOut, PlaceOut, SignupIn, TokenOut
 from ..services import embed_uploads, get_embedder, prepare_upload
 
 router = APIRouter(tags=["accounts"])
@@ -81,6 +84,8 @@ async def me_out(session: AsyncSession, user: User, settings: Settings) -> MeOut
     return MeOut(
         id=user.id,
         username=user.username,
+        is_guest=user.is_guest,
+        nickname=user.nickname,
         is_admin=is_admin(user, settings),
         has_voice=speaker is not None,
         voice_samples=samples,
@@ -157,7 +162,9 @@ def on_map(user: User) -> bool:
 
 
 def token_for(request: Request, user: User, settings: Settings) -> str:
-    return create_token(user.id, request.app.state.jwt_secret, settings.token_days)
+    # A guest has no password to sign in again with, so their sign-in lasts as long as the guest is kept.
+    days = max(settings.token_days, settings.guest_retention_days) if user.is_guest else settings.token_days
+    return create_token(user.id, request.app.state.jwt_secret, days)
 
 
 @router.post("/auth/signup", response_model=TokenOut, status_code=status.HTTP_201_CREATED, dependencies=[Depends(rate_limit)])
@@ -168,10 +175,8 @@ async def signup(
 
     Next step: enroll your voice with POST /me/voice.
     """
-    if (await session.exec(select(User.id).where(User.username == body.username))).first():
-        raise HTTPException(status.HTTP_409_CONFLICT, f"The name '{body.username}' is taken. Try another one.")
-    # Your voice will be enrolled under your username, so it can't clash with a voice-lab name.
-    if (await session.exec(select(Speaker.id).where(func.lower(Speaker.name) == body.username))).first():
+    # Your voice will be enrolled under your username, so it can't clash with a voice-lab name either.
+    if await name_taken(session, body.username):
         raise HTTPException(status.HTTP_409_CONFLICT, f"The name '{body.username}' is taken. Try another one.")
     place = await find_place(geocoder, body.place, body.country)
     user = User(username=body.username, password_hash=hash_password(body.password))
@@ -180,6 +185,65 @@ async def signup(
     await session.commit()
     await session.refresh(user)
     return TokenOut(token=token_for(request, user, settings), user=await me_out(session, user, settings))
+
+
+async def name_taken(session: AsyncSession, username: str) -> bool:
+    """Taken by a player, or by a voice-lab speaker (a player's voice is enrolled under their username)."""
+    return bool(
+        (await session.exec(select(User.id).where(User.username == username))).first()
+        or (await session.exec(select(Speaker.id).where(func.lower(Speaker.name) == username))).first()
+    )
+
+
+def guest_username(name: str) -> str:
+    """'Ada Obi' -> 'ada_obi_4821': a valid, private account name; the room still shows 'Ada Obi'."""
+    slug = unicodedata.normalize("NFKD", name.lower())
+    slug = re.sub(r"[^a-z0-9]+", "_", "".join(c for c in slug if not unicodedata.combining(c))).strip("_")[:14]
+    return f"{slug if len(slug) >= 3 else 'guest'}_{secrets.randbelow(10000):04d}"
+
+
+async def forget_old_guests(session: AsyncSession, settings: Settings) -> None:
+    """Guests who haven't played for GUEST_RETENTION_DAYS are deleted, with everything they played."""
+    cutoff = datetime.now(timezone.utc) - timedelta(days=settings.guest_retention_days)
+    seen = func.coalesce(User.last_seen_at, User.created_at)
+    await session.exec(delete(User).where(User.is_guest, seen < cutoff))
+    await session.commit()
+
+
+@router.post("/auth/guest", response_model=TokenOut, status_code=status.HTTP_201_CREATED, dependencies=[Depends(rate_limit)])
+async def play_as_guest(body: GuestIn, request: Request, session: SessionDep, settings: SettingsDep) -> TokenOut:
+    """Play now with just a name: no password, no place, no voice. Brain Clash, Beat Drop and Story Forge
+    work straight away; save the account (POST /me/claim) to keep it on other devices and to play Who's Talking?."""
+    await forget_old_guests(session, settings)
+    for _ in range(20):
+        username = guest_username(body.name)
+        if not await name_taken(session, username):
+            break
+    else:
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "Too many players right now. Please try again.")
+    user = User(username=username, password_hash="", is_guest=True, nickname=body.name)
+    session.add(user)
+    await session.commit()
+    await session.refresh(user)
+    return TokenOut(token=token_for(request, user, settings), user=await me_out(session, user, settings))
+
+
+@router.post("/me/claim", response_model=MeOut, dependencies=[Depends(rate_limit)])
+async def save_guest(
+    body: ClaimIn, user: CurrentUser, session: SessionDep, settings: SettingsDep, geocoder: GeocoderDep
+) -> MeOut:
+    """A guest keeps their points and history: pick a player name and a password (and, if you like, a place)."""
+    if not user.is_guest:
+        raise HTTPException(status.HTTP_409_CONFLICT, "This player is already saved.")
+    if body.username != user.username and await name_taken(session, body.username):
+        raise HTTPException(status.HTTP_409_CONFLICT, f"The name '{body.username}' is taken. Try another one.")
+    if body.place:
+        put_on_map(user, await find_place(geocoder, body.place, body.country or ""))
+    user.username, user.password_hash, user.is_guest = body.username, hash_password(body.password), False
+    session.add(user)
+    await session.commit()
+    await session.refresh(user)
+    return await me_out(session, user, settings)
 
 
 @router.post("/auth/login", response_model=TokenOut, dependencies=[Depends(rate_limit)])
@@ -210,6 +274,10 @@ async def enroll_my_voice(
     Every take must pass the quality check (long enough, loud enough, clean, not distorted)
     and sound like the other takes, so the voiceprint is built from good material.
     """
+    if user.is_guest:
+        raise HTTPException(
+            status.HTTP_403_FORBIDDEN, "Save your player first (a name and a password), then record your voice."
+        )
     if not consent:
         raise HTTPException(
             status.HTTP_400_BAD_REQUEST,

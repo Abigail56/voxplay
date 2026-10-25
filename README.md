@@ -36,7 +36,9 @@ players, matches played) and the recurring cast.
 ## Brain Clash: two teams, one battle, one champion
 
 A team quiz for friends, families, classes and group chats. The host opens a room, everyone joins from their own
-phone with the code or link, and two teams battle it out. Players need a VOXPLAY account but **no voice setup**.
+phone with the code or link, and two teams battle it out. **No sign-up needed:** a friend who opens the invite
+link types a name and is in (a *guest* player). They can save the player later, with a name and a password, and
+keep their points.
 
 - **⚔️ Brain Battle:** teams take turns; only the team on turn may answer (3 tries). Miss, and the other team
   gets 10 seconds to steal it for half points.
@@ -96,6 +98,14 @@ modes `hum` and `story`. A room keeps to the game it was opened for.
   fire. At the end the whole legend is shown and can be read aloud.
 - **🔥 Streaks** (every Brain Clash room): win three rounds in a row and your team is on fire, +5 a round.
 - **Emoji reactions** float across every screen in the room.
+- **📺 Party screen** (every Brain Clash, Beat Drop and Story Forge room): the host opens it on a TV or laptop
+  that everyone can see. It shows a QR code to join, the teams filling up live, each question big enough to
+  read across a room, the timer, the scores, the answer reveal, the reactions and the champion; Beat Drop hums
+  play on its speaker. Players still answer on their phones. The screen needs no sign-in: it opens with a secret
+  key only the host is shown, and sees only what a spectator may (never the hummer's song or a team's hidden
+  list). It also asks "time's up?" at each buzzer, so the match keeps moving even if every phone is locked.
+- **📤 Share the result:** the victory screen draws a 4:5 image of the final score (champion, both scores,
+  rounds won, the star player, a link to play) for WhatsApp or Instagram, through the phone's share menu.
 
 The songs and sparks are in the same question bank file (kinds `song` and `spark`): 61 songs in 3 playlists,
 36 sparks in 3 story worlds. The bank test checks every title (with and without "by <artist>") and every spark.
@@ -202,8 +212,8 @@ Tech:
    the pin goes on the *neighbourhood* it's in ("Chalk Farm, London"), not the point itself, which is usually
    someone's home. Players can move their pin or hide it from other players.
 6. **Invites.** The waiting room has *Share invite* (the phone's share menu), *WhatsApp*, *Copy link* and *Copy
-   code*. The link is `/?join=CODE`: a friend who opens it signs up (or in), records their voice and lands in the
-   game.
+   code*. The link is `/whos-talking?join=CODE`: a friend who opens it signs up (or in), records their voice and
+   lands in the game.
 7. **Dashboard** (`GET /dashboard`): everyone's online status, place (unless hidden), current game, total points,
    open games and the latest turns.
 8. **Admin** (`/admin`, [routers/admin.py](backend/app/routers/admin.py)), for the player names in
@@ -257,8 +267,13 @@ and scores leave the server, never the voiceprints.
 
 ## Quick start
 
-Requirements: Docker with Docker Compose. Ports used: **3010** (web), **8010** (API) and
-**5442** (Postgres). They're chosen so they don't clash with a local Postgres on 5432.
+Requirements: Docker with Docker Compose. Ports used: **3010** (web), **8010** (API), **5442** (Postgres) and
+**6389** (Redis). They're chosen so they don't clash with a local Postgres on 5432. If another app already holds
+one, move it in `.env` (`WEB_PORT`, `API_PORT`, `DB_PORT`, `REDIS_PORT`); with `API_PORT`, also set
+`PUBLIC_API_URL` to match and rebuild the web image.
+
+Every service restarts by itself after a crash or a reboot (`restart: unless-stopped`), the API reports itself
+unhealthy to Docker if `/health` stops answering, and Redis saves to disk, so games in progress survive a restart.
 
 ```bash
 docker compose up -d --build
@@ -298,13 +313,14 @@ docker compose up -d api      # liveness back on
 docker compose run --rm api pytest -v
 ```
 
-There are 152 tests:
+There are 158 tests:
 - `test_matching.py`: cosine similarity, centroids, ranking, threshold/"unknown" decisions, margin rule, EER
 - `test_audio.py`: resampling, silence trimming, rejecting garbage and too-short audio
 - `test_voice_map.py`: PCA keeps similar voices close, voice twins, consistency
 - `test_liveness.py`: random digit phrases, the ways Whisper writes digits, wrong order and old recordings fail,
   phrases expire and work once (in memory and in the real Redis)
-- `test_brain_clash.py`: answer checking (accents, fillers, numbers, slips, no hedging), every question in the bank
+- `test_brain_clash.py`: answer checking (accents, fillers, numbers, slips, no hedging, Nigerian English and Pidgin:
+  "na Abuja o", "e be Abuja", "I believe it's Abuja"), every question in the bank
   is answerable, Brain Battle turns and steals, Quick-Fire speed bonus, Name It Fast items and repeats, Word
   Association, late and replayed answers, the server clock, tie-breaker and draw, win score, rooms, team
   permissions, voice answers, the other team's hidden list, results saved, live WebSocket updates and reconnecting;
@@ -318,7 +334,8 @@ There are 152 tests:
   demo limits.
 - `test_fun.py`: daily phrase, score and streaks, badges, Guess Who (the speaker stays secret, the clip is
   deleted at the reveal, scoring), speed bonus and time-outs, wins, country and weekly leaderboards, reactions.
-- `test_game.py`: accounts (passwords never stored, no hint which of name/password was wrong), voice
+- `test_game.py`: accounts (passwords never stored, no hint which of name/password was wrong), guest players
+  (play with just a name, no voice until saved, save and keep your points, idle guests forgotten), voice
   enrollment, places at sign-up (unknown places refused, GPS snaps to the area, move and hide your pin),
   admin (players get 403, admins see hidden place names but not hidden pins, cheat attempts, delete a player, end a game), full games in both modes, cheating gets 0,
   only the current player can play, hosts hand over, leaving mid-game, deleting your player, the live WebSocket.
@@ -328,8 +345,22 @@ There are 152 tests:
 
 ```bash
 docker compose down        # stop
-docker compose down -v     # stop AND delete the database + model cache volumes
+docker compose down -v     # stop AND delete the database, Redis and model cache volumes
 ```
+
+### Backups
+
+The `backup` service writes a compressed dump of the database to `./backups/` every 24 hours and keeps the newest
+7 (`BACKUP_INTERVAL_HOURS`, `BACKUP_KEEP`). Copy that folder somewhere off the laptop now and then: a backup on the
+same disk doesn't survive the disk. To restore one into a fresh database:
+
+```bash
+docker compose stop api
+gunzip -c backups/voiceid-YYYYMMDD-HHMMSS.sql.gz | docker compose exec -T db psql -U voiceid -d voiceid
+docker compose start api
+```
+
+(Restore into an empty database: after `docker compose down -v` and `docker compose up -d db`.)
 
 ---
 
@@ -344,6 +375,8 @@ docker compose down -v     # stop AND delete the database + model cache volumes
 | `DELETE` | `/speakers/{id}` | Permanently delete a speaker and all of their voiceprints |
 | | **Voice game** | |
 | `POST` | `/auth/signup`, `/auth/login` | JSON `username`, `password` (+ `country`, `place` to sign up) → `token` + your player |
+| `POST` | `/auth/guest` | JSON `name` → `token` + a guest player (no password; Brain Clash, Beat Drop and Story Forge only) |
+| `POST` | `/me/claim` | A guest saves their player: JSON `username`, `password` (+ optional `country`, `place`) |
 | `GET` / `DELETE` | `/me` | Your player (points, turns, voice, location) / delete everything about you |
 | `POST` | `/me/voice` | Form `consent`, `files` → enroll or re-record your voice |
 | `PUT` | `/me/location` | JSON `share`, optional `country` + `place` → move your pin, or show / hide it |
@@ -378,6 +411,9 @@ docker compose down -v     # stop AND delete the database + model cache volumes
 | `POST` | `/brain-clash/rooms/{code}/start`, `/end` | Host: start (or rematch); end the match now |
 | `POST` | `/brain-clash/rooms/{code}/answer` | Form `round`, `answer_id`, and `text` or `file` (a spoken answer) → checked and scored by the server |
 | `POST` | `/brain-clash/rooms/{code}/advance` | Time's up / next question (the server checks its clock; the host may skip the reveal) |
+| `GET` | `/brain-clash/rooms/{code}/screen?key=` | The party screen: the room as a spectator sees it, opened with the host's `screen_key` (no sign-in) |
+| `POST` / `GET` | `/brain-clash/rooms/{code}/screen/advance?key=`, `/screen/hum?key=` | The party screen's "time's up?" (the server's clock decides); this round's hum for its speaker |
+| `WS` | `/ws?bc=CODE&screen=KEY` | Live updates for a party screen (that room only; it doesn't count as a player) |
 | | **Voice lab** | |
 | `GET` | `/challenge?kind=digits\|line` | A fresh phrase to say: 6 digits (default) or a silly line (valid 2 minutes, one use) |
 | `POST` | `/identify` | Form fields `file`, `challenge_id` → best match or `"unknown"` |
@@ -447,13 +483,31 @@ It also leaves a clear gap above the mean impostor score (0.10).
 **Tune it for your setting.** LibriSpeech is clean read speech. Laptop microphones in noisy rooms
 give lower genuine scores. If enrolled people often get "unknown", try `0.30–0.35`. To be stricter,
 use `0.45–0.50`. You can also set `MIN_MARGIN` (e.g. `0.05`) so the system says "unknown" when two
-speakers score almost the same. Best of all, record your own clips into `data/samples/<name>/`
-and re-run:
+speakers score almost the same. Best of all, tune it on real phone recordings:
+
+### Recording your own clips for tuning
+
+The more people the better: at least **5 people**, ideally 8–10, men and women, with different accents.
+
+1. **Each person records 6 clips of 5–10 seconds**, talking normally (read a news headline, describe your
+   day, anything). Use the phone you'd play on: the voice recorder app, or a WhatsApp voice note sent to yourself
+   and then saved. `.m4a`, `.opus`, `.ogg`, `.mp3`, `.wav`, `.webm`, `.aac`, `.3gp` all work.
+2. **Vary it like a real game would:** 2 clips in a quiet room, 2 with some background noise (TV, street),
+   and 2 at a different distance from the phone or on a different day.
+3. **One folder per person:** `data/samples/ada/1.m4a … 6.m4a`, `data/samples/bayo/…`. Folder names are just labels;
+   the clips stay on your machine (`data/samples/` is git-ignored).
+4. **Get everyone's consent** first: these are voice recordings.
+
+Then run (the first 2 clips per person act as the enrollment, the rest are tested):
 
 ```bash
 docker compose run --rm api python scripts/tune_threshold.py --data /data/samples
 MATCH_THRESHOLD=0.35 docker compose up -d api      # or put it in .env
 ```
+
+Pick the lowest threshold whose false-accept rate is 0 % (or close to it) while false rejects stay under about
+10 %. If no threshold manages both, the recordings are too noisy to tell people apart reliably: ask players to
+re-record their voice somewhere quieter, rather than lowering the threshold.
 
 ### End-to-end verification
 
@@ -508,7 +562,8 @@ and Illinois' BIPA, it needs explicit consent and careful handling. This project
   Redis: when the other players have to *hear* a clip (Guess Who, Humans vs AI, the voice to copy in Broken
   telephone) it's kept until it has been heard, and with the **replay** on (the host's choice, shown to everyone in
   the waiting room) each turn's clip is kept for an hour. Only players in that game can fetch them, and clips
-  are always gone after an hour at most.
+  expire after an hour at most. Redis saves to a file on its Docker volume (so games survive a restart) and
+  compacts it whenever it passes 16 MB, which drops expired clips from disk too; `docker compose down -v` wipes it.
 - **Right to be forgotten.** `DELETE /speakers/{id}` (the "Delete" button) removes the speaker
   and all of their sample embeddings (`ON DELETE CASCADE`).
 - **Treat embeddings as sensitive.** Even without the audio, they identify a person. In production,
@@ -525,7 +580,10 @@ and Illinois' BIPA, it needs explicit consent and careful handling. This project
   Hidden pins stay off the admin map: their coordinates never leave the server.
 - **Accounts.** Passwords are stored only as salted scrypt hashes. "Delete player" removes the account, the
   voiceprint, every turn and the location. Players' voices can't be changed or deleted from the Voice lab.
-- **Phrases and rate limits are short-lived.** Redis keeps them for at most a few minutes and never writes them to disk.
+- **Phrases and rate limits are short-lived.** Redis keeps them for at most a few minutes (they can sit in its
+  save file until the next compaction, as above).
+- **Backups contain personal data.** The dumps in `./backups/` hold accounts, voiceprints and places: keep them
+  private, and a deleted player stays in older dumps until those are rotated out (7 days by default).
 
 ---
 
@@ -533,7 +591,7 @@ and Illinois' BIPA, it needs explicit consent and careful handling. This project
 
 ```
 voice-id/
-├── docker-compose.yml          # db (pgvector) :5442, redis :6389, api :8010, web :3010
+├── docker-compose.yml          # db (pgvector) :5442, redis :6389, api :8010, web :3010, backup (daily pg_dump)
 ├── .env.example                # MATCH_THRESHOLD / REQUIRE_LIVENESS overrides
 ├── README.md
 ├── docs/
@@ -602,6 +660,8 @@ voice-id/
 | Env var | Default | Meaning |
 |---|---|---|
 | `MATCH_THRESHOLD` | `0.40` | Minimum cosine similarity for a match |
+| `WEB_PORT`, `API_PORT`, `DB_PORT`, `REDIS_PORT` | `3010`, `8010`, `5442`, `6389` | Host ports (docker compose only) |
+| `BACKUP_INTERVAL_HOURS`, `BACKUP_KEEP` | `24`, `7` | How often the `backup` service dumps the database, and how many dumps it keeps |
 | `REDIS_URL` | *(empty)* | Redis for phrases and rate limits; empty = in-process memory (one instance only) |
 | `REQUIRE_LIVENESS` | `true` | `/identify` needs a phrase from `/challenge` |
 | `CHALLENGE_TTL_SECONDS` | `120` | How long a phrase stays valid |
@@ -610,6 +670,7 @@ voice-id/
 | `ASR_MODEL` | `base.en` | faster-whisper model (`small.en` is more accurate, ~3x slower) |
 | `JWT_SECRET` | *(random per start)* | Signs sign-in tokens. **Set a long random value in production**, or everyone is signed out on every restart |
 | `TOKEN_DAYS` | `7` | How long a sign-in lasts |
+| `GUEST_RETENTION_DAYS` | `30` | Guest players who haven't played for this long are deleted; a guest's sign-in lasts this long too (they have no password) |
 | `ROOM_TTL_HOURS` | `6` | Games are deleted this long after their last change |
 | `ONLINE_SECONDS` | `90` | A player counts as online if their page pinged this recently |
 | `ADMIN_USERNAMES` | *(empty)* | Comma-separated player names who can open `/admin` |

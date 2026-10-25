@@ -4,8 +4,10 @@ Real PostgreSQL, fake voice model and fake speech-to-text (see helpers.py).
 """
 
 import os
+import time
 import uuid
 
+import jwt
 import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import text
@@ -42,7 +44,7 @@ async def client():
     app = make_app()
     async with app.router.lifespan_context(app):
         async with app.state.sessionmaker() as s:
-            await s.exec(text("TRUNCATE speakers, voice_samples, game_plays, users RESTART IDENTITY CASCADE"))
+            await s.exec(text("TRUNCATE speakers, voice_samples, game_plays, bc_results, users RESTART IDENTITY CASCADE"))
             await s.commit()
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
             c.app = app
@@ -134,6 +136,53 @@ async def test_password_is_not_stored(client):
     async with client.app.state.sessionmaker() as s:
         stored = (await s.exec(text("SELECT password_hash FROM users"))).one()[0]
     assert "my secret pass" not in stored and stored.startswith("scrypt$")
+
+
+@needs_db
+async def test_play_as_guest_then_save_the_player(client):
+    r = await client.post("/auth/guest", json={"name": "  Adá  Obi "})
+    assert r.status_code == 201, r.text
+    guest = r.json()["user"]
+    assert guest["is_guest"] and guest["nickname"] == "Adá Obi" and guest["username"].startswith("ada_obi_")
+    h = {"Authorization": f"Bearer {r.json()['token']}"}
+    # No password to sign in again with, so a guest's sign-in lasts as long as the guest is kept (30 days).
+    claims = jwt.decode(r.json()["token"], "test-secret", algorithms=["HS256"])
+    assert claims["exp"] - time.time() > 29 * 86400
+    assert (await client.post("/auth/guest", json={"name": "x"})).status_code == 422
+    assert (await client.post("/auth/guest", json={"name": "!!"})).json()["user"]["username"].startswith("guest_")
+
+    # Brain Clash works straight away, under the name they typed.
+    room = (await client.post("/brain-clash/rooms", headers=h, json={})).json()
+    assert room["players"][0]["name"] == "Adá Obi"
+    # A guest can't sign in with a password, or record a voice before saving.
+    assert (await client.post("/auth/login", json={"username": guest["username"], "password": ""})).status_code in (401, 422)
+    no_voice = await client.post("/me/voice", headers=h, data={"consent": "true"}, files=takes(ADA))
+    assert no_voice.status_code == 403 and "Save your player" in no_voice.json()["detail"]
+
+    # Saving keeps the same player (same id, same token), now with a password.
+    await signup(client, "bayo")
+    assert (await client.post("/me/claim", headers=h, json={"username": "bayo", "password": "long enough"})).status_code == 409
+    saved = await client.post("/me/claim", headers=h, json={"username": "ada", "password": "long enough", **HOME})
+    assert saved.status_code == 200, saved.text
+    assert saved.json()["id"] == guest["id"] and not saved.json()["is_guest"] and saved.json()["place"] == "Yaba, Lagos"
+    assert (await client.get("/me", headers=h)).json()["username"] == "ada"
+    assert (await client.post("/auth/login", json={"username": "ada", "password": "long enough"})).status_code == 200
+    assert (await client.post("/me/claim", headers=h, json={"username": "ada", "password": "long enough"})).status_code == 409
+    assert (await client.post("/me/voice", headers=h, data={"consent": "true"}, files=takes(ADA))).status_code == 200
+
+
+@needs_db
+async def test_idle_guests_are_forgotten(client):
+    old = (await client.post("/auth/guest", json={"name": "Old guest"})).json()["user"]
+    kept = await signup(client, "ada")
+    async with client.app.state.sessionmaker() as s:
+        await s.exec(text("UPDATE users SET created_at = now() - interval '40 days', last_seen_at = NULL"))
+        await s.commit()
+    await client.post("/auth/guest", json={"name": "New guest"})  # signing a guest in tidies up
+    async with client.app.state.sessionmaker() as s:
+        names = set((await s.exec(text("SELECT username FROM users"))).scalars().all())
+    assert old["username"] not in names and "ada" in names and len(names) == 2
+    assert (await client.get("/me", headers=kept)).status_code == 200
 
 
 @needs_db

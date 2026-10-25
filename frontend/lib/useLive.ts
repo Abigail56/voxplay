@@ -14,12 +14,12 @@ type Handlers = {
 
 /** Live updates over a WebSocket. The server only says what changed; handlers refetch.
  *  Reconnects with back-off, and pings every 15 s so the player shows as online. */
-export function useLive(token: string | null, room: string | null, handlers: Handlers, bc: string | null = null) {
+export function useLive(token: string | null, room: string | null, handlers: Handlers, bc: string | null = null, screen: string | null = null) {
   const ref = useRef(handlers);
   ref.current = handlers;
 
   useEffect(() => {
-    if (!token) return;
+    if (!token && !(bc && screen)) return; // a party screen listens to its room with the host's screen key
     let ws: WebSocket | null = null;
     let ping: ReturnType<typeof setInterval> | undefined;
     let retry: ReturnType<typeof setTimeout> | undefined;
@@ -27,7 +27,7 @@ export function useLive(token: string | null, room: string | null, handlers: Han
     let stopped = false;
 
     const connect = () => {
-      ws = new WebSocket(liveUrl(token, room, bc));
+      ws = new WebSocket(liveUrl(token ?? "", room, bc, screen));
       ws.onopen = () => {
         attempts = 0;
         // Catch up on anything that changed while we were disconnected.
@@ -58,5 +58,5 @@ export function useLive(token: string | null, room: string | null, handlers: Han
       clearTimeout(retry);
       ws?.close();
     };
-  }, [token, room, bc]);
+  }, [token, room, bc, screen]);
 }

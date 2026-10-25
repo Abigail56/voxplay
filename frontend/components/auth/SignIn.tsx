@@ -9,6 +9,8 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { Art } from "../art/Scenes";
 import { Loader } from "../brand/Loader";
 import { AuthForm } from "./AuthForm";
+import { GuestJoin } from "./GuestJoin";
+import { SaveGuest } from "./SaveGuest";
 
 /** Only same-site paths, so a crafted link can't bounce players to another website. */
 function safeNext(raw: string | null): string {
@@ -42,7 +44,14 @@ export function SignIn() {
         </p>
         {next !== "/games" && <p className="hint">You&apos;ll go straight back to where you were.</p>}
       </section>
-      {me ? (
+      {me?.is_guest ? (
+        <>
+          <SaveGuest onDone={() => router.push(next)} />
+          <button className="link" onClick={signOut}>
+            Not {me.nickname}? Start over
+          </button>
+        </>
+      ) : me ? (
         <div className="card auth">
           <p className="tagline">
             Signed in as <strong>{me.username}</strong>.
@@ -55,7 +64,15 @@ export function SignIn() {
           </button>
         </div>
       ) : (
-        <AuthForm onDone={() => router.push(next)} />
+        <>
+          <AuthForm onDone={() => router.push(next)} />
+          {!next.startsWith("/whos-talking") && (
+            <div className="card auth">
+              <p className="tagline">Just want to play? Brain Clash, Beat Drop and Story Forge only need a name.</p>
+              <GuestJoin next={next} />
+            </div>
+          )}
+        </>
       )}
     </div>
   );

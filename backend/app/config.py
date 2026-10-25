@@ -60,6 +60,8 @@ class Settings(BaseSettings):
     # per start, which signs everyone out whenever the API restarts (fine for development).
     jwt_secret: str = ""
     token_days: float = 7
+    # Guest players (a name, no password) are deleted after this many days without playing.
+    guest_retention_days: float = 30
     # Rooms are deleted this long after their last change.
     room_ttl_hours: float = 6
     # A player counts as "online" if their dashboard pinged this recently.

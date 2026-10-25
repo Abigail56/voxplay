@@ -1,12 +1,13 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { api, type BcCategory, type BcGame, type BcMode } from "@/lib/api";
 import { BC_MODES, ROOM_GAMES } from "@/lib/brainClash";
 import { useAuthStore } from "@/store/useAuthStore";
+
+import { GuestJoin } from "../auth/GuestJoin";
 
 import { ArtTile } from "../art/ArtTile";
 import { Art, CategoryArt } from "../art/Scenes";
@@ -87,10 +88,8 @@ export function GameEntry({ game }: { game: BcGame }) {
             <p className="hint">Checking who you are…</p>
           ) : !me ? (
             <>
-              <p className="hint">You need a VOXPLAY player to host or join (a name and a password, no voice setup).</p>
-              <Link href={`/sign-in?next=${g.path}`} className="btn primary">
-                Sign in to play
-              </Link>
+              <p className="hint">Type your name to host a room. You can save your player later.</p>
+              <GuestJoin next={g.path} cta="Continue" />
             </>
           ) : (
             <>
@@ -129,7 +128,7 @@ export function GameEntry({ game }: { game: BcGame }) {
                 </label>
                 <label className="field">
                   Your name in the room
-                  <input value={name} onChange={(e) => setName(e.target.value)} placeholder={me.username} maxLength={20} />
+                  <input value={name} onChange={(e) => setName(e.target.value)} placeholder={me.nickname ?? me.username} maxLength={20} />
                 </label>
               </div>
               <p className="hint">You can change all of this, set the timer, a winning score and team names in the room.</p>

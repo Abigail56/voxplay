@@ -100,6 +100,31 @@ class SignupIn(BaseModel):
         return v.strip().lower() if isinstance(v, str) else v
 
 
+class GuestIn(BaseModel):
+    """Play now with just a name; save the account later with ClaimIn."""
+
+    name: str = Field(min_length=2, max_length=20)
+
+    @field_validator("name", mode="before")
+    @classmethod
+    def _strip(cls, v: str) -> str:
+        return " ".join(v.split()) if isinstance(v, str) else v
+
+
+class ClaimIn(BaseModel):
+    """Turn a guest into a full player: a name and password, and optionally where they play from."""
+
+    username: str = Field(pattern=r"^[a-z0-9_]{3,20}$")
+    password: str = Field(min_length=8, max_length=200)
+    country: str | None = Field(default=None, pattern=r"^[A-Za-z]{2}$")
+    place: str | None = Field(default=None, min_length=2, max_length=120)
+
+    @field_validator("username", mode="before")
+    @classmethod
+    def _lower(cls, v: str) -> str:
+        return v.strip().lower() if isinstance(v, str) else v
+
+
 class LoginIn(BaseModel):
     username: str
     password: str
@@ -123,6 +148,8 @@ class BadgeOut(BaseModel):
 class MeOut(BaseModel):
     id: int
     username: str
+    is_guest: bool = False  # played with just a name: no password or voice yet
+    nickname: str | None = None  # a guest's display name
     is_admin: bool
     has_voice: bool
     voice_samples: int

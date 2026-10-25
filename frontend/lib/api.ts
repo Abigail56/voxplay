@@ -14,6 +14,8 @@ export type Liveness = {
 export type Me = {
   id: number;
   username: string;
+  is_guest: boolean; // played with just a name: no password or voice yet
+  nickname: string | null; // a guest's display name
   is_admin: boolean;
   has_voice: boolean;
   voice_samples: number;
@@ -209,10 +211,11 @@ export type AdminRoom = {
   updated_at: string;
 };
 
-/** ws://… for http://…, wss://… for https://… */
-export function liveUrl(token: string, room?: string | null, bc?: string | null): string {
-  const url = new URL("/ws", API_URL.replace(/^http/, "ws"));
-  url.searchParams.set("token", token);
+/** ws://… for http://…, wss://… for https://… (keeps a path prefix such as https://host/api) */
+export function liveUrl(token: string, room?: string | null, bc?: string | null, screen?: string | null): string {
+  const url = new URL(`${API_URL.replace(/^http/, "ws").replace(/\/$/, "")}/ws`);
+  if (token) url.searchParams.set("token", token);
+  if (screen) url.searchParams.set("screen", screen);
   if (room) url.searchParams.set("room", room);
   if (bc) url.searchParams.set("bc", bc);
   return url.toString();
@@ -347,6 +350,7 @@ export type BcRoom = {
   opener: string | null;
   server_time: string;
   you: number;
+  screen_key: string | null; // the host's key to open the party screen
 };
 export type BcCategory = { id: string; name: string; counts: Partial<Record<BcMode, number>> };
 
@@ -406,6 +410,10 @@ export const api = {
     request<{ token: string; user: Me }>("/auth/signup", { method: "POST", ...json({ username, password, country, place }) }),
   login: (username: string, password: string) =>
     request<{ token: string; user: Me }>("/auth/login", { method: "POST", ...json({ username, password }) }),
+  guest: (name: string) => request<{ token: string; user: Me }>("/auth/guest", { method: "POST", ...json({ name }) }),
+  /** A guest keeps their points: pick a player name and password (and, optionally, where they play from). */
+  claim: (body: { username: string; password: string; country?: string; place?: string }) =>
+    request<Me>("/me/claim", { method: "POST", ...json(body) }),
   me: () => request<Me>("/me"),
   enrollMyVoice(consent: boolean, clips: Clip[]) {
     const form = new FormData();
@@ -516,6 +524,11 @@ export const api = {
       return request<BcRoom>(`/brain-clash/rooms/${encodeURIComponent(code)}/hum`, { method: "POST", body: form });
     },
     humClip: (code: string) => audio(`/brain-clash/rooms/${encodeURIComponent(code)}/hum`),
+    /** The party screen: the room as a spectator sees it, opened with the host's screen key (no sign-in). */
+    screen: (code: string, key: string) => request<BcRoom>(`/brain-clash/rooms/${encodeURIComponent(code)}/screen?key=${encodeURIComponent(key)}`),
+    screenAdvance: (code: string, key: string) =>
+      request<BcRoom>(`/brain-clash/rooms/${encodeURIComponent(code)}/screen/advance?key=${encodeURIComponent(key)}`, { method: "POST" }),
+    screenHum: (code: string, key: string) => audio(`/brain-clash/rooms/${encodeURIComponent(code)}/screen/hum?key=${encodeURIComponent(key)}`),
     fire: (code: string, round: number) => request<BcRoom>(`/brain-clash/rooms/${encodeURIComponent(code)}/fire`, { method: "POST", ...json({ round }) }),
     decide: (code: string, flagId: string, allow: boolean) =>
       request<BcRoom>(`/brain-clash/rooms/${encodeURIComponent(code)}/flags/${flagId}`, { method: "POST", ...json({ allow }) }),

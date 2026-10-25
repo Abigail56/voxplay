@@ -70,7 +70,10 @@ class User(SQLModel, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
     username: str = Field(max_length=20, unique=True, index=True)  # lower-case, see schemas.SignupIn
-    password_hash: str = Field(max_length=200)
+    password_hash: str = Field(max_length=200)  # "" for a guest: nobody can sign in to it with a password
+    # A guest plays with just a name (no password, no voice); they can save the account later (POST /me/claim).
+    is_guest: bool = Field(default=False, sa_column_kwargs={"server_default": false()})
+    nickname: str | None = Field(default=None, max_length=20)  # the name a guest typed, shown in rooms
     # Deleting the voice (e.g. from the voice lab) keeps the account; they can enroll again.
     speaker_id: int | None = Field(default=None, foreign_key="speakers.id", ondelete="SET NULL", unique=True)
     # Where they play from: the country and area they gave at sign-up (or detected), and that

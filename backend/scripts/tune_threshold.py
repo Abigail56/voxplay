@@ -29,7 +29,7 @@ from app.config import get_settings  # noqa: E402
 from app.embedding import EcapaEmbedder  # noqa: E402
 from app.matching import UNKNOWN_LABEL, compute_centroid, decide, equal_error_rate, rank_candidates  # noqa: E402
 
-AUDIO_EXT = {".wav", ".flac", ".mp3", ".webm", ".ogg", ".m4a"}
+AUDIO_EXT = {".wav", ".flac", ".mp3", ".webm", ".ogg", ".opus", ".m4a", ".aac", ".mp4", ".3gp"}  # phone recorders and WhatsApp voice notes too
 
 
 def main() -> None:
