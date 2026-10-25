@@ -10,6 +10,9 @@ export const AVAILABLE_ART: readonly string[] = [
   "/images/voxplay/categories/african_movies.webp",
   "/images/voxplay/categories/african_music.webp",
   "/images/voxplay/categories/animals_nature.webp",
+  "/images/voxplay/categories/bomb_easy.webp",
+  "/images/voxplay/categories/bomb_nightmare.webp",
+  "/images/voxplay/categories/bomb_tricky.webp",
   "/images/voxplay/categories/current_affairs.webp",
   "/images/voxplay/categories/everyday.webp",
   "/images/voxplay/categories/funny.webp",
@@ -33,5 +36,6 @@ export const AVAILABLE_ART: readonly string[] = [
   "/images/voxplay/game-modes/word-association.webp",
   "/images/voxplay/hero/voxplay-hero.webp",
   "/images/voxplay/story-forge/story-forge.webp",
-  "/images/voxplay/whos-talking/whos-talking.webp"
+  "/images/voxplay/whos-talking/whos-talking.webp",
+  "/images/voxplay/word-bomb/word-bomb.webp"
 ];
