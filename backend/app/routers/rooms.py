@@ -133,11 +133,27 @@ def member(room: Room, user: User) -> None:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Join this game first.")
 
 
-async def leave_other_rooms(rooms: RoomStore, user_id: int, keep: str | None = None) -> None:
+async def leave_other_rooms(session: AsyncSession, rooms: RoomStore, user_id: int, keep: str | None = None) -> None:
     """You can be in one game at a time: joining a new one leaves the old one."""
     other = await rooms.room_of(user_id)
     if other and other.code != keep:
         await rooms.leave(other.code, user_id)
+        await settle_votes(session, rooms, other.code)
+
+
+async def settle_votes(session: AsyncSession, rooms: RoomStore, code: str) -> None:
+    """Someone left during a vote or a rating: if everyone still here has had their say, reveal now
+    instead of waiting out the clock for a player who is gone."""
+    async with rooms.lock(code):
+        room = await rooms.get(code)
+        if room is None or room.status != "playing" or room.phase not in ("vote", "rate"):
+            return
+        if not voters(room) or not everyone_voted(room):
+            return
+        if room.phase == "vote":
+            await finish_reveal(session, rooms, room)
+        else:
+            await finish_rating(session, rooms, room)
 
 
 async def improve_voice(session: AsyncSession, settings: Settings, speaker_id: int, clip, candidates) -> None:
@@ -272,7 +288,7 @@ async def finish_rating(session: AsyncSession, rooms: RoomStore, room: Room) -> 
 async def create_room(body: RoomCreateIn, user: CurrentUser, session: SessionDep, rooms: RoomsDep) -> RoomOut:
     """Start a new game. Share its code (e.g. TIGER-42) so friends can join from their phones."""
     host = await as_player(session, user)
-    await leave_other_rooms(rooms, user.id)
+    await leave_other_rooms(session, rooms, user.id)
     return out(await rooms.create(host, **body.model_dump()), user.id)
 
 
@@ -285,7 +301,7 @@ async def get_room(code: str, user: CurrentUser, rooms: RoomsDep) -> RoomOut:
 async def join_room(code: str, user: CurrentUser, session: SessionDep, rooms: RoomsDep) -> RoomOut:
     player = await as_player(session, user)
     room = await get_or_404(rooms, code)
-    await leave_other_rooms(rooms, user.id, keep=room.code)
+    await leave_other_rooms(session, rooms, user.id, keep=room.code)
     async with rooms.lock(room.code):
         room = await get_or_404(rooms, code)
         if room.player(user.id):
@@ -300,9 +316,12 @@ async def join_room(code: str, user: CurrentUser, session: SessionDep, rooms: Ro
 
 
 @router.post("/{code}/leave", response_model=RoomOut | None)
-async def leave_room(code: str, user: CurrentUser, rooms: RoomsDep) -> RoomOut | None:
+async def leave_room(code: str, user: CurrentUser, session: SessionDep, rooms: RoomsDep) -> RoomOut | None:
     room = await rooms.leave(code, user.id)
-    return out(room, user.id) if room else None
+    if room is None:
+        return None
+    await settle_votes(session, rooms, room.code)
+    return out(await rooms.get(room.code) or room, user.id)
 
 
 @router.patch("/{code}", response_model=RoomOut)

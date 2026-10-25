@@ -236,6 +236,22 @@ async def test_humans_vs_ai(client):
 
 
 @needs_db
+async def test_the_last_rater_leaving_reveals_at_once(client):
+    ada, bayo, chi = [await with_voice(client, n, f) for n, f in (("ada", ADA), ("bayo", BAYO), ("chi", CHI))]
+    code = await game(client, [ada, bayo, chi], "impersonate", crowd=True)
+    state = await client.app.state.rooms.get(code)
+    target = state.player(state.active_turn().target_id).username
+    # The one ada impersonates rates; the other leaves (a target leaving drops the turn instead).
+    rater, leaver = ("bayo", "chi") if target == "bayo" else ("chi", "bayo")
+    hs = {"bayo": bayo, "chi": chi}
+    await line_turn(client, ada, code, CHI)
+    await client.post(f"/rooms/{code}/rate", headers=hs[rater], json={"stars": 4})
+    await client.post(f"/rooms/{code}/leave", headers=hs[leaver])  # the only one left to rate walks out
+    room = (await client.get(f"/rooms/{code}", headers=ada)).json()
+    assert room["phase"] == "speak" and room["last_result"]["stars"] == {rater: 4}  # no waiting out the clock
+
+
+@needs_db
 async def test_twists_and_double_final_in_a_game(client):
     ada, bayo = await with_voice(client, "ada", ADA), await with_voice(client, "bayo", BAYO)
     code = (await client.post("/rooms", headers=ada, json={"rounds": 2, "twists": True, "double_final": True})).json()["code"]
