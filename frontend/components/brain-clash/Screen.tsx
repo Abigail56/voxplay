@@ -109,11 +109,13 @@ export function PartyScreen({ code, game }: { code: string; game: BcGame }) {
 
   // At the buzzer the screen asks "time's up?" too, so the match moves on even if every phone is locked.
   // The server checks its own clock; a phone that asked first just means there's nothing left to do.
-  const closes = room?.status === "playing" ? (room.round?.phase === "reveal" ? room.round.reveal_until : room.round?.closes_at) : null;
+  // Word Bomb: the real fuse stays on the server, so from the earliest it could blow, keep asking.
+  const fuse = room?.status === "playing" ? room.round?.fuse_from : null;
+  const closes = fuse || (room?.status === "playing" ? (room.round?.phase === "reveal" ? room.round.reveal_until : room.round?.closes_at) : null);
   useEffect(() => {
     if (!closes || !key) return;
     // The server keeps answers sent just before the buzzer for 0.75 s (GRACE_SECONDS), so ask after that.
-    const ms = Date.parse(closes) - (Date.now() + offset) + 1100;
+    const ms = Date.parse(closes) - (Date.now() + offset) + (fuse ? 0 : 1100);
     let retry: ReturnType<typeof setTimeout> | undefined;
     const ask = (again: boolean) =>
       api.bc
@@ -123,7 +125,7 @@ export function PartyScreen({ code, game }: { code: string; game: BcGame }) {
           setRoom(r);
         })
         .catch(() => {
-          if (again) retry = setTimeout(() => ask(false), 1000);
+          if (again || fuse) retry = setTimeout(() => ask(false), 1000);
           else load();
         });
     const id = setTimeout(() => ask(true), Math.max(300, ms));
@@ -131,7 +133,7 @@ export function PartyScreen({ code, game }: { code: string; game: BcGame }) {
       clearTimeout(id);
       clearTimeout(retry);
     };
-  }, [closes, offset, load, code, key]);
+  }, [closes, fuse, offset, load, code, key]);
 
   async function startShow() {
     setSound(true);

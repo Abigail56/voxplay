@@ -171,6 +171,9 @@ def test_word_bomb_passes_and_explodes():
     assert r.round.performer_id == 1 and r.scores == {"A": 5, "B": 5}
     with pytest.raises(bc.GameError, match="Not yet"):
         bc.advance(r, sec(5))
+    with pytest.raises(bc.GameError, match="Time's up"):
+        bc.submit_answer(r, 1, "tangle", 1, r.round.closes_at + timedelta(seconds=0.1))  # too late: no grace for the bomb
+    assert r.round.performer_id == 1
     bc.advance(r, r.round.closes_at + timedelta(seconds=1))  # BOOM in ada's hands
     assert r.round.phase == "reveal" and r.round.winner_team == "B" and r.scores == {"A": 5, "B": 20}
     assert r.feed[-1].verdict == "boom" and r.feed[-1].player == "ada"
@@ -189,6 +192,34 @@ def test_word_bomb_rotates_and_survives_the_holder_leaving():
     assert r.round.performer_id == 3  # chi: everyone on a team gets a go
     bc.remove_player(r, 3)
     assert r.round.performer_id == 1 and r.status == "playing"  # a teammate catches the bomb
+
+
+def test_a_tiebreak_waits_for_both_teams():
+    r = room("battle", players=(("ada", "A"), ("bayo", "B"), ("chi", "A"), ("dayo", "A")))
+    r.round_index = len(r.plan) - 1
+    bc.open_round(r, sec(0), tiebreak=True)
+    for uid in (1, 3, 4):  # Team A uses all its tries
+        bc.submit_answer(r, uid, "nope", r.round.number, sec(1))
+    assert r.round.phase == "open"  # Team B still gets its go
+    assert bc.submit_answer(r, 2, "answer0", r.round.number, sec(2)).verdict == "correct" and r.round.winner_team == "B"
+
+
+def test_story_forge_survives_the_writer_leaving():
+    r = room("story", players=(("ada", "A"), ("bayo", "B"), ("chi", "A")))
+    assert r.round.performer_id == 1
+    bc.remove_player(r, 1)
+    assert r.round.performer_id == 3  # chi picks up the pen
+    bc.submit_answer(r, 3, "the danfo flew away", 1, sec(1))
+    bc.remove_player(r, 3)  # now Team A has nobody left
+    assert r.status == "finished"
+
+
+def test_story_forge_fire_after_the_writer_leaves():
+    r = room("story", players=(("ada", "A"), ("bayo", "B"), ("chi", "A")))
+    bc.submit_answer(r, 1, "the danfo flew away", 1, sec(1))
+    bc.remove_player(r, 1)  # Ada wrote the line, then left
+    bc.fire(r, 2, 1)
+    assert r.round.scored["A"] >= r.settings.scoring.fire and r.story[-1].fires == 1
 
 
 def test_word_bomb_fuse_varies():
@@ -213,6 +244,9 @@ async def test_word_bomb_over_the_api(client):
     room = (await client.post(f"/brain-clash/rooms/{code}/start", headers=ada)).json()
     assert room["game"] == "word-bomb" and room["round"]["question"]["kind"] == "chunk" and room["round"]["question"]["points"] == 5
     chunk = room["round"]["question"]["prompt"]
+    real = (await client.app.state.bc_rooms.get(code)).round.closes_at
+    seen = room["round"]
+    assert datetime.fromisoformat(seen["fuse_from"]) < real < datetime.fromisoformat(seen["closes_at"])  # the fuse stays secret
     example = (await client.app.state.bc_rooms.get(code)).round.question.items[0][0]
     assert (await send(client, bayo, code, 1, said=example)).status_code == 403  # ada has the bomb
     res = (await send(client, ada, code, 1, said=example)).json()
@@ -749,6 +783,23 @@ async def test_fair_play_over_the_api(client):
     async with client.app.state.sessionmaker() as s:
         rows = (await s.exec(text("SELECT flags FROM bc_results WHERE room_code = :c").bindparams(c=code))).all()
     assert rows[0][0][0]["status"] == "voided"
+
+
+@needs_db
+async def test_a_flag_decided_after_the_match_updates_the_saved_result(client):
+    ada, bayo = await signup(client, "ada"), await signup(client, "bayo")
+    code = (await bc_room(client, ada, mode="quickfire", categories=["everyday"]))["code"]
+    await client.post(f"/brain-clash/rooms/{code}/join", headers=bayo, json={})
+    await client.post(f"/brain-clash/rooms/{code}/start", headers=ada)
+    right = await cheat_answer(client, code)
+    data = {"round": "1", "answer_id": uuid.uuid4().hex, "text": right, "away_ms": "15000", "pasted": "true"}
+    flag = (await client.post(f"/brain-clash/rooms/{code}/answer", headers=bayo, data=data)).json()["room"]["flags"][0]
+    await client.post(f"/brain-clash/rooms/{code}/end", headers=ada)  # the match ends with the flag still pending
+    done = (await client.post(f"/brain-clash/rooms/{code}/flags/{flag['id']}", headers=ada, json={"allow": True})).json()
+    assert done["scores"]["B"] > 0 and done["winner"] == "B"
+    async with client.app.state.sessionmaker() as s:
+        row = (await s.exec(text("SELECT score_b, winner, flags FROM bc_results WHERE room_code = :c").bindparams(c=code))).one()
+    assert row[0] == done["scores"]["B"] and row[1] == "B" and row[2][0]["status"] == "allowed"
 
 
 @needs_db

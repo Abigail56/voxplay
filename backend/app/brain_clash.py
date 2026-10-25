@@ -626,6 +626,18 @@ def open_round(room: BrainClashRoom, at: datetime, tiebreak: bool = False, rng: 
     )
 
 
+def grace(room: BrainClashRoom) -> timedelta:
+    """How long after the buzzer an answer still counts. Word Bomb has none: a word that lands after the
+    blast would pass the bomb to a player whose turn has already blown up."""
+    return timedelta(0) if room.settings.mode == "bomb" else timedelta(seconds=GRACE_SECONDS)
+
+
+def fuse_window(room: BrainClashRoom) -> tuple[datetime, datetime]:
+    """Word Bomb: the earliest and latest the fuse can blow. Screens get only these, never the real time."""
+    r, seconds = room.round, room.settings.round_seconds()
+    return r.opened_at + timedelta(seconds=seconds * (1 - FUSE_SPREAD)), r.opened_at + timedelta(seconds=seconds * (1 + FUSE_SPREAD))
+
+
 def question_points(room: BrainClashRoom, q: Question) -> int:
     rules = room.settings.scoring
     return q.points if q.points is not None else rules.hard if q.difficulty == "hard" else rules.correct
@@ -727,7 +739,7 @@ def submit_answer(
     r = room.round
     if r is None or r.number != round_number:
         raise GameError("That question has already gone. Answer the one on screen.")
-    if received > r.closes_at + timedelta(seconds=GRACE_SECONDS):
+    if received > r.closes_at + grace(room):
         raise GameError("Time's up on that question.")
     eligible(room, player)
     said = said.strip()[:200]
@@ -778,6 +790,11 @@ def submit_answer(
                 close = True
             if item.verdict == "wrong":
                 item.verdict = "correct"
+        elif mode == "battle" and r.tiebreak:
+            # Sudden death: both teams answer at once, so it's over only when both have had their go.
+            close = all(
+                r.attempts.get(t, 0) >= MAX_TEAM_ATTEMPTS or all(p.user_id in r.tried for p in room.team(t)) for t in ("A", "B")
+            )
         elif mode in ("battle", "hum") and r.attempts[team] >= MAX_TEAM_ATTEMPTS:
             close = not _start_steal(room, received)
         elif mode == "quickfire" and all(p.user_id in r.tried for p in room.players):
@@ -903,15 +920,16 @@ def fire(room: BrainClashRoom, user_id: int, round_number: int) -> None:
         raise GameError("Join this room first.", 403)
     if room.status != "playing" or r is None or r.number != round_number or r.phase != "vote":
         raise GameError("There's no line to fire at right now.")
-    writer = room.performer()
-    if voter.team == writer.team:
+    writer = room.performer()  # None if the writer has left: the line still scores for their team
+    team = writer.team if writer else room.story[-1].team
+    if voter.team == team:
         raise GameError("Only the other team can fire. No hyping your own team!", 403)
     if user_id in r.fired:
         raise GameError("You've already fired at this line.")
     r.fired.append(user_id)
     pts = room.settings.scoring.fire
-    book(room, writer.team, writer, pts, room.flag(r.flag_id))
-    r.scored[writer.team] = r.scored.get(writer.team, 0) + pts
+    book(room, team, writer, pts, room.flag(r.flag_id))
+    r.scored[team] = r.scored.get(team, 0) + pts
     room.story[-1].fires += 1
 
 
@@ -985,7 +1003,7 @@ def advance(room: BrainClashRoom, at: datetime, by_host: bool = False) -> None:
     if room.status != "playing" or r is None:
         raise GameError("The game isn't running.")
     if r.phase in ("hum", "open", "steal", "vote"):
-        if at <= r.closes_at + timedelta(seconds=GRACE_SECONDS):
+        if at <= r.closes_at + grace(room):
             raise GameError("Not yet!")
         if r.phase == "open" and room.settings.mode in ("battle", "hum") and r.winner_team is None and _start_steal(room, at):
             return
@@ -1032,6 +1050,8 @@ def remove_player(room: BrainClashRoom, user_id: int) -> None:
     if room.status == "playing" and room.settings.mode == "bomb" and r and r.performer_id == user_id and leaving and room.team(leaving.team):
         holder = next_bomber(room, leaving.team)  # you can't run off with the bomb: a teammate catches it
         r.performer_id = holder.user_id
+    if room.status == "playing" and room.settings.mode == "story" and r and r.phase == "open" and r.performer_id == user_id and leaving and room.team(leaving.team):
+        r.performer_id = room.team(leaving.team)[0].user_id  # a teammate picks up the pen
     if room.host_id == user_id and room.players:
         room.host_id = room.players[0].user_id  # the next person in becomes host
     if room.status == "playing" and (not room.team("A") or not room.team("B")):

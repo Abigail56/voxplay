@@ -588,7 +588,7 @@ def remove_player(room: Room, user_id: int) -> None:
         room.plan = done + todo
         if current and user_id in (current.player_id, current.target_id):
             reset_turn(room, keep_clip=room.mode == "telephone")  # the next turn starts now
-        if len(room.players) < 2 or room.turn_index >= len(room.plan):
+        if len(room.players) < min_players(room.mode) or room.turn_index >= len(room.plan):  # Guess Who with 2 is a free 50
             room.status = "finished"
             room.highlights = highlights(room)
     if room.host_id == user_id and room.players:

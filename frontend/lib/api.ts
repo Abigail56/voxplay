@@ -311,7 +311,8 @@ export type BcRound = {
   phase: "hum" | "open" | "steal" | "vote" | "reveal";
   question: { id: string; kind: "question" | "list" | "association" | "song" | "spark" | "chunk"; category: string; category_name: string; difficulty: string; prompt: string; target: number | null; points: number; spark: string | null };
   opened_at: string;
-  closes_at: string;
+  closes_at: string; // Word Bomb, while the fuse burns: the latest it can blow
+  fuse_from?: string | null; // Word Bomb: the earliest it can blow (the real time stays on the server)
   turn_team: BcTeam | null;
   attempts: Record<string, number>;
   found: Record<BcTeam, string[]>;

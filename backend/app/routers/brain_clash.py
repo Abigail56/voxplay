@@ -116,7 +116,8 @@ class RoundOut(BaseModel):
     phase: bc.Phase
     question: QuestionOut
     opened_at: datetime
-    closes_at: datetime
+    closes_at: datetime  # Word Bomb, while the fuse burns: the latest it can blow, not when it will
+    fuse_from: datetime | None = None  # Word Bomb: the earliest it can blow, when screens start asking "boom yet?"
     turn_team: bc.TeamId | None
     attempts: dict[str, int]
     found: dict[str, list[str]]  # your team's items (both teams' once the round is over)
@@ -185,6 +186,8 @@ def out(room: bc.BrainClashRoom, viewer: int, online: set[int] = frozenset()) ->
         # Beat Drop: only the hummer sees the song until the reveal.
         secret = q.kind == "song" and not over and viewer != r.performer_id
         prompt = "🤫 Only the hummer knows the song" if secret else q.prompt
+        # Word Bomb: the real fuse stays on the server, so nobody can read it off the network.
+        fuse_from, closes_at = bc.fuse_window(room) if room.settings.mode == "bomb" and r.phase == "open" else (None, r.closes_at)
         round_out = RoundOut(
             number=r.number,
             phase=r.phase,
@@ -205,7 +208,8 @@ def out(room: bc.BrainClashRoom, viewer: int, online: set[int] = frozenset()) ->
                 spark=q.answer if q.kind == "spark" else None,
             ),
             opened_at=r.opened_at,
-            closes_at=r.closes_at,
+            closes_at=closes_at,
+            fuse_from=fuse_from,
             turn_team=r.turn_team,
             attempts=r.attempts,
             found=found,
@@ -317,15 +321,22 @@ async def save_change(session: AsyncSession, rooms: bc.BrainClashStore, room: bc
                 categories=s.categories,
                 team_a=s.team_names["A"],
                 team_b=s.team_names["B"],
-                score_a=room.scores["A"],
-                score_b=room.scores["B"],
-                winner=room.winner or "draw",
                 rounds_played=len(room.history),
-                players=[{"user_id": p.user_id, "name": p.name, "team": p.team, "points": p.points} for p in room.players],
-                flags=[f.model_dump(include={"round", "user_id", "player", "kind", "reasons", "suspicion", "status"}) for f in room.flags],
+                **outcome(room),
             )
         )
         await session.commit()
+
+
+def outcome(room: bc.BrainClashRoom) -> dict:
+    """The parts of a saved result that a flag decided after the final whistle can still change."""
+    return {
+        "score_a": room.scores["A"],
+        "score_b": room.scores["B"],
+        "winner": room.winner or "draw",
+        "players": [{"user_id": p.user_id, "name": p.name, "team": p.team, "points": p.points} for p in room.players],
+        "flags": [f.model_dump(include={"round", "user_id", "player", "kind", "reasons", "suspicion", "status"}) for f in room.flags],
+    }
 
 
 # ---------- requests ----------
@@ -677,6 +688,15 @@ async def decide(code: str, flag_id: str, body: DecisionIn, user: CurrentUser, s
         room = await get_or_404(rooms, code)
         rules(lambda: bc.decide_flag(room, user.id, flag_id, body.allow))
         await rooms.save(room)
+        if room.status == "finished":  # decided after the match: the saved result follows the new score
+            saved = (
+                await session.exec(select(BrainClashResult).where(BrainClashResult.room_code == room.code, BrainClashResult.game_no == room.game_no))
+            ).first()
+            if saved:
+                for field, value in outcome(room).items():
+                    setattr(saved, field, value)
+                session.add(saved)
+                await session.commit()
     return await view(session, settings, room, user.id)
 
 

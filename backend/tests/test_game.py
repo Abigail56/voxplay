@@ -4,6 +4,7 @@ Real PostgreSQL, fake voice model and fake speech-to-text (see helpers.py).
 """
 
 import os
+from datetime import datetime, timezone
 import time
 import uuid
 
@@ -15,7 +16,7 @@ from starlette.testclient import TestClient
 
 from app.config import Settings
 from app.main import create_app
-from app.rooms import RoomPlayer, plan_turns, score_impersonation, score_yourself
+from app.rooms import Room, RoomPlayer, plan_turns, remove_player, score_impersonation, score_yourself, start_game
 
 from app.geocode import short_name
 
@@ -498,3 +499,12 @@ async def test_voice_twins(client):
 async def test_voice_twins_before_you_record(client):
     h = await signup(client, "newbie")
     assert (await client.get("/voice-twins", headers=h)).json() == {"me": None, "speakers": [], "samples": []}
+
+
+def test_guess_who_ends_below_three_players():
+    stamp = datetime.now(timezone.utc)
+    players = [RoomPlayer(user_id=i, username=n, speaker_id=i) for i, n in enumerate(("ada", "bayo", "chi"), 1)]
+    room = Room(code="TIGER-42", host_id=1, mode="guess", players=players, created_at=stamp, updated_at=stamp)
+    start_game(room)
+    remove_player(room, 3)
+    assert room.status == "finished"  # with two left, the only voter would always know who spoke

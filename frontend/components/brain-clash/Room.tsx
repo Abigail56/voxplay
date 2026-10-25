@@ -566,11 +566,31 @@ function Match({ room, me, offset, sound, onRoom }: { room: BcRoom; me: BcPlayer
   const asked = useRef<string | null>(null);
   useEffect(() => {
     const key = `${r.number}-${r.phase}`;
-    if (left > 0 || asked.current === key) return;
+    if (r.fuse_from || left > 0 || asked.current === key) return;
     asked.current = key;
     const id = setTimeout(() => api.bc.advance(room.code).then(onRoom).catch(() => {}), (r.phase === "reveal" ? 300 : 900) + Math.random() * 500);
     return () => clearTimeout(id);
-  }, [left, r.number, r.phase, room.code, onRoom]);
+  }, [left, r.number, r.phase, room.code, onRoom, r.fuse_from]);
+
+  // Word Bomb: this phone doesn't know when the fuse runs out either, so from the earliest it could, keep asking.
+  useEffect(() => {
+    if (!r.fuse_from) return;
+    let id: ReturnType<typeof setTimeout>;
+    let stop = false;
+    const ask = (ms: number) => {
+      id = setTimeout(() => {
+        api.bc
+          .advance(room.code)
+          .then(onRoom)
+          .catch(() => !stop && ask(1000 + Math.random() * 500));
+      }, ms);
+    };
+    ask(Math.max(0, Date.parse(r.fuse_from) - (Date.now() + offset)) + Math.random() * 500);
+    return () => {
+      stop = true;
+      clearTimeout(id);
+    };
+  }, [r.fuse_from, r.number, room.code, onRoom, offset]);
 
   // Sounds and the spoken announcer: a new question, and each reveal.
   const lastPhase = useRef<string>("");
