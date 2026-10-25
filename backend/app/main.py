@@ -19,6 +19,7 @@ from .demo import RateLimiter, cleanup_loop, is_active, sample_folder, seed_samp
 from .embedding import EcapaEmbedder, Embedder
 from .geocode import Geocoder, NominatimGeocoder
 from .liveness import ChallengeStore, Transcriber, WhisperTranscriber
+from . import words
 from .models import Speaker
 from .brain_clash import BrainClashStore
 from .routers import accounts, admin, brain_clash, daily, game, identify, rooms, solo, speakers
@@ -71,6 +72,7 @@ def create_app(
             log.info("Speech-to-text ready.")
 
         log.info("Brain Clash: %d questions in the bank.", await brain_clash.seed_questions(sessionmaker))
+        log.info("Word Bomb: %d words in the dictionary.", len(await run_in_threadpool(words.dictionary)))
         if settings.seed_sample_voices:
             await seed_sample_voices(sessionmaker, app.state.embedder, sample_folder(settings))
 

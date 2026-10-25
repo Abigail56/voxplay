@@ -144,6 +144,15 @@ Use the same prompt, recomposed as a vertical shot with the four faces in the up
 > like sparks, a fantasy landscape at night with a huge moon, misty mountains and a distant castle,
 > mystery and adventure, teal and gold light, STYLE, no text.
 
+### 7b. Word Bomb: `word-bomb/word-bomb.webp` (`word-bomb`)
+
+- **Used in:** the Word Bomb banner, its game card and its room background.
+- **Shape:** 16:9, 1920×1080.
+
+> Pulse and DJ Ayo on opposite sides of a neon arena, mid-throw, a cartoon black bomb with a fizzing golden
+> fuse flying between them, giant glowing letters (A, N, G) bursting around it like fireworks, both of them
+> laughing in mock panic, orange and violet light, STYLE, no text.
+
 ### 8. Who's Talking?: `whos-talking/whos-talking.webp` (`whos-talking`)
 
 - **Used in:** the Who's Talking? banner and game card.
@@ -203,6 +212,9 @@ Use the same prompt, recomposed as a vertical shot with the four faces in the up
 | `story_lagos` | A yellow danfo bus in Lagos traffic at sunset, an owambe party tent in the background |
 | `story_legends` | A wise tortoise under a baobab tree beneath a giant moon, a talking drum beside it |
 | `story_chaos` | A goat running through a wedding reception, guests shocked, cake flying |
+| `bomb_easy` | Big friendly glowing letters stacked like toy blocks, a small smiling bomb on top, teal light |
+| `bomb_tricky` | A bomb with a short fizzing fuse balanced on spinning letters, orange sparks |
+| `bomb_nightmare` | A huge bomb about to blow inside a storm of jagged red letters, dramatic shadows |
 
 ### 10. Waiting and empty states: `states/<name>.webp`
 

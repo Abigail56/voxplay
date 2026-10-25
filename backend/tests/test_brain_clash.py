@@ -10,7 +10,7 @@ from sqlalchemy import text
 from starlette.testclient import TestClient
 
 from app import brain_clash as bc
-from app import fairplay
+from app import fairplay, words
 from app.routers.brain_clash import QUESTIONS_FILE
 
 from .helpers import tone_wav
@@ -106,6 +106,10 @@ def test_every_question_in_the_bank_is_valid_and_answerable():
             assert x.category in bc.STORY_CATEGORIES and x.prompt.startswith("Twist:")
             for form in [x.answer, *x.accepted]:
                 assert bc.uses_spark(x, f"And then came the {form} we feared."), (x.id, form)
+        elif x.kind == "chunk":  # every example word must pass the bomb on
+            assert x.category in bc.BOMB_CATEGORIES and x.prompt == x.answer == x.answer.upper() and len(x.items) >= 4
+            for item in x.items:
+                assert words.check(item[0], x.answer, []).word == item[0], (x.id, item)
         else:
             assert x.items, x.id
             for i, item in enumerate(x.items):
@@ -121,8 +125,106 @@ def test_every_question_in_the_bank_is_valid_and_answerable():
     for cat in bc.STORY_CATEGORIES:
         assert sum(x.category == cat and x.kind == "spark" for x in active) >= 8, cat
         assert bc.STORY_OPENERS[cat], cat
+    for cat in bc.BOMB_CATEGORIES:
+        assert sum(x.category == cat and x.kind == "chunk" for x in active) >= 15, cat
     assert sum(x.kind == "list" for x in active) >= 10 and sum(x.kind == "association" for x in active) >= 15
     assert all(x.as_of and x.source for x in parsed if x.category == "current_affairs")
+
+
+# ---------- Word Bomb ----------
+
+
+def test_word_bomb_dictionary():
+    check = lambda said, used=(): words.check(said, "ANG", list(used))  # noqa: E731
+    assert check("bangle").word == "bangle" and check("Um, I think na BANGLE o!").word == "bangle"  # typed or heard
+    assert check("angel").word == "angel" and check("mango").word == "mango"
+    assert check("table").word is None and "No ANG" in check("table").note
+    assert check("bangxyz").word is None and "isn't in our dictionary" in check("bangxyz").note
+    assert check("bangle", ["bangle"]).verdict == "duplicate"
+    assert words.check("it's a kite", "IT", []).word == "kite" and words.check("ten", "EN", []).word == "ten"
+    assert check("bangle, angel", ["bangle"]).word == "angel"  # the first fresh word counts
+    assert words.check("jollof", "OLL", []).word == "jollof" and words.check("wahala", "HAL", []).word == "wahala"  # Naija words count
+    assert words.check("fucking", "UCK", []).word is None and "friendly" in words.check("fucking", "UCK", []).note
+    assert words.check("chuckle", "UCK", []).word == "chuckle"
+    assert words.check("ox", "OX", []).word is None  # 3 letters at least
+
+
+def bomb_room(players=(("ada", "A"), ("bayo", "B")), **settings):
+    chunks = [q(f"c{i}", "ANG", kind="chunk", items=[["bangle"], ["angel"]]) for i in range(6)]
+    return room("bomb", players=players, questions=chunks, **settings)
+
+
+def test_word_bomb_passes_and_explodes():
+    r = bomb_room()
+    assert r.round.performer_id == 1 and r.round.turn_team == "A"  # Team A starts round 1 with the bomb
+    assert 12 <= (r.round.closes_at - r.round.opened_at).total_seconds() <= 28  # a hidden fuse around 20 s
+    with pytest.raises(bc.GameError, match="ada has the bomb"):
+        bc.submit_answer(r, 2, "angel", 1, sec(1))
+    item = bc.submit_answer(r, 1, "bangle", 1, sec(1))
+    assert item.verdict == "correct" and item.points == 5 and r.scores == {"A": 5, "B": 0}
+    assert r.round.performer_id == 2 and r.round.turn_team == "B"  # passed to the other team
+    dup = bc.submit_answer(r, 2, "bangle", 1, sec(2))
+    assert dup.verdict == "duplicate" and "already used" in dup.note and r.round.performer_id == 2  # still holding it
+    miss = bc.submit_answer(r, 2, "you idiot", 1, sec(3))
+    assert miss.verdict == "wrong" and r.feed[-1].said == "…" and r.feed[-1].note is None  # the room never sees it
+    bc.submit_answer(r, 2, "angel", 1, sec(4))
+    assert r.round.performer_id == 1 and r.scores == {"A": 5, "B": 5}
+    with pytest.raises(bc.GameError, match="Not yet"):
+        bc.advance(r, sec(5))
+    bc.advance(r, r.round.closes_at + timedelta(seconds=1))  # BOOM in ada's hands
+    assert r.round.phase == "reveal" and r.round.winner_team == "B" and r.scores == {"A": 5, "B": 20}
+    assert r.feed[-1].verdict == "boom" and r.feed[-1].player == "ada"
+    assert r.streaks == {"A": 0, "B": 1}  # only the team that wasn't holding it won the round
+    bc.advance(r, r.round.reveal_until + timedelta(seconds=1))
+    assert r.round.number == 2 and r.round.performer_id == 2  # Team B starts round 2
+    assert bc.submit_answer(r, 2, "bangle", 2, r.round.opened_at).verdict == "duplicate"  # each word counts once a game
+
+
+def test_word_bomb_rotates_and_survives_the_holder_leaving():
+    r = bomb_room(players=(("ada", "A"), ("bayo", "B"), ("chi", "A"), ("dayo", "B")))
+    assert r.round.performer_id == 1
+    bc.submit_answer(r, 1, "bangle", 1, sec(1))
+    assert r.round.performer_id == 2
+    bc.submit_answer(r, 2, "angel", 1, sec(2))
+    assert r.round.performer_id == 3  # chi: everyone on a team gets a go
+    bc.remove_player(r, 3)
+    assert r.round.performer_id == 1 and r.status == "playing"  # a teammate catches the bomb
+
+
+def test_word_bomb_fuse_varies():
+    import random
+
+    r = bomb_room()
+    lengths = set()
+    for seed in range(20):
+        bc.open_round(r, T0, rng=random.Random(seed))
+        lengths.add(round((r.round.closes_at - T0).total_seconds()))
+    assert len(lengths) > 5 and min(lengths) >= 12 and max(lengths) <= 28
+
+
+@needs_db
+async def test_word_bomb_over_the_api(client):
+    cats = (await client.get("/brain-clash/categories?game=word-bomb")).json()
+    assert {c["id"] for c in cats} == set(bc.BOMB_CATEGORIES) and all(c["counts"]["bomb"] >= 15 for c in cats)
+    ada, bayo = await signup(client, "ada"), await signup(client, "bayo")
+    code = (await bc_room(client, ada, mode="bomb", categories=["bomb_easy"]))["code"]
+    assert (await client.patch(f"/brain-clash/rooms/{code}/settings", headers=ada, json={"mode": "battle"})).status_code == 409
+    await client.post(f"/brain-clash/rooms/{code}/join", headers=bayo, json={})
+    room = (await client.post(f"/brain-clash/rooms/{code}/start", headers=ada)).json()
+    assert room["game"] == "word-bomb" and room["round"]["question"]["kind"] == "chunk" and room["round"]["question"]["points"] == 5
+    chunk = room["round"]["question"]["prompt"]
+    example = (await client.app.state.bc_rooms.get(code)).round.question.items[0][0]
+    assert (await send(client, bayo, code, 1, said=example)).status_code == 403  # ada has the bomb
+    res = (await send(client, ada, code, 1, said=example)).json()
+    assert res["feedback"]["verdict"] == "correct" and res["room"]["round"]["performer_id"] != res["room"]["you"], chunk
+    bad = (await send(client, bayo, code, 1, said="qqqq")).json()
+    assert bad["feedback"]["verdict"] == "wrong" and bad["feedback"]["note"]
+    # The fuse runs out; the reveal suggests words nobody has played yet.
+    room_now = await client.app.state.bc_rooms.get(code)
+    bc.advance(room_now, room_now.round.closes_at + timedelta(seconds=1))
+    await client.app.state.bc_rooms.save(room_now)
+    shown = (await client.get(f"/brain-clash/rooms/{code}", headers=ada)).json()["round"]["reveal"]["more"]
+    assert shown and example not in shown
 
 
 # ---------- Brain Battle ----------

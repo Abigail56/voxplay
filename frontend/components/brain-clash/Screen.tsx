@@ -62,6 +62,8 @@ function feedText(f: BcFeed): string {
       return f.points ? `added a line ⚡ +${f.points}` : "added a line";
     case "streak":
       return `is ON FIRE 🔥 +${f.points}`;
+    case "boom":
+      return "was holding it! 💥";
     default:
       return "missed";
   }
@@ -242,6 +244,7 @@ function ScreenMatch({ room, offset, sound, screenKey }: { room: BcRoom; offset:
   const left = useSecondsLeft(reveal ? r.reveal_until : r.closes_at, offset);
   const total = Math.max(1, (Date.parse(r.closes_at) - Date.parse(r.opened_at)) / 1000);
   const performer = room.players.find((p) => p.user_id === r.performer_id)?.name;
+  const bomb = room.settings.mode === "bomb";
   const lastPhase = useRef("");
   useEffect(() => {
     const now = `${r.number}:${r.phase}`;
@@ -252,14 +255,18 @@ function ScreenMatch({ room, offset, sound, screenKey }: { room: BcRoom; offset:
     else sfx("turn", sound);
   }, [r.number, r.phase, r.scored, r.turn_team, reveal, room, sound]);
   useEffect(() => {
-    if (!reveal && left > 0 && left <= 5 && Math.abs(left - Math.round(left)) < 0.11) sfx("tick", sound);
-  }, [left, reveal, sound]);
+    if (!reveal && !bomb && left > 0 && left <= 5 && Math.abs(left - Math.round(left)) < 0.11) sfx("tick", sound);
+  }, [left, reveal, sound, bomb]);
 
   const status = reveal
-    ? r.winner_team
+    ? bomb && r.winner_team
+      ? `💥 BOOM! ${teamName(room, r.winner_team)} takes the blast bonus`
+      : r.winner_team
       ? `${teamName(room, r.winner_team)} took the round`
       : "Nobody got it"
-    : r.phase === "steal"
+    : bomb
+      ? `💣 ${performer ?? "Someone"} (${teamName(room, r.turn_team ?? "A")}) has the bomb!`
+      : r.phase === "steal"
       ? `STEAL! ${teamName(room, r.turn_team ?? "A")} can snatch it`
       : r.phase === "hum"
         ? `🎵 ${performer ?? "The hummer"} is recording a hum…`
@@ -279,6 +286,16 @@ function ScreenMatch({ room, offset, sound, screenKey }: { room: BcRoom; offset:
         </p>
         {room.game === "story-forge" ? (
           <StoryOnScreen room={room} />
+        ) : bomb ? (
+          <div className="ps-bomb-row">
+            <h1 className="ps-prompt ps-chunk">{r.question.prompt}</h1>
+            {!reveal && (
+              <div className="bomb ps-bomb" aria-hidden key={r.performer_id}>
+                <span className="bomb-body">💣</span>
+                <span className="bomb-spark" />
+              </div>
+            )}
+          </div>
         ) : (
           <h1 className="ps-prompt">{r.question.prompt}</h1>
         )}
@@ -291,14 +308,20 @@ function ScreenMatch({ room, offset, sound, screenKey }: { room: BcRoom; offset:
         {r.has_clip && !reveal && r.phase !== "hum" && <ScreenHum code={room.code} round={r.number} screenKey={screenKey} sound={sound} />}
         {reveal && r.reveal && (
           <div className="ps-reveal pop">
-            <span>{r.question.kind === "song" ? "The song was" : r.question.kind === "list" ? "Answers that counted" : "The answer"}</span>
-            <strong>{r.question.kind === "list" ? [...r.found.A, ...r.found.B, ...r.reveal.more].slice(0, 10).join(", ") : r.reveal.answer}</strong>
+            <span>
+              {r.question.kind === "song" ? "The song was" : r.question.kind === "list" ? "Answers that counted" : r.question.kind === "chunk" ? "Words that would have worked" : "The answer"}
+            </span>
+            <strong>
+              {r.question.kind === "list" || r.question.kind === "chunk"
+                ? [...r.found.A, ...r.found.B, ...r.reveal.more].slice(0, r.question.kind === "chunk" ? 5 : 10).join(", ")
+                : r.reveal.answer}
+            </strong>
             {r.reveal.explanation && <p>{r.reveal.explanation}</p>}
           </div>
         )}
       </section>
       <p className={`ps-status ${r.phase}`}>{status}</p>
-      {!reveal && (
+      {!reveal && !bomb && (
         <div className="ps-timer" aria-label={`${Math.ceil(left)} seconds left`}>
           <div className="ps-timer-fill" style={{ width: `${Math.min(100, (left / total) * 100)}%` }} />
           <span>{Math.ceil(left)}</span>

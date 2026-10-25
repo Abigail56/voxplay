@@ -6989,6 +6989,1611 @@
     "mobile phone"
    ],
    "active": true
+  },
+  {
+   "id": "bomb_easy-b01",
+   "kind": "chunk",
+   "category": "bomb_easy",
+   "difficulty": "easy",
+   "prompt": "ING",
+   "answer": "ING",
+   "items": [
+    [
+     "sing"
+    ],
+    [
+     "king"
+    ],
+    [
+     "bring"
+    ],
+    [
+     "morning"
+    ],
+    [
+     "singer"
+    ]
+   ],
+   "explanation": "15,241 words in the dictionary contain ING.",
+   "active": true
+  },
+  {
+   "id": "bomb_easy-b02",
+   "kind": "chunk",
+   "category": "bomb_easy",
+   "difficulty": "easy",
+   "prompt": "ER",
+   "answer": "ER",
+   "items": [
+    [
+     "water"
+    ],
+    [
+     "paper"
+    ],
+    [
+     "mother"
+    ],
+    [
+     "river"
+    ],
+    [
+     "tiger"
+    ]
+   ],
+   "explanation": "30,960 words in the dictionary contain ER.",
+   "active": true
+  },
+  {
+   "id": "bomb_easy-b03",
+   "kind": "chunk",
+   "category": "bomb_easy",
+   "difficulty": "easy",
+   "prompt": "AN",
+   "answer": "AN",
+   "items": [
+    [
+     "banana"
+    ],
+    [
+     "plant"
+    ],
+    [
+     "candle"
+    ],
+    [
+     "dance"
+    ],
+    [
+     "planet"
+    ]
+   ],
+   "explanation": "14,529 words in the dictionary contain AN.",
+   "active": true
+  },
+  {
+   "id": "bomb_easy-b04",
+   "kind": "chunk",
+   "category": "bomb_easy",
+   "difficulty": "easy",
+   "prompt": "ON",
+   "answer": "ON",
+   "items": [
+    [
+     "money"
+    ],
+    [
+     "lemon"
+    ],
+    [
+     "onion"
+    ],
+    [
+     "phone"
+    ],
+    [
+     "donkey"
+    ]
+   ],
+   "explanation": "18,867 words in the dictionary contain ON.",
+   "active": true
+  },
+  {
+   "id": "bomb_easy-b05",
+   "kind": "chunk",
+   "category": "bomb_easy",
+   "difficulty": "easy",
+   "prompt": "AT",
+   "answer": "AT",
+   "items": [
+    [
+     "water"
+    ],
+    [
+     "cat"
+    ],
+    [
+     "matter"
+    ],
+    [
+     "bath"
+    ],
+    [
+     "later"
+    ]
+   ],
+   "explanation": "18,968 words in the dictionary contain AT.",
+   "active": true
+  },
+  {
+   "id": "bomb_easy-b06",
+   "kind": "chunk",
+   "category": "bomb_easy",
+   "difficulty": "easy",
+   "prompt": "IN",
+   "answer": "IN",
+   "items": [
+    [
+     "rain"
+    ],
+    [
+     "window"
+    ],
+    [
+     "ink"
+    ],
+    [
+     "cabin"
+    ],
+    [
+     "finger"
+    ]
+   ],
+   "explanation": "31,096 words in the dictionary contain IN.",
+   "active": true
+  },
+  {
+   "id": "bomb_easy-b07",
+   "kind": "chunk",
+   "category": "bomb_easy",
+   "difficulty": "easy",
+   "prompt": "EN",
+   "answer": "EN",
+   "items": [
+    [
+     "pen"
+    ],
+    [
+     "garden"
+    ],
+    [
+     "open"
+    ],
+    [
+     "tent"
+    ],
+    [
+     "ten"
+    ]
+   ],
+   "explanation": "16,240 words in the dictionary contain EN.",
+   "active": true
+  },
+  {
+   "id": "bomb_easy-b08",
+   "kind": "chunk",
+   "category": "bomb_easy",
+   "difficulty": "easy",
+   "prompt": "OR",
+   "answer": "OR",
+   "items": [
+    [
+     "door"
+    ],
+    [
+     "horse"
+    ],
+    [
+     "corn"
+    ],
+    [
+     "storm"
+    ],
+    [
+     "order"
+    ]
+   ],
+   "explanation": "12,136 words in the dictionary contain OR.",
+   "active": true
+  },
+  {
+   "id": "bomb_easy-b09",
+   "kind": "chunk",
+   "category": "bomb_easy",
+   "difficulty": "easy",
+   "prompt": "AR",
+   "answer": "AR",
+   "items": [
+    [
+     "car"
+    ],
+    [
+     "star"
+    ],
+    [
+     "market"
+    ],
+    [
+     "garden"
+    ],
+    [
+     "party"
+    ]
+   ],
+   "explanation": "12,851 words in the dictionary contain AR.",
+   "active": true
+  },
+  {
+   "id": "bomb_easy-b10",
+   "kind": "chunk",
+   "category": "bomb_easy",
+   "difficulty": "easy",
+   "prompt": "ST",
+   "answer": "ST",
+   "items": [
+    [
+     "stone"
+    ],
+    [
+     "best"
+    ],
+    [
+     "stars"
+    ],
+    [
+     "fast"
+    ],
+    [
+     "first"
+    ]
+   ],
+   "explanation": "16,033 words in the dictionary contain ST.",
+   "active": true
+  },
+  {
+   "id": "bomb_easy-b11",
+   "kind": "chunk",
+   "category": "bomb_easy",
+   "difficulty": "easy",
+   "prompt": "RE",
+   "answer": "RE",
+   "items": [
+    [
+     "red"
+    ],
+    [
+     "tree"
+    ],
+    [
+     "fire"
+    ],
+    [
+     "green"
+    ],
+    [
+     "there"
+    ]
+   ],
+   "explanation": "19,087 words in the dictionary contain RE.",
+   "active": true
+  },
+  {
+   "id": "bomb_easy-b12",
+   "kind": "chunk",
+   "category": "bomb_easy",
+   "difficulty": "easy",
+   "prompt": "TE",
+   "answer": "TE",
+   "items": [
+    [
+     "teacher"
+    ],
+    [
+     "ten"
+    ],
+    [
+     "note"
+    ],
+    [
+     "team"
+    ],
+    [
+     "water"
+    ]
+   ],
+   "explanation": "19,471 words in the dictionary contain TE.",
+   "active": true
+  },
+  {
+   "id": "bomb_easy-b13",
+   "kind": "chunk",
+   "category": "bomb_easy",
+   "difficulty": "easy",
+   "prompt": "AL",
+   "answer": "AL",
+   "items": [
+    [
+     "ball"
+    ],
+    [
+     "salt"
+    ],
+    [
+     "animal"
+    ],
+    [
+     "palm"
+    ],
+    [
+     "walk"
+    ]
+   ],
+   "explanation": "15,508 words in the dictionary contain AL.",
+   "active": true
+  },
+  {
+   "id": "bomb_easy-b14",
+   "kind": "chunk",
+   "category": "bomb_easy",
+   "difficulty": "easy",
+   "prompt": "LE",
+   "answer": "LE",
+   "items": [
+    [
+     "lemon"
+    ],
+    [
+     "table"
+    ],
+    [
+     "apple"
+    ],
+    [
+     "leg"
+    ],
+    [
+     "little"
+    ]
+   ],
+   "explanation": "15,206 words in the dictionary contain LE.",
+   "active": true
+  },
+  {
+   "id": "bomb_easy-b15",
+   "kind": "chunk",
+   "category": "bomb_easy",
+   "difficulty": "easy",
+   "prompt": "IT",
+   "answer": "IT",
+   "items": [
+    [
+     "kitchen"
+    ],
+    [
+     "bit"
+    ],
+    [
+     "sit"
+    ],
+    [
+     "city"
+    ],
+    [
+     "kite"
+    ]
+   ],
+   "explanation": "11,031 words in the dictionary contain IT.",
+   "active": true
+  },
+  {
+   "id": "bomb_easy-b16",
+   "kind": "chunk",
+   "category": "bomb_easy",
+   "difficulty": "easy",
+   "prompt": "OU",
+   "answer": "OU",
+   "items": [
+    [
+     "house"
+    ],
+    [
+     "mouth"
+    ],
+    [
+     "soup"
+    ],
+    [
+     "cloud"
+    ],
+    [
+     "young"
+    ]
+   ],
+   "explanation": "7,871 words in the dictionary contain OU.",
+   "active": true
+  },
+  {
+   "id": "bomb_easy-b17",
+   "kind": "chunk",
+   "category": "bomb_easy",
+   "difficulty": "easy",
+   "prompt": "CH",
+   "answer": "CH",
+   "items": [
+    [
+     "chair"
+    ],
+    [
+     "church"
+    ],
+    [
+     "lunch"
+    ],
+    [
+     "rich"
+    ],
+    [
+     "chicken"
+    ]
+   ],
+   "explanation": "7,714 words in the dictionary contain CH.",
+   "active": true
+  },
+  {
+   "id": "bomb_easy-b18",
+   "kind": "chunk",
+   "category": "bomb_easy",
+   "difficulty": "easy",
+   "prompt": "SH",
+   "answer": "SH",
+   "items": [
+    [
+     "fish"
+    ],
+    [
+     "shop"
+    ],
+    [
+     "shoe"
+    ],
+    [
+     "wash"
+    ],
+    [
+     "fresh"
+    ]
+   ],
+   "explanation": "5,452 words in the dictionary contain SH.",
+   "active": true
+  },
+  {
+   "id": "bomb_easy-b19",
+   "kind": "chunk",
+   "category": "bomb_easy",
+   "difficulty": "easy",
+   "prompt": "ATE",
+   "answer": "ATE",
+   "items": [
+    [
+     "late"
+    ],
+    [
+     "plate"
+    ],
+    [
+     "water"
+    ],
+    [
+     "gate"
+    ],
+    [
+     "skate"
+    ]
+   ],
+   "explanation": "5,479 words in the dictionary contain ATE.",
+   "active": true
+  },
+  {
+   "id": "bomb_easy-b20",
+   "kind": "chunk",
+   "category": "bomb_easy",
+   "difficulty": "easy",
+   "prompt": "ION",
+   "answer": "ION",
+   "items": [
+    [
+     "lion"
+    ],
+    [
+     "onion"
+    ],
+    [
+     "nation"
+    ],
+    [
+     "million"
+    ],
+    [
+     "action"
+    ]
+   ],
+   "explanation": "7,800 words in the dictionary contain ION.",
+   "active": true
+  },
+  {
+   "id": "bomb_tricky-b01",
+   "kind": "chunk",
+   "category": "bomb_tricky",
+   "difficulty": "medium",
+   "prompt": "ACK",
+   "answer": "ACK",
+   "items": [
+    [
+     "back"
+    ],
+    [
+     "black"
+    ],
+    [
+     "snack"
+    ],
+    [
+     "jacket"
+    ],
+    [
+     "packet"
+    ]
+   ],
+   "explanation": "1,327 words in the dictionary contain ACK.",
+   "active": true
+  },
+  {
+   "id": "bomb_tricky-b02",
+   "kind": "chunk",
+   "category": "bomb_tricky",
+   "difficulty": "medium",
+   "prompt": "ICK",
+   "answer": "ICK",
+   "items": [
+    [
+     "sick"
+    ],
+    [
+     "brick"
+    ],
+    [
+     "kick"
+    ],
+    [
+     "chicken"
+    ],
+    [
+     "tickle"
+    ]
+   ],
+   "explanation": "923 words in the dictionary contain ICK.",
+   "active": true
+  },
+  {
+   "id": "bomb_tricky-b03",
+   "kind": "chunk",
+   "category": "bomb_tricky",
+   "difficulty": "medium",
+   "prompt": "IGH",
+   "answer": "IGH",
+   "items": [
+    [
+     "night"
+    ],
+    [
+     "light"
+    ],
+    [
+     "high"
+    ],
+    [
+     "right"
+    ],
+    [
+     "fight"
+    ]
+   ],
+   "explanation": "957 words in the dictionary contain IGH.",
+   "active": true
+  },
+  {
+   "id": "bomb_tricky-b04",
+   "kind": "chunk",
+   "category": "bomb_tricky",
+   "difficulty": "medium",
+   "prompt": "OLD",
+   "answer": "OLD",
+   "items": [
+    [
+     "gold"
+    ],
+    [
+     "cold"
+    ],
+    [
+     "hold"
+    ],
+    [
+     "bold"
+    ],
+    [
+     "golden"
+    ]
+   ],
+   "explanation": "451 words in the dictionary contain OLD.",
+   "active": true
+  },
+  {
+   "id": "bomb_tricky-b05",
+   "kind": "chunk",
+   "category": "bomb_tricky",
+   "difficulty": "medium",
+   "prompt": "ANT",
+   "answer": "ANT",
+   "items": [
+    [
+     "giant"
+    ],
+    [
+     "plant"
+    ],
+    [
+     "elephant"
+    ],
+    [
+     "pants"
+    ],
+    [
+     "antelope"
+    ]
+   ],
+   "explanation": "3,154 words in the dictionary contain ANT.",
+   "active": true
+  },
+  {
+   "id": "bomb_tricky-b06",
+   "kind": "chunk",
+   "category": "bomb_tricky",
+   "difficulty": "medium",
+   "prompt": "INK",
+   "answer": "INK",
+   "items": [
+    [
+     "pink"
+    ],
+    [
+     "drink"
+    ],
+    [
+     "think"
+    ],
+    [
+     "wink"
+    ],
+    [
+     "sink"
+    ]
+   ],
+   "explanation": "456 words in the dictionary contain INK.",
+   "active": true
+  },
+  {
+   "id": "bomb_tricky-b07",
+   "kind": "chunk",
+   "category": "bomb_tricky",
+   "difficulty": "medium",
+   "prompt": "OOK",
+   "answer": "OOK",
+   "items": [
+    [
+     "book"
+    ],
+    [
+     "cook"
+    ],
+    [
+     "look"
+    ],
+    [
+     "hook"
+    ],
+    [
+     "cookie"
+    ]
+   ],
+   "explanation": "409 words in the dictionary contain OOK.",
+   "active": true
+  },
+  {
+   "id": "bomb_tricky-b08",
+   "kind": "chunk",
+   "category": "bomb_tricky",
+   "difficulty": "medium",
+   "prompt": "AIN",
+   "answer": "AIN",
+   "items": [
+    [
+     "rain"
+    ],
+    [
+     "train"
+    ],
+    [
+     "brain"
+    ],
+    [
+     "chain"
+    ],
+    [
+     "again"
+    ]
+   ],
+   "explanation": "1,098 words in the dictionary contain AIN.",
+   "active": true
+  },
+  {
+   "id": "bomb_tricky-b09",
+   "kind": "chunk",
+   "category": "bomb_tricky",
+   "difficulty": "medium",
+   "prompt": "ILL",
+   "answer": "ILL",
+   "items": [
+    [
+     "hill"
+    ],
+    [
+     "mill"
+    ],
+    [
+     "pillow"
+    ],
+    [
+     "village"
+    ],
+    [
+     "bill"
+    ]
+   ],
+   "explanation": "1,740 words in the dictionary contain ILL.",
+   "active": true
+  },
+  {
+   "id": "bomb_tricky-b10",
+   "kind": "chunk",
+   "category": "bomb_tricky",
+   "difficulty": "medium",
+   "prompt": "EAR",
+   "answer": "EAR",
+   "items": [
+    [
+     "bear"
+    ],
+    [
+     "ear"
+    ],
+    [
+     "heart"
+    ],
+    [
+     "year"
+    ],
+    [
+     "learn"
+    ]
+   ],
+   "explanation": "1,095 words in the dictionary contain EAR.",
+   "active": true
+  },
+  {
+   "id": "bomb_tricky-b11",
+   "kind": "chunk",
+   "category": "bomb_tricky",
+   "difficulty": "medium",
+   "prompt": "OUT",
+   "answer": "OUT",
+   "items": [
+    [
+     "shout"
+    ],
+    [
+     "outside"
+    ],
+    [
+     "about"
+    ],
+    [
+     "mouth"
+    ],
+    [
+     "trout"
+    ]
+   ],
+   "explanation": "1,859 words in the dictionary contain OUT.",
+   "active": true
+  },
+  {
+   "id": "bomb_tricky-b12",
+   "kind": "chunk",
+   "category": "bomb_tricky",
+   "difficulty": "medium",
+   "prompt": "AND",
+   "answer": "AND",
+   "items": [
+    [
+     "hand"
+    ],
+    [
+     "sand"
+    ],
+    [
+     "band"
+    ],
+    [
+     "candy"
+    ],
+    [
+     "island"
+    ]
+   ],
+   "explanation": "1,828 words in the dictionary contain AND.",
+   "active": true
+  },
+  {
+   "id": "bomb_tricky-b13",
+   "kind": "chunk",
+   "category": "bomb_tricky",
+   "difficulty": "medium",
+   "prompt": "ART",
+   "answer": "ART",
+   "items": [
+    [
+     "heart"
+    ],
+    [
+     "party"
+    ],
+    [
+     "smart"
+    ],
+    [
+     "cart"
+    ],
+    [
+     "start"
+    ]
+   ],
+   "explanation": "1,149 words in the dictionary contain ART.",
+   "active": true
+  },
+  {
+   "id": "bomb_tricky-b14",
+   "kind": "chunk",
+   "category": "bomb_tricky",
+   "difficulty": "medium",
+   "prompt": "AME",
+   "answer": "AME",
+   "items": [
+    [
+     "game"
+    ],
+    [
+     "name"
+    ],
+    [
+     "came"
+    ],
+    [
+     "frame"
+    ],
+    [
+     "camel"
+    ]
+   ],
+   "explanation": "786 words in the dictionary contain AME.",
+   "active": true
+  },
+  {
+   "id": "bomb_tricky-b15",
+   "kind": "chunk",
+   "category": "bomb_tricky",
+   "difficulty": "medium",
+   "prompt": "OW",
+   "answer": "OW",
+   "items": [
+    [
+     "cow"
+    ],
+    [
+     "snow"
+    ],
+    [
+     "brown"
+    ],
+    [
+     "window"
+    ],
+    [
+     "flower"
+    ]
+   ],
+   "explanation": "2,475 words in the dictionary contain OW.",
+   "active": true
+  },
+  {
+   "id": "bomb_tricky-b16",
+   "kind": "chunk",
+   "category": "bomb_tricky",
+   "difficulty": "medium",
+   "prompt": "UMP",
+   "answer": "UMP",
+   "items": [
+    [
+     "jump"
+    ],
+    [
+     "pump"
+    ],
+    [
+     "bump"
+    ],
+    [
+     "stump"
+    ],
+    [
+     "lump"
+    ]
+   ],
+   "explanation": "383 words in the dictionary contain UMP.",
+   "active": true
+  },
+  {
+   "id": "bomb_tricky-b17",
+   "kind": "chunk",
+   "category": "bomb_tricky",
+   "difficulty": "medium",
+   "prompt": "ACE",
+   "answer": "ACE",
+   "items": [
+    [
+     "face"
+    ],
+    [
+     "race"
+    ],
+    [
+     "space"
+    ],
+    [
+     "place"
+    ],
+    [
+     "peace"
+    ]
+   ],
+   "explanation": "835 words in the dictionary contain ACE.",
+   "active": true
+  },
+  {
+   "id": "bomb_tricky-b18",
+   "kind": "chunk",
+   "category": "bomb_tricky",
+   "difficulty": "medium",
+   "prompt": "IDE",
+   "answer": "IDE",
+   "items": [
+    [
+     "ride"
+    ],
+    [
+     "slide"
+    ],
+    [
+     "wide"
+    ],
+    [
+     "hide"
+    ],
+    [
+     "bride"
+    ]
+   ],
+   "explanation": "1,530 words in the dictionary contain IDE.",
+   "active": true
+  },
+  {
+   "id": "bomb_tricky-b19",
+   "kind": "chunk",
+   "category": "bomb_tricky",
+   "difficulty": "medium",
+   "prompt": "AKE",
+   "answer": "AKE",
+   "items": [
+    [
+     "cake"
+    ],
+    [
+     "lake"
+    ],
+    [
+     "snake"
+    ],
+    [
+     "shake"
+    ],
+    [
+     "bake"
+    ]
+   ],
+   "explanation": "627 words in the dictionary contain AKE.",
+   "active": true
+  },
+  {
+   "id": "bomb_tricky-b20",
+   "kind": "chunk",
+   "category": "bomb_tricky",
+   "difficulty": "medium",
+   "prompt": "ORT",
+   "answer": "ORT",
+   "items": [
+    [
+     "short"
+    ],
+    [
+     "sport"
+    ],
+    [
+     "fort"
+    ],
+    [
+     "port"
+    ],
+    [
+     "report"
+    ]
+   ],
+   "explanation": "1,272 words in the dictionary contain ORT.",
+   "active": true
+  },
+  {
+   "id": "bomb_nightmare-b01",
+   "kind": "chunk",
+   "category": "bomb_nightmare",
+   "difficulty": "hard",
+   "prompt": "GHT",
+   "answer": "GHT",
+   "items": [
+    [
+     "night"
+    ],
+    [
+     "light"
+    ],
+    [
+     "fight"
+    ],
+    [
+     "eight"
+    ],
+    [
+     "bright"
+    ]
+   ],
+   "explanation": "951 words in the dictionary contain GHT.",
+   "active": true
+  },
+  {
+   "id": "bomb_nightmare-b02",
+   "kind": "chunk",
+   "category": "bomb_nightmare",
+   "difficulty": "hard",
+   "prompt": "DGE",
+   "answer": "DGE",
+   "items": [
+    [
+     "bridge"
+    ],
+    [
+     "edge"
+    ],
+    [
+     "fridge"
+    ],
+    [
+     "judge"
+    ],
+    [
+     "badge"
+    ]
+   ],
+   "explanation": "387 words in the dictionary contain DGE.",
+   "active": true
+  },
+  {
+   "id": "bomb_nightmare-b03",
+   "kind": "chunk",
+   "category": "bomb_nightmare",
+   "difficulty": "hard",
+   "prompt": "PH",
+   "answer": "PH",
+   "items": [
+    [
+     "phone"
+    ],
+    [
+     "photo"
+    ],
+    [
+     "elephant"
+    ],
+    [
+     "graph"
+    ],
+    [
+     "dolphin"
+    ]
+   ],
+   "explanation": "4,709 words in the dictionary contain PH.",
+   "active": true
+  },
+  {
+   "id": "bomb_nightmare-b04",
+   "kind": "chunk",
+   "category": "bomb_nightmare",
+   "difficulty": "hard",
+   "prompt": "MB",
+   "answer": "MB",
+   "items": [
+    [
+     "thumb"
+    ],
+    [
+     "lamb"
+    ],
+    [
+     "climb"
+    ],
+    [
+     "bomb"
+    ],
+    [
+     "number"
+    ]
+   ],
+   "explanation": "2,039 words in the dictionary contain MB.",
+   "active": true
+  },
+  {
+   "id": "bomb_nightmare-b05",
+   "kind": "chunk",
+   "category": "bomb_nightmare",
+   "difficulty": "hard",
+   "prompt": "WN",
+   "answer": "WN",
+   "items": [
+    [
+     "brown"
+    ],
+    [
+     "down"
+    ],
+    [
+     "town"
+    ],
+    [
+     "clown"
+    ],
+    [
+     "gown"
+    ]
+   ],
+   "explanation": "604 words in the dictionary contain WN.",
+   "active": true
+  },
+  {
+   "id": "bomb_nightmare-b06",
+   "kind": "chunk",
+   "category": "bomb_nightmare",
+   "difficulty": "hard",
+   "prompt": "XT",
+   "answer": "XT",
+   "items": [
+    [
+     "next"
+    ],
+    [
+     "text"
+    ],
+    [
+     "extra"
+    ],
+    [
+     "sixty"
+    ],
+    [
+     "extend"
+    ]
+   ],
+   "explanation": "562 words in the dictionary contain XT.",
+   "active": true
+  },
+  {
+   "id": "bomb_nightmare-b07",
+   "kind": "chunk",
+   "category": "bomb_nightmare",
+   "difficulty": "hard",
+   "prompt": "LK",
+   "answer": "LK",
+   "items": [
+    [
+     "milk"
+    ],
+    [
+     "walk"
+    ],
+    [
+     "talk"
+    ],
+    [
+     "silk"
+    ],
+    [
+     "chalk"
+    ]
+   ],
+   "explanation": "518 words in the dictionary contain LK.",
+   "active": true
+  },
+  {
+   "id": "bomb_nightmare-b08",
+   "kind": "chunk",
+   "category": "bomb_nightmare",
+   "difficulty": "hard",
+   "prompt": "OOZ",
+   "answer": "OOZ",
+   "items": [
+    [
+     "snooze"
+    ],
+    [
+     "ooze"
+    ],
+    [
+     "oozing"
+    ],
+    [
+     "woozy"
+    ]
+   ],
+   "explanation": "70 words in the dictionary contain OOZ.",
+   "active": true
+  },
+  {
+   "id": "bomb_nightmare-b09",
+   "kind": "chunk",
+   "category": "bomb_nightmare",
+   "difficulty": "hard",
+   "prompt": "ZZ",
+   "answer": "ZZ",
+   "items": [
+    [
+     "pizza"
+    ],
+    [
+     "jazz"
+    ],
+    [
+     "buzz"
+    ],
+    [
+     "puzzle"
+    ],
+    [
+     "dizzy"
+    ]
+   ],
+   "explanation": "346 words in the dictionary contain ZZ.",
+   "active": true
+  },
+  {
+   "id": "bomb_nightmare-b10",
+   "kind": "chunk",
+   "category": "bomb_nightmare",
+   "difficulty": "hard",
+   "prompt": "AWK",
+   "answer": "AWK",
+   "items": [
+    [
+     "hawk"
+    ],
+    [
+     "squawk"
+    ],
+    [
+     "awkward"
+    ],
+    [
+     "gawk"
+    ]
+   ],
+   "explanation": "86 words in the dictionary contain AWK.",
+   "active": true
+  },
+  {
+   "id": "bomb_nightmare-b11",
+   "kind": "chunk",
+   "category": "bomb_nightmare",
+   "difficulty": "hard",
+   "prompt": "UFF",
+   "answer": "UFF",
+   "items": [
+    [
+     "puff"
+    ],
+    [
+     "stuff"
+    ],
+    [
+     "fluffy"
+    ],
+    [
+     "muffin"
+    ],
+    [
+     "cuff"
+    ]
+   ],
+   "explanation": "421 words in the dictionary contain UFF.",
+   "active": true
+  },
+  {
+   "id": "bomb_nightmare-b12",
+   "kind": "chunk",
+   "category": "bomb_nightmare",
+   "difficulty": "hard",
+   "prompt": "OMP",
+   "answer": "OMP",
+   "items": [
+    [
+     "romp"
+    ],
+    [
+     "stomp"
+    ],
+    [
+     "compass"
+    ],
+    [
+     "compete"
+    ],
+    [
+     "pompom"
+    ]
+   ],
+   "explanation": "797 words in the dictionary contain OMP.",
+   "active": true
+  },
+  {
+   "id": "bomb_nightmare-b13",
+   "kind": "chunk",
+   "category": "bomb_nightmare",
+   "difficulty": "hard",
+   "prompt": "RTH",
+   "answer": "RTH",
+   "items": [
+    [
+     "birth"
+    ],
+    [
+     "earth"
+    ],
+    [
+     "north"
+    ],
+    [
+     "worth"
+    ],
+    [
+     "forth"
+    ]
+   ],
+   "explanation": "475 words in the dictionary contain RTH.",
+   "active": true
+  },
+  {
+   "id": "bomb_nightmare-b14",
+   "kind": "chunk",
+   "category": "bomb_nightmare",
+   "difficulty": "hard",
+   "prompt": "YST",
+   "answer": "YST",
+   "items": [
+    [
+     "mystery"
+    ],
+    [
+     "crystal"
+    ],
+    [
+     "system"
+    ],
+    [
+     "analyst"
+    ]
+   ],
+   "explanation": "355 words in the dictionary contain YST.",
+   "active": true
+  },
+  {
+   "id": "bomb_nightmare-b15",
+   "kind": "chunk",
+   "category": "bomb_nightmare",
+   "difficulty": "hard",
+   "prompt": "SQU",
+   "answer": "SQU",
+   "items": [
+    [
+     "square"
+    ],
+    [
+     "squash"
+    ],
+    [
+     "squid"
+    ],
+    [
+     "squeeze"
+    ],
+    [
+     "squirrel"
+    ]
+   ],
+   "explanation": "409 words in the dictionary contain SQU.",
+   "active": true
+  },
+  {
+   "id": "bomb_nightmare-b16",
+   "kind": "chunk",
+   "category": "bomb_nightmare",
+   "difficulty": "hard",
+   "prompt": "OI",
+   "answer": "OI",
+   "items": [
+    [
+     "coin"
+    ],
+    [
+     "boil"
+    ],
+    [
+     "soil"
+    ],
+    [
+     "noise"
+    ],
+    [
+     "point"
+    ]
+   ],
+   "explanation": "2,232 words in the dictionary contain OI.",
+   "active": true
+  },
+  {
+   "id": "bomb_nightmare-b17",
+   "kind": "chunk",
+   "category": "bomb_nightmare",
+   "difficulty": "hard",
+   "prompt": "EAU",
+   "answer": "EAU",
+   "items": [
+    [
+     "beauty"
+    ],
+    [
+     "beautiful"
+    ],
+    [
+     "bureau"
+    ],
+    [
+     "plateau"
+    ]
+   ],
+   "explanation": "143 words in the dictionary contain EAU.",
+   "active": true
+  },
+  {
+   "id": "bomb_nightmare-b18",
+   "kind": "chunk",
+   "category": "bomb_nightmare",
+   "difficulty": "hard",
+   "prompt": "IRL",
+   "answer": "IRL",
+   "items": [
+    [
+     "girl"
+    ],
+    [
+     "swirl"
+    ],
+    [
+     "twirl"
+    ],
+    [
+     "whirl"
+    ]
+   ],
+   "explanation": "131 words in the dictionary contain IRL.",
+   "active": true
+  },
+  {
+   "id": "bomb_nightmare-b19",
+   "kind": "chunk",
+   "category": "bomb_nightmare",
+   "difficulty": "hard",
+   "prompt": "URP",
+   "answer": "URP",
+   "items": [
+    [
+     "purple"
+    ],
+    [
+     "burp"
+    ],
+    [
+     "slurp"
+    ],
+    [
+     "purpose"
+    ],
+    [
+     "turpentine"
+    ]
+   ],
+   "explanation": "114 words in the dictionary contain URP.",
+   "active": true
+  },
+  {
+   "id": "bomb_nightmare-b20",
+   "kind": "chunk",
+   "category": "bomb_nightmare",
+   "difficulty": "hard",
+   "prompt": "KN",
+   "answer": "KN",
+   "items": [
+    [
+     "knee"
+    ],
+    [
+     "knife"
+    ],
+    [
+     "know"
+    ],
+    [
+     "knock"
+    ],
+    [
+     "knot"
+    ]
+   ],
+   "explanation": "403 words in the dictionary contain KN.",
+   "active": true
   }
  ]
 }

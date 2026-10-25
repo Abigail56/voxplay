@@ -260,9 +260,9 @@ export type MatchResult = {
   finished_at: string;
 };
 
-export type BcMode = "battle" | "namefast" | "quickfire" | "association" | "hum" | "story";
+export type BcMode = "battle" | "namefast" | "quickfire" | "association" | "hum" | "story" | "bomb";
 /** The games that run on Brain Clash rooms. */
-export type BcGame = "brain-clash" | "beat-drop" | "story-forge";
+export type BcGame = "brain-clash" | "beat-drop" | "story-forge" | "word-bomb";
 export type BcTeam = "A" | "B";
 export type BcSettings = {
   mode: BcMode;
@@ -282,10 +282,11 @@ export type BcFeed = {
   player: string;
   user_id: number;
   said: string;
-  verdict: "correct" | "wrong" | "duplicate" | "item" | "steal" | "line" | "streak";
+  verdict: "correct" | "wrong" | "duplicate" | "item" | "steal" | "line" | "streak" | "boom";
   points: number;
   items: string[];
   flag_id: string | null;
+  note?: string | null; // Word Bomb: why a word didn't count
 };
 /** Something the fair-play detector thinks may be cheating, waiting for (or after) the host's decision. */
 export type BcFlag = {
@@ -308,7 +309,7 @@ export type BcSignals = { away_ms: number; pasted: boolean; typing_ms: number | 
 export type BcRound = {
   number: number;
   phase: "hum" | "open" | "steal" | "vote" | "reveal";
-  question: { id: string; kind: "question" | "list" | "association" | "song" | "spark"; category: string; category_name: string; difficulty: string; prompt: string; target: number | null; points: number; spark: string | null };
+  question: { id: string; kind: "question" | "list" | "association" | "song" | "spark" | "chunk"; category: string; category_name: string; difficulty: string; prompt: string; target: number | null; points: number; spark: string | null };
   opened_at: string;
   closes_at: string;
   turn_team: BcTeam | null;
@@ -320,7 +321,7 @@ export type BcRound = {
   reveal_until: string | null;
   tiebreak: boolean;
   you_tried: boolean;
-  performer_id: number | null; // Beat Drop's hummer, Story Forge's writer
+  performer_id: number | null; // Beat Drop's hummer, Story Forge's writer, Word Bomb's bomb holder
   has_clip: boolean;
   line: string | null;
   fires: number;

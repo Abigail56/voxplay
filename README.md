@@ -11,6 +11,7 @@ and internal names still say `voiceid`, so existing data and deployments keep wo
 | `/brain-clash`, `/brain-clash/CODE` | **Brain Clash**: the team quiz (below). The room link is also the invite |
 | `/beat-drop`, `/beat-drop/CODE` | **Beat Drop**: hum a secret song, your team names it |
 | `/story-forge`, `/story-forge/CODE` | **Story Forge**: two teams build one story, a line each |
+| `/word-bomb`, `/word-bomb/CODE` | **Word Bomb**: pass the bomb with a word before it blows |
 | `/whos-talking` | **Who's Talking?**: the voice game (old `/?join=CODE` links redirect here) |
 | `/sign-in` | One player for every game |
 | `/admin` | Admins only |
@@ -98,7 +99,7 @@ modes `hum` and `story`. A room keeps to the game it was opened for.
   fire. At the end the whole legend is shown and can be read aloud.
 - **🔥 Streaks** (every Brain Clash room): win three rounds in a row and your team is on fire, +5 a round.
 - **Emoji reactions** float across every screen in the room.
-- **📺 Party screen** (every Brain Clash, Beat Drop and Story Forge room): the host opens it on a TV or laptop
+- **📺 Party screen** (every Brain Clash, Beat Drop, Story Forge and Word Bomb room): the host opens it on a TV or laptop
   that everyone can see. It shows a QR code to join, the teams filling up live, each question big enough to
   read across a room, the timer, the scores, the answer reveal, the reactions and the champion; Beat Drop hums
   play on its speaker. Players still answer on their phones. The screen needs no sign-in: it opens with a secret
@@ -106,6 +107,22 @@ modes `hum` and `story`. A room keeps to the game it was opened for.
   list). It also asks "time's up?" at each buzzer, so the match keeps moving even if every phone is locked.
 - **📤 Share the result:** the victory screen draws a 4:5 image of the final score (champion, both scores,
   rounds won, the star player, a link to play) for WhatsApp or Instagram, through the phone's share menu.
+
+## Word Bomb: say a word before it blows
+
+Also on Brain Clash's rooms (mode `bomb`). Each round shows a chunk of letters (ING, ACK, GHT…). One player
+holds the bomb and has to say or type a real word with the letters in it; a good word scores 5 and throws the
+bomb to the next player on the other team. The fuse is secret (about 20 seconds like every VOXPLAY clock, but never the
+same, and no countdown on any screen). Whoever holds it when it blows loses the round, and the other team takes a +15
+blast bonus. Each word counts once a game; at least 3 letters.
+
+**The dictionary** ([backend/app/words.py](backend/app/words.py)) is ENABLE, the public-domain list word games
+have long used (172,823 words, gzipped in `backend/app/data/words/`), plus `naija.txt`: Nigerian and African
+words it doesn't know (jollof, danfo, wahala, owambe…). `blocked.txt` keeps slurs and crude words off the
+party screen even though they're real words. A missed word is explained only to the player who sent it
+("“bango” isn't in our dictionary."); everyone else just sees that they missed. The 60 letter chunks (3 levels:
+Easy, Tricky, Nightmare) are in the question bank as kind `chunk`, each with example words a test checks
+against the dictionary.
 
 The songs and sparks are in the same question bank file (kinds `song` and `spark`): 61 songs in 3 playlists,
 36 sparks in 3 story worlds. The bank test checks every title (with and without "by <artist>") and every spark.
@@ -313,7 +330,7 @@ docker compose up -d api      # liveness back on
 docker compose run --rm api pytest -v
 ```
 
-There are 158 tests:
+There are 163 tests:
 - `test_matching.py`: cosine similarity, centroids, ranking, threshold/"unknown" decisions, margin rule, EER
 - `test_audio.py`: resampling, silence trimming, rejecting garbage and too-short audio
 - `test_voice_map.py`: PCA keeps similar voices close, voice twins, consistency
@@ -325,7 +342,9 @@ There are 158 tests:
   Association, late and replayed answers, the server clock, tie-breaker and draw, win score, rooms, team
   permissions, voice answers, the other team's hidden list, results saved, live WebSocket updates and reconnecting;
   streaks; Beat Drop (the secret song, hums, guesses, the hummer's bonus, a title said aloud flagged); Story Forge
-  (sparks, fires, copied lines flagged); the fair-play detector's signs, held points and who may decide
+  (sparks, fires, copied lines flagged); Word Bomb (the dictionary, Naija words, blocked words, passing, the
+  secret fuse, the explosion, the holder leaving, every chunk's examples); the fair-play detector's signs, held
+  points and who may decide
 - `test_modes.py`: silly lines and near-miss words, disguise, broken telephone (chains, drift, a player leaving
   mid-chain), humans vs AI ratings, twists and the double final, the replay (and clips deleted straight away when
   it's off), highlights, solo play (guess the voice, impersonate, disguise, kept out of the weekly cup)

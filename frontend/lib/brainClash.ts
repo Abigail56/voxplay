@@ -112,7 +112,26 @@ export const ROOM_GAMES: Record<BcGame, RoomGame> = {
     catsTitle: "Choose your world",
     startLabel: "Start the story",
   },
+  "word-bomb": {
+    id: "word-bomb",
+    title: "Word Bomb",
+    path: "/word-bomb",
+    mode: "bomb",
+    eyebrow: "A VOXPLAY word battle",
+    tagline: "Say a word before it blows.",
+    lede: "Three letters flash up. Whoever holds the bomb shouts or types a word with them in it, and the bomb flies to the other team. Nobody knows when the fuse runs out. Don't be holding it.",
+    art: "wordBomb",
+    howTitle: "How Word Bomb works",
+    how: [
+      { icon: "🔤", name: "The letters", art: "mode-word-association", rules: ["Every round shows a chunk of letters, like ANG.", "Holding the bomb? Say or type a real word with them: BANGLE.", "At least 3 letters; Naija words count (jollof, wahala, danfo)."] },
+      { icon: "💣", name: "Pass it", art: "mode-quick-fire", rules: ["A good word scores 5 and sends the bomb to the other team.", "Everyone gets a turn, in team order.", "Each word counts once a game: no repeats."] },
+      { icon: "💥", name: "Boom", art: "mode-team-battle", rules: ["The fuse is secret: around 20 seconds, never the same.", "Holding it when it blows? The other team gets +15.", "Three rounds in a row: your team is on fire, +5 a round."] },
+      { icon: "🤖", name: "Fair play", art: "mode-riddles", rules: ["The game checks every word against a 170,000-word dictionary.", "Looking words up in another app gets flagged.", "Rude words don't count: keep it friendly."] },
+    ],
+    catsTitle: "Pick your letters",
+    startLabel: "Light the fuse",
+  },
 };
 
-const EXTRA_MODES: Partial<Record<BcMode, string>> = { hum: "Beat Drop", story: "Story Forge" };
+const EXTRA_MODES: Partial<Record<BcMode, string>> = { hum: "Beat Drop", story: "Story Forge", bomb: "Word Bomb" };
 export const modeName = (m: BcMode) => BC_MODES.find((x) => x.id === m)?.name ?? EXTRA_MODES[m] ?? m;

@@ -139,7 +139,8 @@ async function draw(canvas: HTMLCanvasElement, room: BcRoom, site: string) {
     ctx.font = `700 34px ${SANS}`;
     ctx.fillText("⭐ STAR PLAYER", X, y);
     ctx.fillStyle = INK;
-    const line = `${star.name} · ${star.points} pts${room.game === "brain-clash" ? ` · ${star.correct} right` : ""}`;
+    const extra = room.game === "brain-clash" ? ` · ${star.correct} right` : room.game === "word-bomb" ? ` · ${star.correct} words` : "";
+    const line = `${star.name} · ${star.points} pts${extra}`;
     fit(ctx, line, inner, (px) => `800 italic ${px}px ${DISPLAY}`, 56, 30);
     ctx.fillText(line, X, y + 66);
     y += 130;

@@ -576,6 +576,7 @@ const SCENES: Partial<Record<ArtSlot, (props: SceneProps) => React.ReactElement>
   whosTalking: VoiceScene,
   beatDrop: BeatDropScene,
   storyForge: StoryForgeScene,
+  wordBomb: (p) => <IconScene {...p} id="word-bomb" hue="#c2410c" glow="#fde047" icon="💣" extras={["🔤", "💥"]} />,
   comingSoon: SoonScene,
   lobby: (p) => <ArenaScene {...p} label="Nova and Pulse wait in the arena for the match to start" />,
   victory: VictoryScene,

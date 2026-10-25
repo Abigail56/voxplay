@@ -1077,3 +1077,22 @@ picture.art-fill, .game-art picture { display: block; width: 100%; height: 100%;
   .ps-question, .ps-champion, .ps-team li, .ps-feed li, .ps-status.steal { animation: none; }
 }
 .screen-link { flex-basis: 100%; display: flex; flex-direction: column; gap: 6px; padding-top: 10px; border-top: 1px solid var(--border); }
+
+/* Word Bomb: the letters, and the bomb (its fuse is secret, so there's no countdown: it just fizzes) */
+.bomb-chunk { display: inline-block; font-family: var(--font-display), system-ui, sans-serif; font-style: italic; font-weight: 900;
+  font-size: clamp(48px, 14vw, 96px); letter-spacing: 0.12em; line-height: 1; color: #fde047; text-shadow: 0 0 28px rgb(253 224 71 / 0.45); }
+.bomb { position: relative; display: flex; justify-content: center; margin: 4px auto; width: 96px; height: 96px; }
+.bomb-body { font-size: 76px; line-height: 1; animation: bomb-wobble 0.9s ease-in-out infinite; transform-origin: 50% 70%; }
+.bomb-spark { position: absolute; top: 2px; right: 14px; width: 14px; height: 14px; border-radius: 50%;
+  background: radial-gradient(circle, #fff 0 25%, #fde047 35%, #f97316 60%, transparent 70%); animation: bomb-spark 0.25s steps(2) infinite; }
+.bomb.mine .bomb-body { animation-duration: 0.35s; filter: drop-shadow(0 0 18px rgb(239 68 68 / 0.9)); }
+@keyframes bomb-wobble { 0%, 100% { transform: rotate(-6deg); } 50% { transform: rotate(6deg) scale(1.04); } }
+@keyframes bomb-spark { 50% { transform: scale(1.6); opacity: 0.6; } }
+.ps-bomb-row { display: flex; align-items: center; justify-content: center; gap: 4vw; }
+.ps-chunk { font-size: clamp(64px, 14vw, 260px); letter-spacing: 0.12em; color: #fde047; text-shadow: 0 0 60px rgb(253 224 71 / 0.45); max-width: none; }
+.ps-bomb { width: min(24vh, 18vw); height: min(24vh, 18vw); animation: pop 0.4s ease-out; }
+.ps-bomb .bomb-body { font-size: min(20vh, 15vw); }
+.ps-bomb .bomb-spark { width: 3vh; height: 3vh; top: 0; right: 18%; }
+@media (prefers-reduced-motion: reduce) {
+  .bomb-body, .bomb-spark { animation: none; }
+}

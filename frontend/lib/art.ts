@@ -27,6 +27,7 @@ export type ArtSlot =
   | "defeat"
   | "beatDrop"
   | "storyForge"
+  | "wordBomb"
   | "whosTalking"
   | "comingSoon"
   | "empty"
@@ -70,6 +71,7 @@ export const ART: Record<ArtSlot, ArtFile> = {
   defeat: { file: `${BASE}/brain-clash/defeat.webp`, alt: "The captains, determined, ready for a rematch", position: "50% 30%" },
   beatDrop: { file: `${BASE}/brain-clash/beat-drop.webp`, alt: "A DJ hits the decks on a neon stage in front of a cheering crowd", position: "50% 28%" },
   storyForge: { file: `${BASE}/story-forge/story-forge.webp`, alt: "A storyteller writes in a glowing book as a castle and a dragon rise from its pages", position: "60% 30%" },
+  wordBomb: { file: `${BASE}/word-bomb/word-bomb.webp`, alt: "A cartoon bomb with a fizzing fuse bounces between two glowing teams", position: "50% 40%" },
   whosTalking: { file: `${BASE}/whos-talking/whos-talking.webp`, alt: "Two friends chat as a sound wave flows between them", position: "50% 35%" },
   comingSoon: { file: `${BASE}/states/coming-soon.webp`, alt: "A new challenger waits in the shadows", position: "50% 40%" },
   empty: { file: `${BASE}/states/no-games.webp`, alt: STATES["no-games"], position: "50% 50%" },
@@ -159,6 +161,9 @@ export const CATEGORY_LOOK: Record<string, { icon: string; extras: [string, stri
   story_lagos: { icon: "🚌", extras: ["🌆", "🍛"], hue: "#c2410c", glow: "#fde047", alt: "Lagos life: danfos, traffic and owambe" },
   story_legends: { icon: "🐢", extras: ["🌙", "🥁"], hue: "#1e3a8a", glow: "#fde68a", alt: "Myths and legends: tortoises, drums and the moon" },
   story_chaos: { icon: "🐐", extras: ["💍", "😱"], hue: "#a21caf", glow: "#fda4af", alt: "Comedy chaos: goats at weddings" },
+  bomb_easy: { icon: "🔤", extras: ["💣", "😎"], hue: "#0f766e", glow: "#fde047", alt: "Easy letters: ING, ER, AN" },
+  bomb_tricky: { icon: "💣", extras: ["🔥", "🔤"], hue: "#c2410c", glow: "#fde047", alt: "Tricky letters: ACK, IGH, OLD" },
+  bomb_nightmare: { icon: "💥", extras: ["💣", "😱"], hue: "#7f1d1d", glow: "#f472b6", alt: "Nightmare letters: GHT, DGE, ZZ" },
 };
 
 export function categoryFile(id: string): string {

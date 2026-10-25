@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { api, type MatchResult } from "@/lib/api";
 import { ROOM_GAMES } from "@/lib/brainClash";
 
-const ICON = { "brain-clash": "⚔️", "beat-drop": "🎵", "story-forge": "✍️" } as const;
+const ICON = { "brain-clash": "⚔️", "beat-drop": "🎵", "story-forge": "✍️", "word-bomb": "💣" } as const;
 
 function ago(iso: string, now: number) {
   const s = Math.max(0, Math.round((now - Date.parse(iso)) / 1000));

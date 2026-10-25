@@ -516,6 +516,7 @@ function canAnswer(room: BcRoom, me: BcPlayer | null): string | null {
   if (!me) return "You're watching this match.";
   if (!r || r.phase === "reveal") return "Round over.";
   const mode = room.settings.mode;
+  if (mode === "bomb") return r.performer_id === me.user_id ? null : `💣 ${performerName(room)} has the bomb. Get a word ready!`;
   if (mode === "hum") {
     if (r.phase === "hum") return `🎧 ${performerName(room)} is getting ready to hum…`;
     if (r.performer_id === me.user_id) return "🎵 Your hum is playing. No hints now!";
@@ -537,6 +538,7 @@ function Match({ room, me, offset, sound, onRoom }: { room: BcRoom; me: BcPlayer
   const deadline = r.phase === "reveal" ? r.reveal_until : r.closes_at;
   const left = useSecondsLeft(deadline, offset);
   const story = room.settings.mode === "story";
+  const bomb = room.settings.mode === "bomb";
   const total =
     r.phase === "reveal" ? (story ? 4 : 6) : r.phase === "steal" ? 10 : r.phase === "hum" ? 20 : r.phase === "vote" ? 12 : (Date.parse(r.closes_at) - Date.parse(r.opened_at)) / 1000;
   const [feedback, setFeedback] = useState<BcFeed | null>(null);
@@ -547,11 +549,17 @@ function Match({ room, me, offset, sound, onRoom }: { room: BcRoom; me: BcPlayer
   const lastTick = useRef(0);
   useEffect(() => {
     const s = Math.ceil(left);
-    if (r.phase !== "reveal" && s <= 5 && s > 0 && s !== lastTick.current) {
+    if (r.phase !== "reveal" && !bomb && s <= 5 && s > 0 && s !== lastTick.current) {
       lastTick.current = s;
       sfx("tick", sound);
     }
-  }, [left, r.phase, sound]);
+  }, [left, r.phase, sound, bomb]);
+
+  // Word Bomb: a sound when the bomb lands in your hands.
+  const holding = bomb && r.phase !== "reveal" && r.performer_id === me?.user_id;
+  useEffect(() => {
+    if (holding) sfx("turn", sound);
+  }, [holding, sound]);
 
   // When the clock runs out, ask the server to move on (it checks its own clock). A little jitter
   // so every phone in the room doesn't call at the same instant.
@@ -573,12 +581,15 @@ function Match({ room, me, offset, sound, onRoom }: { room: BcRoom; me: BcPlayer
     if (r.phase === "open" || r.phase === "hum") sfx("turn", sound);
     if (r.phase === "steal") announce(`Steal! ${teamName(room, r.turn_team!)} can take it.`, sound);
     if (r.phase === "vote" && r.line) announce(r.line, sound);
-    if (r.phase === "reveal") {
+    if (r.phase === "reveal" && bomb) {
+      sfx("zero", sound);
+      announce(`Boom! ${performerName(room)} was holding it.`, sound);
+    } else if (r.phase === "reveal") {
       const scored = Object.keys(r.scored);
       sfx(scored.length ? "score" : "zero", sound);
       announce(r.reveal ? `The answer: ${r.reveal.answer}` : "", sound);
     }
-  }, [r.number, r.phase, r.scored, r.reveal, r.turn_team, room, sound]);
+  }, [r.number, r.phase, r.scored, r.reveal, r.turn_team, room, sound, bomb]);
   useEffect(() => setFeedback(null), [r.number]);
 
   // A new flag makes a sound for everyone: the detector caught something.
@@ -610,7 +621,11 @@ function Match({ room, me, offset, sound, onRoom }: { room: BcRoom; me: BcPlayer
               ? `🥷 Steal! ${teamName(room, r.turn_team)} for half points`
               : r.phase === "hum"
                 ? `🎤 ${performerName(room)} hums for ${teamName(room, r.turn_team)}`
-                : story
+                : bomb
+                  ? performer
+                    ? "💣 YOU have the bomb! Quick, a word!"
+                    : `💣 ${performerName(room)} (${teamName(room, r.turn_team)}) has the bomb`
+                  : story
                   ? `✍️ ${performerName(room)} writes for ${teamName(room, r.turn_team)}`
                   : `${teamName(room, r.turn_team)}'s turn`}
           </p>
@@ -625,6 +640,10 @@ function Match({ room, me, offset, sound, onRoom }: { room: BcRoom; me: BcPlayer
               <span className="hint">Spark word</span> <span className="assoc-word">{r.question.spark}</span>
               <span className="bc-twist">{r.question.prompt}</span>
             </>
+          ) : bomb ? (
+            <>
+              <span className="hint">A word with</span> <span className="bomb-chunk">{r.question.prompt}</span>
+            </>
           ) : room.settings.mode === "hum" && performer && r.phase !== "reveal" ? (
             <>
               <span className="hint">🤫 Your secret song: hum it, don&apos;t say it!</span> <span className="assoc-word">{r.question.prompt}</span>
@@ -633,10 +652,19 @@ function Match({ room, me, offset, sound, onRoom }: { room: BcRoom; me: BcPlayer
             r.question.prompt
           )}
         </h2>
-        <div className={`bc-timer ${left <= 5 && r.phase !== "reveal" ? "urgent" : ""}`} role="timer" aria-label={`${Math.ceil(left)} seconds left`}>
-          <div className="bc-timer-fill" style={{ width: `${Math.min(100, (left / Math.max(1, total)) * 100)}%` }} />
-          <span>{r.phase === "reveal" ? `Next round in ${Math.ceil(left)}s` : left > 0 ? `${Math.ceil(left)}` : "Time!"}</span>
-        </div>
+        {bomb && r.phase !== "reveal" ? (
+          <div className={`bomb ${holding ? "mine" : ""}`} role="img" aria-label="The bomb is ticking. Nobody knows when it blows.">
+            <span className="bomb-body" aria-hidden>
+              💣
+            </span>
+            <span className="bomb-spark" aria-hidden />
+          </div>
+        ) : (
+          <div className={`bc-timer ${left <= 5 && r.phase !== "reveal" ? "urgent" : ""}`} role="timer" aria-label={`${Math.ceil(left)} seconds left`}>
+            <div className="bc-timer-fill" style={{ width: `${Math.min(100, (left / Math.max(1, total)) * 100)}%` }} />
+            <span>{r.phase === "reveal" ? `Next round in ${Math.ceil(left)}s` : left > 0 ? `${Math.ceil(left)}` : "Time!"}</span>
+          </div>
+        )}
 
         {r.question.kind === "list" && r.phase !== "reveal" && me && (
           <div className="found">
@@ -743,7 +771,10 @@ function HypeBurst({ room, me }: { room: BcRoom; me: BcPlayer | null }) {
   const mine = me && scorers.includes(me.team);
   const fire = scorers.find((t) => room.streaks[t] >= 3);
   const stole = room.feed.some((f) => f.round === r.number && f.verdict === "steal");
-  const text = !scorers.length
+  const boom = room.feed.find((f) => f.round === r.number && f.verdict === "boom");
+  const text = boom
+    ? `💥 BOOM! ${boom.player.toUpperCase()}`
+    : !scorers.length
     ? "MISSED IT!"
     : fire
       ? "ON FIRE! 🔥"
@@ -984,7 +1015,12 @@ function AnswerBox({ room, away, onAnswered }: { room: BcRoom; away: () => numbe
   return (
     <div className="bc-answer">
       {story && <p className="hint">Use the spark word &ldquo;{r.question.spark}&rdquo; in your line for +{r.question.points}. {r.question.prompt}</p>}
-      <ClipInput onClip={(clip) => send({ clip })} disabled={busy} allowUpload={false} label={story ? "🎙 Say your line" : "🎙 Speak your answer"} />
+      <ClipInput
+        onClip={(clip) => send({ clip })}
+        disabled={busy}
+        allowUpload={false}
+        label={story ? "🎙 Say your line" : r.question.kind === "chunk" ? "🎙 Shout your word" : "🎙 Speak your answer"}
+      />
       <form
         className="join"
         onSubmit={(e) => {
@@ -997,7 +1033,16 @@ function AnswerBox({ room, away, onAnswered }: { room: BcRoom; away: () => numbe
           onChange={(e) => setText(e.target.value)}
           onKeyDown={() => (firstKey.current ??= Date.now())}
           onPaste={() => (pasted.current = true)}
-          placeholder={story ? "…or type your line" : r.question.kind === "list" ? "Type answers, e.g. Ghana, Kenya" : "…or type your answer"}
+          placeholder={
+            story
+              ? "…or type your line"
+              : r.question.kind === "list"
+                ? "Type answers, e.g. Ghana, Kenya"
+                : r.question.kind === "chunk"
+                  ? "…or type your word"
+                  : "…or type your answer"
+          }
+          autoFocus={r.question.kind === "chunk"}
           aria-label={story ? "Your line" : "Your answer"}
           maxLength={story ? 300 : 200}
           autoComplete="off"
@@ -1019,7 +1064,11 @@ function FeedbackPop({ fb }: { fb: BcFeed }) {
     ? fb.points
       ? `Right, but the fair-play AI flagged it: ${fb.points} points on hold until it's decided.`
       : "The fair-play AI flagged this one for review."
-    : fb.verdict === "line"
+    : fb.note
+      ? fb.points
+        ? `${fb.note} +${fb.points}`
+        : fb.note
+      : fb.verdict === "line"
       ? fb.points
         ? `Spark used! +${fb.points}`
         : "In the story! (No spark word, no points.)"
@@ -1046,7 +1095,15 @@ function Reveal({ room }: { room: BcRoom }) {
   return (
     <div className="bc-reveal pop">
       <span className="hint">
-        {r.question.kind === "list" ? "Some answers that counted" : r.question.kind === "song" ? "The song was" : r.question.kind === "spark" ? "The spark word" : "The answer"}
+        {r.question.kind === "list"
+          ? "Some answers that counted"
+          : r.question.kind === "song"
+            ? "The song was"
+            : r.question.kind === "spark"
+              ? "The spark word"
+              : r.question.kind === "chunk"
+                ? "💥 The letters were"
+                : "The answer"}
       </span>
       <p className="bc-answer-text">{r.reveal?.answer}</p>
       {r.question.kind === "spark" && r.line && <p className="bc-line">&ldquo;{r.line}&rdquo;</p>}
@@ -1068,7 +1125,7 @@ function Reveal({ room }: { room: BcRoom }) {
 function Feed({ room }: { room: BcRoom }) {
   const items = room.feed.filter((f) => f.round === room.round?.number).slice(-6).reverse();
   if (!items.length) return null;
-  const icon = { correct: "✅", steal: "🥷", item: "✅", duplicate: "🔁", wrong: "❌", line: "✍️", streak: "🔥" };
+  const icon = { correct: "✅", steal: "🥷", item: "✅", duplicate: "🔁", wrong: "❌", line: "✍️", streak: "🔥", boom: "💥" };
   return (
     <section className="card bc-feed" aria-label="Answers this round">
       <ul>
@@ -1076,7 +1133,9 @@ function Feed({ room }: { room: BcRoom }) {
           <li key={`${f.user_id}-${i}-${f.said}`} className={`team-${f.team}`}>
             <span aria-hidden>{icon[f.verdict]}</span>
             <strong>{f.player}</strong>
-            <span className="said">{f.verdict === "streak" ? f.said : <>&ldquo;{f.said}&rdquo;</>}</span>
+            <span className="said">
+              {f.verdict === "streak" ? f.said : f.verdict === "boom" ? "was holding the bomb!" : f.said === "…" && room.settings.mode === "bomb" ? "missed" : <>&ldquo;{f.said}&rdquo;</>}
+            </span>
             {f.flag_id && <span className="flag-tag">⚠ review</span>}
             {f.points > 0 && <span className="pts">+{f.points}</span>}
           </li>
@@ -1128,7 +1187,7 @@ function Victory({ room, me, sound, onRoom }: { room: BcRoom; me: number; sound:
       </div>
       {mvp && mvp.points > 0 && (
         <p className="tagline">
-          ⭐ Star player: <strong>{mvp.name}</strong> with {mvp.points} points ({mvp.correct} right)
+          ⭐ Star player: <strong>{mvp.name}</strong> with {mvp.points} points ({mvp.correct} {room.game === "word-bomb" ? "words" : "right"})
         </p>
       )}
       <ShareCard room={room} />

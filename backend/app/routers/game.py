@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, WebSocket
 from sqlmodel import func, select, update
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from .. import brain_clash as bc
 from ..auth import CurrentUser, user_id_from_token
 from ..config import Settings, get_settings
 from ..db import get_session
@@ -55,7 +56,7 @@ async def stats(session: SessionDep, settings: SettingsDep) -> dict[str, int]:
     }
 
 
-GAME_FOR_MODE = {"battle": "brain-clash", "quickfire": "brain-clash", "namefast": "brain-clash", "association": "brain-clash", "hum": "beat-drop", "story": "story-forge"}
+GAME_FOR_MODE = bc.GAME_FOR_MODE
 
 
 @router.get("/results")

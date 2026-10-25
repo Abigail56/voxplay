@@ -1,7 +1,7 @@
 """Brain Clash rooms: create, join, pick teams, play, answer by voice or text.
 
-The same rooms run Beat Drop (mode "hum") and Story Forge (mode "story"); a room keeps to the game
-it was opened for.
+The same rooms run Beat Drop (mode "hum"), Story Forge (mode "story") and Word Bomb (mode "bomb");
+a room keeps to the game it was opened for.
 
 Rooms live in Redis like Who's Talking? rooms, and every change is published on `bc:<code>`,
 which the /ws WebSocket passes on as {"type": "brain_clash"}. Browsers then fetch the room again.
@@ -154,7 +154,7 @@ class RoomOut(BaseModel):
     winner: str | None
     finish_reason: str | None
     notice: str | None
-    game: str  # brain-clash | beat-drop | story-forge
+    game: str  # brain-clash | beat-drop | story-forge | word-bomb
     streaks: dict[str, int]
     flags: list[FlagOut]
     story: list[bc.StoryLine]
@@ -179,7 +179,8 @@ def out(room: bc.BrainClashRoom, viewer: int, online: set[int] = frozenset()) ->
         found = {t: [q.items[i][0] for i in r.found[t]] if over or (me and me.team == t) else [] for t in ("A", "B")}
         reveal = None
         if over:
-            more = [] if q.kind == "song" else [it[0] for i, it in enumerate(q.items) if i not in r.found["A"] + r.found["B"]][:12]
+            played = r.found["A"] + r.found["B"]
+            more = [] if q.kind == "song" else [it[0] for i, it in enumerate(q.items) if i not in played and it[0] not in room.used_words][:12]
             reveal = RevealOut(answer=q.answer, explanation=q.explanation, source=q.source, as_of=q.as_of, more=more)
         # Beat Drop: only the hummer sees the song until the reveal.
         secret = q.kind == "song" and not over and viewer != r.performer_id
@@ -195,7 +196,12 @@ def out(room: bc.BrainClashRoom, viewer: int, online: set[int] = frozenset()) ->
                 difficulty=q.difficulty,
                 prompt=prompt,
                 target=bc.list_target(q) if q.kind == "list" else None,
-                points=room.settings.scoring.list_item if q.kind == "list" else room.settings.scoring.spark if q.kind == "spark" else bc.question_points(room, q),
+                points=(
+                    room.settings.scoring.list_item if q.kind == "list"
+                    else room.settings.scoring.spark if q.kind == "spark"
+                    else room.settings.scoring.bomb_word if q.kind == "chunk"
+                    else bc.question_points(room, q)
+                ),
                 spark=q.answer if q.kind == "spark" else None,
             ),
             opened_at=r.opened_at,
@@ -358,7 +364,7 @@ def display_name(name: str | None, user: User) -> str:
 
 @router.get("/categories")
 async def categories(session: SessionDep, game: str = "brain-clash") -> list[dict]:
-    """A game's categories (brain-clash, beat-drop or story-forge) with how many active challenges each has for each mode."""
+    """A game's categories (brain-clash, beat-drop, story-forge or word-bomb) with how many active challenges each has for each mode."""
     if game not in bc.GAME_CATEGORIES:
         raise HTTPException(status.HTTP_404_NOT_FOUND, f"No game called {game}.")
     rows = (await session.exec(select(BrainClashQuestion.category, BrainClashQuestion.kind).where(BrainClashQuestion.active))).all()

@@ -53,12 +53,12 @@ from pydantic import BaseModel, Field
 from . import fairplay
 from .store import Store
 
-Mode = Literal["battle", "namefast", "quickfire", "association", "hum", "story"]
+Mode = Literal["battle", "namefast", "quickfire", "association", "hum", "story", "bomb"]
 TeamId = Literal["A", "B"]
 Status = Literal["lobby", "playing", "finished"]
 # hum: Beat Drop's hummer is recording. vote: Story Forge's fire votes on the new line.
 Phase = Literal["hum", "open", "steal", "vote", "reveal"]
-Verdict = Literal["correct", "wrong", "duplicate", "item", "steal", "line", "streak"]
+Verdict = Literal["correct", "wrong", "duplicate", "item", "steal", "line", "streak", "boom"]
 
 CATEGORIES = {
     "african_general": "African General Knowledge",
@@ -88,6 +88,11 @@ STORY_CATEGORIES = {
     "story_legends": "Myths and Legends",
     "story_chaos": "Comedy Chaos",
 }
+BOMB_CATEGORIES = {
+    "bomb_easy": "Easy Letters",
+    "bomb_tricky": "Tricky Letters",
+    "bomb_nightmare": "Nightmare Letters",
+}
 # Story Forge: the game writes the first line, so nobody faces a blank page.
 STORY_OPENERS = {
     "story_lagos": [
@@ -108,13 +113,15 @@ STORY_OPENERS = {
 }
 
 # Which game each mode belongs to, and the categories that game offers.
-GAME_FOR_MODE = {"battle": "brain-clash", "quickfire": "brain-clash", "namefast": "brain-clash", "association": "brain-clash", "hum": "beat-drop", "story": "story-forge"}
-GAME_CATEGORIES = {"brain-clash": CATEGORIES, "beat-drop": HUM_CATEGORIES, "story-forge": STORY_CATEGORIES}
-ALL_CATEGORIES = {**CATEGORIES, **HUM_CATEGORIES, **STORY_CATEGORIES}
-KIND_FOR_MODE = {"battle": "question", "quickfire": "question", "namefast": "list", "association": "association", "hum": "song", "story": "spark"}
+GAME_FOR_MODE = {"battle": "brain-clash", "quickfire": "brain-clash", "namefast": "brain-clash", "association": "brain-clash", "hum": "beat-drop", "story": "story-forge", "bomb": "word-bomb"}
+GAME_CATEGORIES = {"brain-clash": CATEGORIES, "beat-drop": HUM_CATEGORIES, "story-forge": STORY_CATEGORIES, "word-bomb": BOMB_CATEGORIES}
+ALL_CATEGORIES = {**CATEGORIES, **HUM_CATEGORIES, **STORY_CATEGORIES, **BOMB_CATEGORIES}
+KIND_FOR_MODE = {"battle": "question", "quickfire": "question", "namefast": "list", "association": "association", "hum": "song", "story": "spark", "bomb": "chunk"}
 # Every game runs on a 20-second clock by default: fast enough to keep the room shouting. The host can change it.
 ROUND_SECONDS = 20
 DEFAULT_SECONDS = {mode: ROUND_SECONDS for mode in KIND_FOR_MODE}
+# Word Bomb: the fuse is the round's seconds give or take this share, and nobody knows exactly when it blows.
+FUSE_SPREAD = 0.4
 DEFAULT_TEAM_NAMES = {"A": "Team Nova", "B": "Team Pulse"}
 
 MAX_TEAM_ATTEMPTS = 3  # Brain Battle: tries per team per question
@@ -151,10 +158,11 @@ class GameError(Exception):
 class Question(BaseModel):
     """One challenge in the bank. Beat Drop songs: `prompt` is what the hummer sees, `answer` the title,
     `items` the artists (["Wizkid", "Tems"]). Story Forge sparks: `answer` is the word every line must
-    use, `accepted` its other forms, `prompt` the twist for that round."""
+    use, `accepted` its other forms, `prompt` the twist for that round. Word Bomb chunks: `prompt` and
+    `answer` are the letters ("ANG"), `items` example words shown at the reveal."""
 
     id: str
-    kind: Literal["question", "list", "association", "song", "spark"]
+    kind: Literal["question", "list", "association", "song", "spark", "chunk"]
     category: str
     difficulty: Literal["easy", "medium", "hard"] = "medium"
     prompt: str
@@ -178,6 +186,8 @@ class Scoring(BaseModel):
     hum_bonus: int = Field(default=5, ge=0, le=50)  # Beat Drop: the hummer's team, when the song is guessed
     spark: int = Field(default=10, ge=0, le=100)  # Story Forge: a line that uses the spark word
     fire: int = Field(default=3, ge=0, le=50)  # Story Forge: each 🔥 from the other team
+    bomb_word: int = Field(default=5, ge=0, le=50)  # Word Bomb: each word that passes the bomb on
+    blast: int = Field(default=15, ge=0, le=100)  # Word Bomb: the team NOT holding the bomb when it blows
 
 
 class RoomSettings(BaseModel):
@@ -411,6 +421,7 @@ class FeedItem(BaseModel):
     points: int = 0
     items: list[str] = []  # Name It Fast: what was found
     flag_id: str | None = None  # held for the host to review (see Flag)
+    note: str | None = None  # Word Bomb: why a word didn't count ("“bango” isn't in our dictionary.")
 
 
 class Flag(BaseModel):
@@ -489,6 +500,8 @@ class BrainClashRoom(BaseModel):
     flags: list[Flag] = []
     story: list[StoryLine] = []  # Story Forge: the story so far
     opener: str | None = None  # Story Forge: the game's first line
+    used_words: list[str] = []  # Word Bomb: each word counts once a game
+    bomb_turns: dict[str, int] = {"A": 0, "B": 0}  # Word Bomb: how often each team has held the bomb (for its rotation)
     finish_reason: str | None = None
     notice: str | None = None  # e.g. "Only 6 questions match those categories"
     # The party screen (a TV or laptop everyone watches) opens the room with this instead of signing in.
@@ -567,6 +580,7 @@ def start_game(room: BrainClashRoom, pool: list[Question], at: datetime | None =
         p.points = p.correct = 0
     room.feed, room.history, room.winner, room.finish_reason = [], [], None, None
     room.streaks, room.flags, room.story = {"A": 0, "B": 0}, [], []
+    room.used_words, room.bomb_turns = [], {"A": 0, "B": 0}
     if room.settings.mode == "story":
         room.opener = random.SystemRandom().choice(STORY_OPENERS.get(plan[0].category) or STORY_OPENERS["story_chaos"])
     room.round_index = 0
@@ -580,14 +594,25 @@ def performer_for(room: BrainClashRoom, number: int) -> Player:
     return members[((number - 1) // 2) % len(members)]
 
 
-def open_round(room: BrainClashRoom, at: datetime, tiebreak: bool = False) -> None:
+def next_bomber(room: BrainClashRoom, team: TeamId) -> Player:
+    """Word Bomb: the next player on this team to get the bomb (everyone gets a go, in join order)."""
+    members = room.team(team)
+    turn = room.bomb_turns.get(team, 0)
+    room.bomb_turns[team] = turn + 1
+    return members[turn % len(members)]
+
+
+def open_round(room: BrainClashRoom, at: datetime, tiebreak: bool = False, rng: random.Random | None = None) -> None:
     number = room.round_index + 1
     s = room.settings
     turn: TeamId | None = None
     if s.mode == "battle" and not tiebreak:
         turn = "A" if number % 2 else "B"
     performer = performer_for(room, number) if s.mode in ("hum", "story") else None
-    seconds = HUM_SECONDS if s.mode == "hum" else s.round_seconds()
+    seconds: float = HUM_SECONDS if s.mode == "hum" else s.round_seconds()
+    if s.mode == "bomb":
+        performer = next_bomber(room, "A" if number % 2 else "B")  # the teams take turns to start with the bomb
+        seconds *= (rng or random.SystemRandom()).uniform(1 - FUSE_SPREAD, 1 + FUSE_SPREAD)
     room.round = Round(
         number=number,
         question=room.plan[room.round_index],
@@ -624,6 +649,10 @@ def eligible(room: BrainClashRoom, player: Player) -> None:
             raise GameError("The line is in. Fire at it if you love it!")
         if player.user_id != r.performer_id:
             raise GameError(f"It's {room.performer().name}'s line.", 403)
+        return
+    if mode == "bomb":
+        if player.user_id != r.performer_id:
+            raise GameError(f"{room.performer().name} has the bomb!", 403)
         return
     if mode == "hum" and r.turn_team and player.team != r.turn_team:
         raise GameError(f"It's {room.settings.team_names[r.turn_team]}'s turn to guess.", 403)
@@ -710,6 +739,8 @@ def submit_answer(
     item = FeedItem(round=r.number, team=team, player=player.name, user_id=user_id, said=said, verdict="wrong")
     if mode == "story":
         return _submit_line(room, player, said, received, signals)
+    if mode == "bomb":
+        return _submit_word(room, player, said, received, signals)
     close = False
     round_flag = room.flag(r.flag_id)  # Beat Drop: a hum under review holds the whole round's points
 
@@ -822,6 +853,48 @@ def _submit_line(room: BrainClashRoom, player: Player, line: str, at: datetime, 
     return item
 
 
+def _submit_word(room: BrainClashRoom, player: Player, said: str, at: datetime, signals: fairplay.Signals) -> FeedItem:
+    """Word Bomb: a real word with the letters scores and passes the bomb to the other team. A miss keeps
+    it in your hands. The answering player is told why a word didn't count; the room only sees that it missed,
+    so nothing typed in anger reaches the party screen."""
+    from . import words  # the dictionary loads on first use, not at import
+
+    r = room.round
+    result = words.check(said, r.question.answer, room.used_words)
+    item = FeedItem(round=r.number, team=player.team, player=player.name, user_id=player.user_id, said=said,
+                    verdict=result.verdict, note=result.note)
+    if result.word:
+        item.said = result.word
+        item.points = room.settings.scoring.bomb_word
+        room.used_words.append(result.word)
+        flag = raise_flag(room, player, "answer", said, fairplay.answer_signs(signals, said, True, r.opened_at, at, None))
+        item.flag_id = flag.id if flag else None
+        book(room, player.team, player, item.points, flag)
+        r.scored[player.team] = r.scored.get(player.team, 0) + item.points
+        player.correct += 1
+        holder = next_bomber(room, other(player.team))
+        r.performer_id, r.turn_team = holder.user_id, holder.team
+        room.feed = [*room.feed, item][-FEED_SIZE:]
+    else:
+        room.feed = [*room.feed, item.model_copy(update={"said": "…", "note": None})][-FEED_SIZE:]
+    return item
+
+
+def _explode(room: BrainClashRoom, at: datetime) -> None:
+    """Word Bomb: the fuse ran out. Whoever holds the bomb loses the round; the other team takes the blast bonus."""
+    r = room.round
+    holder = room.performer()
+    if holder is None:
+        return
+    winner = other(holder.team)
+    pts = room.settings.scoring.blast
+    book(room, winner, None, pts, None)
+    r.scored[winner] = r.scored.get(winner, 0) + pts
+    r.winner_team = winner
+    boom = FeedItem(round=r.number, team=holder.team, player=holder.name, user_id=holder.user_id, said="💥", verdict="boom")
+    room.feed = [*room.feed, boom][-FEED_SIZE:]
+
+
 def fire(room: BrainClashRoom, user_id: int, round_number: int) -> None:
     """Story Forge: someone on the other team loves the line. Each fire scores for the writer's team."""
     r = room.round
@@ -893,7 +966,9 @@ def _streaks(room: BrainClashRoom) -> None:
     """Three rounds won in a row and a team is on fire: +STREAK_BONUS for every round it keeps winning."""
     r = room.round
     for team in ("A", "B"):
-        if r.scored.get(team):
+        # Word Bomb: both teams score words in a round; the round goes to the team that wasn't left holding it.
+        won = r.winner_team == team if room.settings.mode == "bomb" else r.scored.get(team)
+        if won:
             room.streaks[team] = room.streaks.get(team, 0) + 1
             if room.streaks[team] >= STREAK_AT:
                 book(room, team, None, STREAK_BONUS, room.flag(r.flag_id))
@@ -914,6 +989,8 @@ def advance(room: BrainClashRoom, at: datetime, by_host: bool = False) -> None:
             raise GameError("Not yet!")
         if r.phase == "open" and room.settings.mode in ("battle", "hum") and r.winner_team is None and _start_steal(room, at):
             return
+        if room.settings.mode == "bomb":
+            _explode(room, at)
         close_round(room, at)
         return
     if at < r.reveal_until and not by_host:
@@ -949,7 +1026,12 @@ def finish(room: BrainClashRoom, reason: str) -> None:
 
 
 def remove_player(room: BrainClashRoom, user_id: int) -> None:
+    leaving = room.player(user_id)
     room.players = [p for p in room.players if p.user_id != user_id]
+    r = room.round
+    if room.status == "playing" and room.settings.mode == "bomb" and r and r.performer_id == user_id and leaving and room.team(leaving.team):
+        holder = next_bomber(room, leaving.team)  # you can't run off with the bomb: a teammate catches it
+        r.performer_id = holder.user_id
     if room.host_id == user_id and room.players:
         room.host_id = room.players[0].user_id  # the next person in becomes host
     if room.status == "playing" and (not room.team("A") or not room.team("B")):

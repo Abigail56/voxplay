@@ -14,6 +14,7 @@ const LINKS = [
   { href: "/brain-clash", label: "Brain Clash" },
   { href: "/beat-drop", label: "Beat Drop" },
   { href: "/story-forge", label: "Story Forge" },
+  { href: "/word-bomb", label: "Word Bomb" },
   { href: "/whos-talking", label: "Who's Talking?" },
 ];
 
