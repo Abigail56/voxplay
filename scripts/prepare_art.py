@@ -6,8 +6,9 @@ folder, then run:
 
     python scripts/prepare_art.py ~/Downloads/voxplay-art
 
-Each image is resized to its target width (never enlarged), cropped to its aspect ratio from the
-centre (or kept as it is when it already matches), saved as WebP and written to
+Scenes keep their whole picture (the site frames them with CSS object-position, so a square image
+works in a wide slot) and are only scaled down so their longer side fits the target size. Portraits
+and avatars are cropped square from the upper centre. Everything is saved as WebP and written to
 frontend/public/images/voxplay/... Rebuild the site afterwards: the new images replace the drawn
 scenes by themselves. Needs Pillow (`pip install pillow`); it's a tool for you, not a site dependency.
 """
@@ -22,11 +23,11 @@ from PIL import Image, ImageOps
 PUBLIC = Path(__file__).resolve().parents[1] / "frontend" / "public" / "images" / "voxplay"
 
 # asset name -> (folder, width, aspect ratio w/h, WebP quality)
-SCENE = (1920, 16 / 9, 80)
+SCENE = (1600, 16 / 9, 80)
 TILE = (1200, 16 / 10, 78)
 STATE = (1000, 4 / 3, 78)
 ASSETS: dict[str, tuple[str, int, float, int]] = {
-    "voxplay-hero": ("hero", 2400, 16 / 9, 80),
+    "voxplay-hero": ("hero", 2000, 16 / 9, 80),
     "voxplay-hero-mobile": ("hero", 1080, 4 / 5, 80),
     "arena": ("brain-clash", *SCENE),
     "team-versus": ("brain-clash", *SCENE),
@@ -47,11 +48,11 @@ ASSETS: dict[str, tuple[str, int, float, int]] = {
 
 def fit(img: Image.Image, width: int, ratio: float) -> Image.Image:
     img = ImageOps.exif_transpose(img).convert("RGB")
-    if abs(img.width / img.height - ratio) > 0.02:  # crop to the ratio, keeping the centre
-        img = ImageOps.fit(img, (img.width, round(img.width / ratio)) if img.width / img.height < ratio else (round(img.height * ratio), img.height), centering=(0.5, 0.4))
-    if img.width > width:
-        img = img.resize((width, round(width / ratio)), Image.LANCZOS)
-    return img
+    if ratio == 1.0:  # portraits and avatars must be square for round frames
+        side = min(img.size)
+        return ImageOps.fit(img, (min(side, width), min(side, width)), Image.LANCZOS, centering=(0.5, 0.3))
+    scale = min(1.0, width / max(img.size))  # never enlarged
+    return img.resize((round(img.width * scale), round(img.height * scale)), Image.LANCZOS) if scale < 1 else img
 
 
 def main(inbox: Path) -> None:
