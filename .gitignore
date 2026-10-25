@@ -9,3 +9,8 @@ data/samples/
 dist/
 *.tsbuildinfo
 backups/
+# Source artwork before scripts/prepare_art.py turns it into WebP
+/bomb_easy.png
+/bomb_nightmare.png
+/bomb_tricky.png
+/word-bomb.png
