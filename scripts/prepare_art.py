@@ -35,6 +35,7 @@ ASSETS: dict[str, tuple[str, int, float, int]] = {
     "defeat": ("brain-clash", *SCENE),
     "beat-drop": ("brain-clash", *SCENE),
     "story-forge": ("story-forge", *SCENE),
+    "word-bomb": ("word-bomb", *SCENE),
     "whos-talking": ("whos-talking", *SCENE),
     **{m: ("game-modes", *TILE) for m in (
         "african-knowledge", "music-challenge", "culture-challenge", "word-association",
@@ -44,7 +45,7 @@ ASSETS: dict[str, tuple[str, int, float, int]] = {
         "african_general", "nigerian_general", "african_music", "nigerian_entertainment", "african_history",
         "current_affairs", "african_football", "animals_nature", "african_food", "languages", "pidgin",
         "african_movies", "riddles", "word_challenges", "everyday", "funny", "hum_afrobeats", "hum_amapiano",
-        "hum_classics", "story_lagos", "story_legends", "story_chaos",
+        "hum_classics", "story_lagos", "story_legends", "story_chaos", "bomb_easy", "bomb_tricky", "bomb_nightmare",
     )},
     **{s: ("states", *STATE) for s in ("searching", "waiting", "empty-room", "creating-room", "no-games", "reconnecting", "coming-soon")},
     **{c: ("characters", 1024, 1.0, 82) for c in ("nova", "pulse", "zuri", "ayo")},
