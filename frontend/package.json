@@ -3,10 +3,13 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "predev": "node scripts/scan-art.mjs",
     "dev": "next dev -p 3010",
+    "prebuild": "node scripts/scan-art.mjs",
     "build": "next build",
     "start": "next start -p 3010",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "art": "node scripts/scan-art.mjs"
   },
   "dependencies": {
     "leaflet": "1.9.4",

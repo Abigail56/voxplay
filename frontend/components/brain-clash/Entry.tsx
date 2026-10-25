@@ -5,9 +5,10 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { api, type BcCategory, type BcGame, type BcMode } from "@/lib/api";
-import { BC_MODES, ROOM_GAMES } from "@/lib/brainClash";
+import { BC_MODES, CATEGORY_ART, ROOM_GAMES } from "@/lib/brainClash";
 import { useAuthStore } from "@/store/useAuthStore";
 
+import { ArtTile } from "../art/ArtTile";
 import { Art } from "../art/Scenes";
 
 /** /brain-clash, /beat-drop and /story-forge: what the game is, and the way in (create a room, or join one with a code). */
@@ -157,19 +158,15 @@ export function GameEntry({ game }: { game: BcGame }) {
           <p className="eyebrow">How to play</p>
           <h2 id="how-bc">{g.howTitle}</h2>
         </div>
-        <div className="feature-grid">
+        <div className="art-tile-grid">
           {g.how.map((m) => (
-            <div key={m.name} className="feature">
-              <span className="feature-icon" aria-hidden>
-                {m.icon}
-              </span>
-              <h3>{m.name}</h3>
+            <ArtTile key={m.name} slot={m.art} title={m.name} icon={m.icon}>
               <ul className="bc-rules">
                 {m.rules.map((r) => (
                   <li key={r}>{r}</li>
                 ))}
               </ul>
-            </div>
+            </ArtTile>
           ))}
         </div>
         {game === "brain-clash" && (
@@ -187,11 +184,12 @@ export function GameEntry({ game }: { game: BcGame }) {
           <p className="eyebrow">Categories</p>
           <h2 id="cats-bc">{g.catsTitle}</h2>
         </div>
-        <ul className="cat-grid">
+        <ul className="art-tile-grid small">
           {cats.map((c) => (
             <li key={c.id}>
-              <strong>{c.name}</strong>
-              <span className="hint">{Object.values(c.counts).reduce((a, b) => a + (b ?? 0), 0)} challenges</span>
+              <ArtTile slot={`mode-${CATEGORY_ART[c.id] ?? "general-knowledge"}`} title={c.name} size="small">
+                <span className="hint">{Object.values(c.counts).reduce((a, b) => a + (b ?? 0), 0)} challenges</span>
+              </ArtTile>
             </li>
           ))}
         </ul>

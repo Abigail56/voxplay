@@ -13,7 +13,7 @@ from ..auth import CurrentUser, user_id_from_token
 from ..config import Settings, get_settings
 from ..db import get_session
 from ..demo import is_active
-from ..models import GamePlay, Speaker, User, VoiceSample
+from ..models import BrainClashResult, GamePlay, Speaker, User, VoiceSample
 from ..schemas import (
     DashboardOut,
     DashboardPlay,
@@ -39,6 +39,20 @@ async def forget_old_locations(session: AsyncSession, settings: Settings) -> Non
     cutoff = datetime.now(timezone.utc) - timedelta(days=settings.location_retention_days)
     await session.exec(update(GamePlay).where(GamePlay.created_at < cutoff).values(lat=None, lon=None))
     await session.commit()
+
+
+@router.get("/stats")
+async def stats(session: SessionDep, settings: SettingsDep) -> dict[str, int]:
+    """Public live numbers for the landing page: players online now, players in all, matches and turns played.
+    Real counts only (no names), so the site never shows made-up activity."""
+    since = datetime.now(timezone.utc) - timedelta(seconds=settings.online_seconds)
+    count = lambda q: session.scalar(q)  # noqa: E731
+    return {
+        "online": await count(select(func.count()).select_from(User).where(User.last_seen_at > since)) or 0,
+        "players": await count(select(func.count()).select_from(User)) or 0,
+        "matches": await count(select(func.count()).select_from(BrainClashResult)) or 0,
+        "turns": await count(select(func.count()).select_from(GamePlay)) or 0,
+    }
 
 
 @router.get("/dashboard", response_model=DashboardOut)

@@ -3,7 +3,7 @@
 // skies, manga speed lines, sparkles and a glowing portal. Motion comes from CSS classes (art-float,
 // art-spin, art-pulse, art-twinkle), which reduced-motion turns off.
 
-import { ART, type ArtSlot } from "@/lib/art";
+import { ART, artSrc, type ArtSlot } from "@/lib/art";
 
 import { Mystery, Nova, Pulse } from "./Characters";
 
@@ -173,10 +173,14 @@ export function NexusScene({ className }: SceneProps) {
       <Aura cx={610} cy={250} r={150} color="#38bdf8" />
       <Aura cx={300} cy={290} r={170} color="#c084fc" />
       <g transform="translate(424 40) scale(0.95)">
-        <Pulse id="nx" />
+        <g className="art-breathe late">
+          <Pulse id="nx" />
+        </g>
       </g>
       <g transform="translate(84 44) scale(1.1)">
-        <Nova id="nx" />
+        <g className="art-breathe">
+          <Nova id="nx" />
+        </g>
       </g>
       <Sparkle x={120} y={120} s={16} color="#fde68a" twinkle />
       <Sparkle x={730} y={90} s={12} color="#fff" twinkle />
@@ -210,10 +214,14 @@ export function ArenaScene({ className, label = "Nova and Pulse face off on a sp
       <Aura cx={264} cy={230} r={110} color="#f0abfc" />
       <Aura cx={536} cy={230} r={110} color="#7dd3fc" />
       <g transform="translate(112 64) scale(0.74)">
-        <Nova id="ar" />
+        <g className="art-breathe">
+          <Nova id="ar" />
+        </g>
       </g>
       <g transform="translate(392 60) scale(0.74)">
-        <Pulse id="ar" />
+        <g className="art-breathe late">
+          <Pulse id="ar" />
+        </g>
       </g>
       {/* the slash between the two halves */}
       <path d={`M466 -10 L478 -10 L338 ${H + 10} L326 ${H + 10} Z`} fill="#fff" opacity={0.9} />
@@ -261,7 +269,9 @@ export function VoiceScene({ className }: SceneProps) {
       <text x={720} y={300} fontSize={36} fill="#a5f3fc" className="art-float slow">♫</text>
       <Aura cx={250} cy={250} r={140} color="#fdf4ff" />
       <g transform="translate(90 40) scale(0.8)">
-        <Nova id="vs" mood="sing" />
+        <g className="art-breathe">
+          <Nova id="vs" mood="sing" />
+        </g>
       </g>
       <Sparkle x={470} y={70} s={14} color="#fff" twinkle />
       <Sparkle x={60} y={80} s={10} color="#fde68a" />
@@ -377,7 +387,9 @@ export function BeatDropScene({ className }: SceneProps) {
         return <rect key={i} x={i * 20 + 2} y={H - h} width={14} height={h} rx={3} fill={i % 3 ? "#22d3ee" : "#f472b6"} opacity={0.75} className={i % 4 ? undefined : "art-pulse"} />;
       })}
       <g transform="translate(244 56) scale(0.78)">
-        <Pulse id="bd" />
+        <g className="art-breathe late">
+          <Pulse id="bd" />
+        </g>
       </g>
       {/* "hmm hmm" bubble and notes */}
       <g className="art-float">
@@ -430,7 +442,9 @@ export function StoryForgeScene({ className }: SceneProps) {
       <path d="M0 330 C140 300 260 340 400 320 C540 300 660 340 800 315 L800 400 L0 400 Z" fill="#0b0820" />
       <Aura cx={290} cy={250} r={130} color="#c084fc" />
       <g transform="translate(130 56) scale(0.76)">
-        <Nova id="sf" />
+        <g className="art-breathe">
+          <Nova id="sf" />
+        </g>
       </g>
       {/* the floating book */}
       <g className="art-float">
@@ -470,7 +484,70 @@ export function StoryForgeScene({ className }: SceneProps) {
   );
 }
 
-const SCENES: Record<ArtSlot, (props: SceneProps) => React.ReactElement> = {
+/** The match is lost, not the war: dusk-blue light, both captains steady, a spark of the next fight. */
+export function DefeatScene({ className }: SceneProps) {
+  const W = 800;
+  const H = 420;
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid slice" className={className} role="img" aria-label="Nova and Pulse, determined, ready for a rematch">
+      <defs>
+        <SoftFilter />
+      </defs>
+      <Sky id="df" w={W} h={H} colors={["#020617", "#1e3a8a", "#4c1d95"]} seed={91} />
+      <SpeedLines cx={400} cy={210} color="#93c5fd" opacity={0.08} count={30} seed={4} />
+      <Skyline y={360} w={W} color="#0b1033" seed={21} />
+      <Aura cx={264} cy={240} r={110} color="#818cf8" />
+      <Aura cx={536} cy={240} r={110} color="#38bdf8" />
+      <g transform="translate(112 74) scale(0.72)">
+        <Nova id="df" />
+      </g>
+      <g transform="translate(392 70) scale(0.72)">
+        <Pulse id="df" />
+      </g>
+      <path d="M408 120 L380 190 L402 190 L390 250 L430 170 L406 170 L420 120 Z" fill="#93c5fd" opacity={0.8} className="art-pulse" />
+      <Sparkle x={150} y={80} s={10} color="#bfdbfe" twinkle />
+      <Sparkle x={660} y={110} s={8} color="#fff" twinkle />
+    </svg>
+  );
+}
+
+const MODE_LOOK: Record<string, { hue: string; glow: string; icon: string }> = {
+  "african-knowledge": { hue: "#7c3aed", glow: "#fbbf24", icon: "🌍" },
+  "music-challenge": { hue: "#db2777", glow: "#22d3ee", icon: "🎵" },
+  "culture-challenge": { hue: "#b45309", glow: "#f472b6", icon: "🥁" },
+  "word-association": { hue: "#0e7490", glow: "#a78bfa", icon: "🔗" },
+  riddles: { hue: "#4c1d95", glow: "#c084fc", icon: "🧩" },
+  "quick-fire": { hue: "#be123c", glow: "#fde047", icon: "⚡" },
+  "general-knowledge": { hue: "#1d4ed8", glow: "#67e8f9", icon: "💡" },
+  "team-battle": { hue: "#6d28d9", glow: "#38bdf8", icon: "⚔️" },
+};
+
+/** A game-mode tile's stand-in until its painting arrives: a coloured burst with the mode's symbol. */
+export function ModeScene({ className, mode }: SceneProps & { mode: string }) {
+  const look = MODE_LOOK[mode] ?? MODE_LOOK["general-knowledge"];
+  const W = 600;
+  const H = 400;
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid slice" className={className} aria-hidden>
+      <defs>
+        <radialGradient id={`md-${mode}`} cx="0.5" cy="0.45" r="0.7">
+          <stop offset="0" stopColor={look.glow} stopOpacity="0.55" />
+          <stop offset="0.45" stopColor={look.hue} />
+          <stop offset="1" stopColor="#0a0819" />
+        </radialGradient>
+      </defs>
+      <rect width={W} height={H} fill={`url(#md-${mode})`} />
+      <SpeedLines cx={300} cy={180} color="#fff" opacity={0.14} count={30} seed={mode.length * 7} />
+      <text x={300} y={225} textAnchor="middle" fontSize={130} className="art-float">
+        {look.icon}
+      </text>
+      <Sparkle x={120} y={90} s={12} color="#fff" twinkle />
+      <Sparkle x={480} y={300} s={10} color={look.glow} twinkle />
+    </svg>
+  );
+}
+
+const SCENES: Partial<Record<ArtSlot, (props: SceneProps) => React.ReactElement>> = {
   hero: NexusScene,
   brainClash: ArenaScene,
   whosTalking: VoiceScene,
@@ -479,13 +556,33 @@ const SCENES: Record<ArtSlot, (props: SceneProps) => React.ReactElement> = {
   comingSoon: SoonScene,
   lobby: (p) => <ArenaScene {...p} label="Nova and Pulse wait in the arena for the match to start" />,
   victory: VictoryScene,
+  defeat: DefeatScene,
   empty: SoonScene,
 };
 
-/** One artwork slot: the image set in lib/art.ts if there is one, otherwise its SVG scene. */
-export function Art({ slot, className }: { slot: ArtSlot; className?: string }) {
-  const image = ART[slot];
-  if (image) return <img src={image.src} alt={image.alt} className={className} loading="lazy" decoding="async" />;
-  const Scene = SCENES[slot];
+/** One artwork slot: its image when the file exists (lib/art.ts), otherwise its drawn SVG scene.
+ *  `priority` loads it straight away (the hero); everything else loads lazily. */
+export function Art({ slot, className, priority }: { slot: ArtSlot; className?: string; priority?: boolean }) {
+  const meta = ART[slot];
+  const src = artSrc(meta.file);
+  if (src) {
+    const mobile = artSrc(meta.mobile);
+    return (
+      <picture className={className}>
+        {mobile && <source media="(max-width: 640px)" srcSet={mobile} />}
+        <img
+          src={src}
+          alt={meta.alt}
+          className="art-img"
+          style={{ objectPosition: meta.position }}
+          loading={priority ? "eager" : "lazy"}
+          fetchPriority={priority ? "high" : "auto"}
+          decoding="async"
+        />
+      </picture>
+    );
+  }
+  if (slot.startsWith("mode-")) return <ModeScene className={className} mode={slot.slice(5)} />;
+  const Scene = SCENES[slot] ?? SoonScene;
   return <Scene className={className} />;
 }

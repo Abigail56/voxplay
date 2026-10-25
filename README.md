@@ -21,8 +21,17 @@ for headings and Nunito for text (both SIL OFL, bundled), and two cel-shaded mas
 **Nova** and **Pulse**, the Brain Clash captains (`frontend/components/art/Characters.tsx`). They star in the scenes
 in `frontend/components/art/Scenes.tsx`: the Nexus portal at dusk, a fighting-game VS screen, Nova singing for
 Who's Talking?, and the victory podium.
-Every artwork spot is a named slot in `frontend/lib/art.ts`: put a licensed image in `frontend/public/art/` and
-set its path there to replace a scene, no other code changes needed.
+Every artwork spot is a named slot in `frontend/lib/art.ts` with its file path under
+`frontend/public/images/voxplay/`. **To add painted art**, generate it with the prompts in
+[docs/ART_PROMPTS.md](docs/ART_PROMPTS.md) (a style guide, a four-character bible: Nova, Pulse, Zuri, DJ Ayo, and
+every image's size, crop and path), run `python scripts/prepare_art.py <folder>` to resize and compress it to
+WebP, and rebuild. `frontend/scripts/scan-art.mjs` runs before every build and lists the files that exist, so a
+slot shows its image only when it's really there (never a broken link) and its drawn scene otherwise.
+
+Every game runs on a **20-second clock** by default (the host can change it). A match opens with a VS splash,
+each round with a "ROUND n" flash, and every reveal with a hype burst ("YES!", "STOLEN!", "ON FIRE!"); the losing
+team gets its own defeat screen. The landing page shows real live numbers from `GET /stats` (players online,
+players, matches played) and the recurring cast.
 
 ## Brain Clash: two teams, one battle, one champion
 
@@ -289,7 +298,7 @@ docker compose up -d api      # liveness back on
 docker compose run --rm api pytest -v
 ```
 
-There are 150 tests:
+There are 152 tests:
 - `test_matching.py`: cosine similarity, centroids, ranking, threshold/"unknown" decisions, margin rule, EER
 - `test_audio.py`: resampling, silence trimming, rejecting garbage and too-short audio
 - `test_voice_map.py`: PCA keeps similar voices close, voice twins, consistency

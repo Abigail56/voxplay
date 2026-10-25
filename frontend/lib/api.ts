@@ -455,6 +455,8 @@ export const api = {
     return request<DailyState>("/daily", { method: "POST", body: form });
   },
   leaderboards: () => request<Leaderboards>("/leaderboards"),
+  /** Public, real counts for the landing page. */
+  stats: () => request<{ online: number; players: number; matches: number; turns: number }>("/stats"),
   startRoom: (code: string) => request<Room>(`/rooms/${encodeURIComponent(code)}/start`, { method: "POST" }),
   admin: {
     overview: () => request<AdminOverview>("/admin/overview"),

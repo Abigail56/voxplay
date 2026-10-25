@@ -136,10 +136,10 @@ def test_hard_questions_score_more_and_time_runs_out():
     assert bc.submit_answer(r, 1, "accra", 1, sec(3)).points == 20
     bc.advance(r, sec(3), by_host=True)
     with pytest.raises(bc.GameError, match="Time's up"):
-        bc.submit_answer(r, 2, "accra", 2, sec(3 + 31))  # after the 30 s round (and its grace)
+        bc.submit_answer(r, 2, "accra", 2, sec(3 + 21))  # after the 20 s round (and its grace)
     with pytest.raises(bc.GameError, match="Not yet"):
-        bc.advance(r, sec(3 + 20))
-    bc.advance(r, sec(3 + 32))
+        bc.advance(r, sec(3 + 15))
+    bc.advance(r, sec(3 + 22))
     assert r.round.phase == "steal" and r.round.turn_team == "A"  # nobody answered: A gets a steal
     bc.advance(r, r.round.closes_at + timedelta(seconds=2))
     assert r.round.phase == "reveal" and r.history[-1].scored == {}
@@ -161,8 +161,8 @@ def test_quick_fire_speed_bonus_and_one_try_each():
     assert bc.submit_answer(r, 1, "nope", 1, sec(1)).verdict == "wrong"
     with pytest.raises(bc.GameError, match="had your go"):
         bc.submit_answer(r, 1, "answer0", 1, sec(2))
-    hit = bc.submit_answer(r, 3, "answer0", 1, sec(3))  # 3 s into a 12 s round
-    assert hit.points == 10 + round(5 * 9 / 12) and r.round.winner_team == "B" and r.round.phase == "reveal"
+    hit = bc.submit_answer(r, 3, "answer0", 1, sec(3))  # 3 s into a 20 s round
+    assert hit.points == 10 + round(5 * 17 / 20) and r.round.winner_team == "B" and r.round.phase == "reveal"
 
 
 def test_quick_fire_closes_when_everyone_has_tried():
@@ -252,6 +252,12 @@ def test_choosing_questions_spreads_categories_and_keeps_a_reserve():
 
 
 # ---------- streaks ----------
+
+
+def test_every_game_runs_on_a_20_second_clock():
+    for mode in bc.KIND_FOR_MODE:
+        assert bc.RoomSettings(mode=mode).round_seconds() == 20, mode
+    assert bc.HUM_SECONDS == 20
 
 
 def test_three_rounds_in_a_row_puts_a_team_on_fire():
@@ -347,7 +353,7 @@ def test_story_forge_lines_sparks_and_fire():
     assert r.round.phase == "reveal"
     bc.advance(r, r.round.reveal_until)
     assert r.round.performer_id == 2  # Bayo writes next
-    assert bc.submit_answer(r, 2, "Nobody noticed anything strange that night.", 2, sec(60)).points == 0  # no spark word
+    assert bc.submit_answer(r, 2, "Nobody noticed anything strange that night.", 2, r.round.opened_at + timedelta(seconds=5)).points == 0  # no spark word
 
 
 def test_copying_an_earlier_line_is_flagged():
@@ -355,7 +361,7 @@ def test_copying_an_earlier_line_is_flagged():
     bc.submit_answer(r, 1, "The goat walked into the wedding hall.", 1, sec(5))
     bc.advance(r, r.round.closes_at + timedelta(seconds=1))
     bc.advance(r, r.round.reveal_until)
-    item = bc.submit_answer(r, 2, "The goat walked into the wedding hall!", 2, sec(60))
+    item = bc.submit_answer(r, 2, "The goat walked into the wedding hall!", 2, r.round.opened_at + timedelta(seconds=5))
     assert item.flag_id and r.scores["B"] == 0 and r.flag(item.flag_id).held == {"B": 10}
     bc.decide_flag(r, 1, item.flag_id, True)  # the host lets it stand
     assert r.scores["B"] == 10
@@ -581,3 +587,12 @@ async def test_fair_play_over_the_api(client):
     async with client.app.state.sessionmaker() as s:
         rows = (await s.exec(text("SELECT flags FROM bc_results WHERE room_code = :c").bindparams(c=code))).all()
     assert rows[0][0][0]["status"] == "voided"
+
+
+@needs_db
+async def test_public_stats_are_real_counts(client):
+    before = (await client.get("/stats")).json()
+    assert set(before) == {"online", "players", "matches", "turns"} and all(v >= 0 for v in before.values())
+    await signup(client, "statsy")
+    after = (await client.get("/stats")).json()
+    assert after["players"] == before["players"] + 1

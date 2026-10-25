@@ -21,6 +21,8 @@ import { announce, loadSoundSetting, sfx } from "@/lib/game";
 import { useLive } from "@/lib/useLive";
 import { useAuthStore } from "@/store/useAuthStore";
 
+import { ART, artSrc } from "@/lib/art";
+
 import { Art } from "../art/Scenes";
 import { Loader } from "../brand/Loader";
 import { ClipInput } from "../ClipInput";
@@ -70,7 +72,7 @@ export function BrainClashRoomPage({ code, game = "brain-clash" }: { code: strin
   }, []);
   useLive(token, null, { onBrainClash: load, onReaction, onSignedOut: signOut }, token ? code : null);
 
-  if (!ready) return <Loader label="Entering the room…" />;
+  if (!ready) return <Loader label="Entering the room…" art="searching" />;
   if (!me) {
     return (
       <section className="state-page">
@@ -88,6 +90,7 @@ export function BrainClashRoomPage({ code, game = "brain-clash" }: { code: strin
   if (missing) {
     return (
       <section className="state-page">
+        {artSrc(ART["state-empty-room"].file) && <Art slot="state-empty-room" className="state-art" />}
         <p className="eyebrow">{g.title}</p>
         <h1>Room not found</h1>
         <p className="tagline">{missing} Rooms close a few hours after the last game.</p>
@@ -97,7 +100,7 @@ export function BrainClashRoomPage({ code, game = "brain-clash" }: { code: strin
       </section>
     );
   }
-  if (!room) return <Loader label="Entering the room…" />;
+  if (!room) return <Loader label="Entering the room…" art="searching" />;
 
   const mine = room.players.find((p) => p.user_id === me.id) ?? null;
   return (
@@ -251,6 +254,7 @@ function Lobby({ room, me, onRoom }: { room: BcRoom; me: number; onRoom: (r: BcR
         </section>
       ) : (
         <section className="card">
+          {artSrc(ART["state-waiting"].file) && <Art slot="state-waiting" className="state-art" />}
           <p className="tagline">
             {modeName(room.settings.mode)} · {room.settings.rounds} rounds
             {room.settings.win_score ? ` · first to ${room.settings.win_score}` : ""}
@@ -492,7 +496,7 @@ function Match({ room, me, offset, sound, onRoom }: { room: BcRoom; me: BcPlayer
   const left = useSecondsLeft(deadline, offset);
   const story = room.settings.mode === "story";
   const total =
-    r.phase === "reveal" ? (story ? 4 : 6) : r.phase === "steal" ? 10 : r.phase === "hum" ? 25 : r.phase === "vote" ? 12 : (Date.parse(r.closes_at) - Date.parse(r.opened_at)) / 1000;
+    r.phase === "reveal" ? (story ? 4 : 6) : r.phase === "steal" ? 10 : r.phase === "hum" ? 20 : r.phase === "vote" ? 12 : (Date.parse(r.closes_at) - Date.parse(r.opened_at)) / 1000;
   const [feedback, setFeedback] = useState<BcFeed | null>(null);
   const { act, error } = useAct(onRoom);
   const away = useAwayTime(`${r.number}-${r.phase === "steal" ? "open" : r.phase}`);
@@ -546,6 +550,7 @@ function Match({ room, me, offset, sound, onRoom }: { room: BcRoom; me: BcPlayer
   const performer = r.performer_id === me?.user_id;
   return (
     <>
+      <RoundIntro room={room} offset={offset} sound={sound} />
       <ScoreBar room={room} />
       {room.notice && r.number === 1 && <p className="notice">{room.notice}</p>}
       <FlagPanel room={room} onRoom={onRoom} />
@@ -604,6 +609,7 @@ function Match({ room, me, offset, sound, onRoom }: { room: BcRoom; me: BcPlayer
           </div>
         )}
 
+        {r.phase === "reveal" && <HypeBurst key={`hype-${r.number}`} room={room} me={me} />}
         {room.settings.mode === "hum" && r.has_clip && r.phase !== "hum" && <HumPlayer key={`hum-${r.number}`} code={room.code} round={r.number} />}
         {r.phase === "reveal" ? (
           <Reveal room={room} />
@@ -643,6 +649,78 @@ function Match({ room, me, offset, sound, onRoom }: { room: BcRoom; me: BcPlayer
       )}
       <LeaveLink code={room.code} game={room.game} />
     </>
+  );
+}
+
+/** The match intro (a VS splash with both team names) when round 1 opens, then a quick "ROUND n"
+ *  flash for every new round. It never blocks the screen: taps go straight through. */
+function RoundIntro({ room, offset, sound }: { room: BcRoom; offset: number; sound: boolean }) {
+  const r = room.round!;
+  const [show, setShow] = useState<"vs" | "round" | null>(null);
+  const seen = useRef<string>("");
+  useEffect(() => {
+    const key = `${room.game_no}-${r.number}`;
+    if (seen.current === key) return;
+    seen.current = key;
+    // Only when the round has just started: a player who reloads mid-round doesn't get the splash again.
+    if (Date.now() + offset - Date.parse(r.opened_at) > 4000 && r.phase !== "hum") return;
+    const kind = r.number === 1 && !r.tiebreak ? "vs" : "round";
+    setShow(kind);
+    if (kind === "vs") announce(`${teamName(room, "A")} versus ${teamName(room, "B")}. Go!`, sound);
+  }, [room, r.number, r.opened_at, r.phase, r.tiebreak, offset, sound]);
+  // Its own effect, so a room update arriving mid-splash can't cancel the timer that hides it.
+  useEffect(() => {
+    if (!show) return;
+    const id = setTimeout(() => setShow(null), show === "vs" ? 2300 : 1100);
+    return () => clearTimeout(id);
+  }, [show]);
+  if (!show) return null;
+  if (show === "round")
+    return (
+      <div className="round-flash" aria-hidden>
+        <span>{r.tiebreak ? "TIE-BREAKER" : `ROUND ${r.number}`}</span>
+      </div>
+    );
+  return (
+    <div className="match-intro" aria-hidden>
+      <Art slot="brainClash" className="art-fill" />
+      <div className="match-intro-names">
+        <span className="side a">{teamName(room, "A")}</span>
+        <span className="vs-big">VS</span>
+        <span className="side b">{teamName(room, "B")}</span>
+      </div>
+      <span className="match-intro-go">Round 1 · GO!</span>
+    </div>
+  );
+}
+
+/** The moment after a round: a big burst for the team that scored (with confetti for your team). */
+function HypeBurst({ room, me }: { room: BcRoom; me: BcPlayer | null }) {
+  const r = room.round!;
+  const scorers = Object.keys(r.scored) as BcTeam[];
+  const mine = me && scorers.includes(me.team);
+  const fire = scorers.find((t) => room.streaks[t] >= 3);
+  const stole = room.feed.some((f) => f.round === r.number && f.verdict === "steal");
+  const text = !scorers.length
+    ? "MISSED IT!"
+    : fire
+      ? "ON FIRE! 🔥"
+      : stole
+        ? "STOLEN! 🥷"
+        : mine
+          ? "YES! ⚡"
+          : `${teamName(room, scorers[0]).toUpperCase()} SCORES!`;
+  return (
+    <div className={`hype-burst ${scorers.length ? "hit" : "miss"} ${fire ? "fire" : ""}`} aria-hidden>
+      <span>{text}</span>
+      {mine && (
+        <div className="confetti">
+          {Array.from({ length: 18 }, (_, i) => (
+            <span key={i} style={{ left: `${(i * 53) % 100}%`, animationDelay: `${(i % 6) * 0.08}s`, background: ["#f472b6", "#38bdf8", "#fde047", "#a78bfa"][i % 4] }} />
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -973,6 +1051,8 @@ function Victory({ room, me, sound, onRoom }: { room: BcRoom; me: number; sound:
   const { act, error, busy } = useAct(onRoom);
   const draw = room.winner === "draw";
   const champ = draw ? null : (room.winner as BcTeam);
+  const myTeam = room.players.find((p) => p.user_id === me)?.team;
+  const lost = !!champ && !!myTeam && myTeam !== champ;
   const mvp = [...room.players].sort((a, b) => b.points - a.points)[0];
   const said = useRef(false);
   useEffect(() => {
@@ -991,9 +1071,9 @@ function Victory({ room, me, sound, onRoom }: { room: BcRoom; me: number; sound:
         ))}
       </div>
       <div className="bc-victory-art">
-        <Art slot="victory" className="art-fill" />
+        <Art slot={lost ? "defeat" : "victory"} className="art-fill" />
       </div>
-      <p className="eyebrow">{room.finish_reason}</p>
+      <p className="eyebrow">{lost ? "So close. Run it back?" : room.finish_reason}</p>
       <h1 className="bc-champion">{draw ? "It's a draw!" : `${teamName(room, champ!)} wins!`}</h1>
       <div className="bc-final">
         {TEAMS.map((t) => (

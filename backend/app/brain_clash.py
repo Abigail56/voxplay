@@ -111,13 +111,15 @@ GAME_FOR_MODE = {"battle": "brain-clash", "quickfire": "brain-clash", "namefast"
 GAME_CATEGORIES = {"brain-clash": CATEGORIES, "beat-drop": HUM_CATEGORIES, "story-forge": STORY_CATEGORIES}
 ALL_CATEGORIES = {**CATEGORIES, **HUM_CATEGORIES, **STORY_CATEGORIES}
 KIND_FOR_MODE = {"battle": "question", "quickfire": "question", "namefast": "list", "association": "association", "hum": "song", "story": "spark"}
-DEFAULT_SECONDS = {"battle": 30, "quickfire": 12, "namefast": 45, "association": 15, "hum": 30, "story": 45}
+# Every game runs on a 20-second clock by default: fast enough to keep the room shouting. The host can change it.
+ROUND_SECONDS = 20
+DEFAULT_SECONDS = {mode: ROUND_SECONDS for mode in KIND_FOR_MODE}
 DEFAULT_TEAM_NAMES = {"A": "Team Nova", "B": "Team Pulse"}
 
 MAX_TEAM_ATTEMPTS = 3  # Brain Battle: tries per team per question
 STEAL_SECONDS = 10
 REVEAL_SECONDS = 6
-HUM_SECONDS = 25  # Beat Drop: time to record the hum
+HUM_SECONDS = 20  # Beat Drop: time to record the hum
 VOTE_SECONDS = 12  # Story Forge: time to fire at the new line
 STORY_REVEAL_SECONDS = 4
 STREAK_AT = 3  # rounds in a row to be "on fire"

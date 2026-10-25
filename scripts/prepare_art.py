@@ -1,0 +1,81 @@
+"""Turn generated artwork into the site's optimised WebP files, at the right size and path.
+
+Generate the images with the prompts in docs/ART_PROMPTS.md, name each file after its asset
+(e.g. `voxplay-hero.png`, `team-versus.jpg`, `nova.png`, `avatar-01.png`), put them all in one
+folder, then run:
+
+    python scripts/prepare_art.py ~/Downloads/voxplay-art
+
+Each image is resized to its target width (never enlarged), cropped to its aspect ratio from the
+centre (or kept as it is when it already matches), saved as WebP and written to
+frontend/public/images/voxplay/... Rebuild the site afterwards: the new images replace the drawn
+scenes by themselves. Needs Pillow (`pip install pillow`); it's a tool for you, not a site dependency.
+"""
+
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+from PIL import Image, ImageOps
+
+PUBLIC = Path(__file__).resolve().parents[1] / "frontend" / "public" / "images" / "voxplay"
+
+# asset name -> (folder, width, aspect ratio w/h, WebP quality)
+SCENE = (1920, 16 / 9, 80)
+TILE = (1200, 16 / 10, 78)
+STATE = (1000, 4 / 3, 78)
+ASSETS: dict[str, tuple[str, int, float, int]] = {
+    "voxplay-hero": ("hero", 2400, 16 / 9, 80),
+    "voxplay-hero-mobile": ("hero", 1080, 4 / 5, 80),
+    "arena": ("brain-clash", *SCENE),
+    "team-versus": ("brain-clash", *SCENE),
+    "victory": ("brain-clash", *SCENE),
+    "defeat": ("brain-clash", *SCENE),
+    "beat-drop": ("brain-clash", *SCENE),
+    "story-forge": ("story-forge", *SCENE),
+    "whos-talking": ("whos-talking", *SCENE),
+    **{m: ("game-modes", *TILE) for m in (
+        "african-knowledge", "music-challenge", "culture-challenge", "word-association",
+        "riddles", "quick-fire", "general-knowledge", "team-battle",
+    )},
+    **{s: ("states", *STATE) for s in ("searching", "waiting", "empty-room", "creating-room", "no-games", "reconnecting", "coming-soon")},
+    **{c: ("characters", 1024, 1.0, 82) for c in ("nova", "pulse", "zuri", "ayo")},
+    **{f"avatar-{i:02d}": ("avatars", 256, 1.0, 80) for i in range(1, 13)},
+}
+
+
+def fit(img: Image.Image, width: int, ratio: float) -> Image.Image:
+    img = ImageOps.exif_transpose(img).convert("RGB")
+    if abs(img.width / img.height - ratio) > 0.02:  # crop to the ratio, keeping the centre
+        img = ImageOps.fit(img, (img.width, round(img.width / ratio)) if img.width / img.height < ratio else (round(img.height * ratio), img.height), centering=(0.5, 0.4))
+    if img.width > width:
+        img = img.resize((width, round(width / ratio)), Image.LANCZOS)
+    return img
+
+
+def main(inbox: Path) -> None:
+    done, unknown = [], []
+    for src in sorted(inbox.iterdir()):
+        if src.suffix.lower() not in (".png", ".jpg", ".jpeg", ".webp", ".avif"):
+            continue
+        spec = ASSETS.get(src.stem.lower())
+        if spec is None:
+            unknown.append(src.name)
+            continue
+        folder, width, ratio, quality = spec
+        out = PUBLIC / folder / f"{src.stem.lower()}.webp"
+        out.parent.mkdir(parents=True, exist_ok=True)
+        with Image.open(src) as img:
+            fitted = fit(img, width, ratio)
+        fitted.save(out, "WEBP", quality=quality, method=6)
+        done.append(f"{out.relative_to(PUBLIC.parents[1])}  {fitted.width}x{fitted.height}  {out.stat().st_size // 1024} KB")
+    print("\n".join(done) or "No images matched an asset name.")
+    if unknown:
+        print("\nNot used (name them after an asset in docs/ART_PROMPTS.md):", ", ".join(unknown))
+
+
+if __name__ == "__main__":
+    if len(sys.argv) != 2 or not Path(sys.argv[1]).is_dir():
+        sys.exit(__doc__)
+    main(Path(sys.argv[1]))

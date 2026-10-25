@@ -1,7 +1,9 @@
 import Link from "next/link";
 
 import { Art } from "@/components/art/Scenes";
+import { Crew } from "@/components/portal/Crew";
 import { GameCard } from "@/components/portal/GameCard";
+import { LiveStats } from "@/components/portal/LiveStats";
 import { GAMES } from "@/lib/games";
 
 const STEPS = [
@@ -65,11 +67,12 @@ export default function Landing() {
             </Link>
           </div>
           <p className="hint">Your world. Your voice. Your victory.</p>
+          <LiveStats />
         </div>
         <div className="hero-art">
-          <Art slot="hero" className="art-fill" />
+          <Art slot="hero" className="art-fill" priority />
           <Link href="/brain-clash" className="hero-preview" aria-label="Brain Clash: open the game">
-            <span className="eyebrow">Now playing · Brain Clash</span>
+            <span className="eyebrow">Sample round · Brain Clash</span>
             <span className="preview-q">The famous jollof rice rivalry is between Nigeria and which country?</span>
             <span className="preview-score">
               <span className="team a">Team Nova 40</span>
@@ -111,6 +114,14 @@ export default function Landing() {
             Enter the arena
           </Link>
         </div>
+      </section>
+
+      <section className="landing-section" aria-labelledby="crew-title">
+        <div className="section-title">
+          <p className="eyebrow">The crew</p>
+          <h2 id="crew-title">Meet your captains</h2>
+        </div>
+        <Crew />
       </section>
 
       <section className="landing-section" id="how" aria-labelledby="how-title">
