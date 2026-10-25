@@ -38,7 +38,13 @@ ASSETS: dict[str, tuple[str, int, float, int]] = {
     "whos-talking": ("whos-talking", *SCENE),
     **{m: ("game-modes", *TILE) for m in (
         "african-knowledge", "music-challenge", "culture-challenge", "word-association",
-        "riddles", "quick-fire", "general-knowledge", "team-battle",
+        "riddles", "quick-fire", "general-knowledge", "team-battle", "name-it-fast",
+    )},
+    **{c: ("categories", *TILE) for c in (
+        "african_general", "nigerian_general", "african_music", "nigerian_entertainment", "african_history",
+        "current_affairs", "african_football", "animals_nature", "african_food", "languages", "pidgin",
+        "african_movies", "riddles", "word_challenges", "everyday", "funny", "hum_afrobeats", "hum_amapiano",
+        "hum_classics", "story_lagos", "story_legends", "story_chaos",
     )},
     **{s: ("states", *STATE) for s in ("searching", "waiting", "empty-room", "creating-room", "no-games", "reconnecting", "coming-soon")},
     **{c: ("characters", 1024, 1.0, 82) for c in ("nova", "pulse", "zuri", "ayo")},

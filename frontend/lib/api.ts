@@ -245,6 +245,18 @@ export type Clip = { id: string; blob: Blob; filename: string; url: string };
 
 // ---------- Brain Clash ----------
 
+export type MatchResult = {
+  id: number;
+  game: BcGame;
+  team_a: string;
+  team_b: string;
+  score_a: number;
+  score_b: number;
+  winner: "A" | "B" | "draw";
+  rounds: number;
+  finished_at: string;
+};
+
 export type BcMode = "battle" | "namefast" | "quickfire" | "association" | "hum" | "story";
 /** The games that run on Brain Clash rooms. */
 export type BcGame = "brain-clash" | "beat-drop" | "story-forge";
@@ -457,6 +469,8 @@ export const api = {
   leaderboards: () => request<Leaderboards>("/leaderboards"),
   /** Public, real counts for the landing page. */
   stats: () => request<{ online: number; players: number; matches: number; turns: number }>("/stats"),
+  /** Public: the latest finished team matches, newest first. */
+  results: () => request<MatchResult[]>("/results"),
   startRoom: (code: string) => request<Room>(`/rooms/${encodeURIComponent(code)}/start`, { method: "POST" }),
   admin: {
     overview: () => request<AdminOverview>("/admin/overview"),

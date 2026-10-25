@@ -7,13 +7,14 @@ import { useEffect, useState } from "react";
 import { useAuthStore } from "@/store/useAuthStore";
 
 import { Logo } from "./brand/Logo";
+import { MusicToggle } from "./MusicToggle";
 
 const LINKS = [
-  { href: "/", label: "Home" },
   { href: "/games", label: "Games" },
   { href: "/brain-clash", label: "Brain Clash" },
+  { href: "/beat-drop", label: "Beat Drop" },
+  { href: "/story-forge", label: "Story Forge" },
   { href: "/whos-talking", label: "Who's Talking?" },
-  { href: "/#how", label: "How to play" },
 ];
 
 export function Nav() {
@@ -44,6 +45,7 @@ export function Nav() {
         <Link href="/" className="brand" aria-label="VOXPLAY home">
           <Logo />
         </Link>
+        <MusicToggle />
         <button
           className="menu-toggle"
           aria-expanded={open}

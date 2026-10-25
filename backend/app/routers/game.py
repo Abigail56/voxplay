@@ -55,6 +55,30 @@ async def stats(session: SessionDep, settings: SettingsDep) -> dict[str, int]:
     }
 
 
+GAME_FOR_MODE = {"battle": "brain-clash", "quickfire": "brain-clash", "namefast": "brain-clash", "association": "brain-clash", "hum": "beat-drop", "story": "story-forge"}
+
+
+@router.get("/results")
+async def results(session: SessionDep, limit: int = 8) -> list[dict]:
+    """Public: the latest finished team matches (Brain Clash, Beat Drop, Story Forge), newest first.
+    Team names and scores only, never player names, so it's safe on the landing page."""
+    rows = (await session.exec(select(BrainClashResult).order_by(BrainClashResult.finished_at.desc()).limit(min(max(limit, 1), 20)))).all()
+    return [
+        {
+            "id": r.id,
+            "game": GAME_FOR_MODE.get(r.mode, "brain-clash"),
+            "team_a": r.team_a,
+            "team_b": r.team_b,
+            "score_a": r.score_a,
+            "score_b": r.score_b,
+            "winner": r.winner,
+            "rounds": r.rounds_played,
+            "finished_at": r.finished_at,
+        }
+        for r in rows
+    ]
+
+
 @router.get("/dashboard", response_model=DashboardOut)
 async def dashboard(user: CurrentUser, session: SessionDep, settings: SettingsDep, rooms: RoomsDep) -> DashboardOut:
     """Everyone who plays: who's online, where (if they share it), their games and scores."""

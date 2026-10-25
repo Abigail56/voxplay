@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import { duckMusic } from "@/lib/music";
+
 /** Fetches a recording when pressed and plays it (press again to stop). */
 export function PlayButton({ load, label = "▶" }: { load: () => Promise<Blob>; label?: string }) {
   const [state, setState] = useState<"idle" | "loading" | "playing" | "gone">("idle");
@@ -16,9 +18,11 @@ export function PlayButton({ load, label = "▶" }: { load: () => Promise<Blob>;
       const a = new Audio(url);
       player.current = a;
       a.onended = a.onpause = () => {
+        duckMusic(false);
         setState("idle");
         URL.revokeObjectURL(url);
       };
+      duckMusic(true); // the music steps aside while a voice plays
       await a.play();
       setState("playing");
     } catch {

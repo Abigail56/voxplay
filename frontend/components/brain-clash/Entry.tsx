@@ -5,11 +5,11 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { api, type BcCategory, type BcGame, type BcMode } from "@/lib/api";
-import { BC_MODES, CATEGORY_ART, ROOM_GAMES } from "@/lib/brainClash";
+import { BC_MODES, ROOM_GAMES } from "@/lib/brainClash";
 import { useAuthStore } from "@/store/useAuthStore";
 
 import { ArtTile } from "../art/ArtTile";
-import { Art } from "../art/Scenes";
+import { Art, CategoryArt } from "../art/Scenes";
 
 /** /brain-clash, /beat-drop and /story-forge: what the game is, and the way in (create a room, or join one with a code). */
 export function GameEntry({ game }: { game: BcGame }) {
@@ -187,7 +187,7 @@ export function GameEntry({ game }: { game: BcGame }) {
         <ul className="art-tile-grid small">
           {cats.map((c) => (
             <li key={c.id}>
-              <ArtTile slot={`mode-${CATEGORY_ART[c.id] ?? "general-knowledge"}`} title={c.name} size="small">
+              <ArtTile media={<CategoryArt id={c.id} className="art-fill" />} title={c.name} size="small">
                 <span className="hint">{Object.values(c.counts).reduce((a, b) => a + (b ?? 0), 0)} challenges</span>
               </ArtTile>
             </li>

@@ -169,6 +169,40 @@ Use the same prompt, recomposed as a vertical shot with the four faces in the up
 | `quick-fire` | Pulse sprinting through streaks of light past a giant glowing countdown ring, intense speed |
 | `general-knowledge` | DJ Ayo reaching into a cloud of holographic knowledge cards, curious grin |
 | `team-battle` | Two teams charging toward each other across a neon arena, violet versus cyan, dramatic perspective |
+| `name-it-fast` | A captain racing to fill a glowing holographic list, ticks lighting up, a countdown ring behind |
+
+### 9b. Category tiles: `categories/<id>.webp`
+
+- **Used in:** the category tiles ("Sixteen ways to win", "Pick your playlist", "Choose your world") on
+  the three game pages. Until a category has its image, its tile shows a drawn icon scene.
+- **Shape:** 16:10, 1200×750. Keep the subject in the upper two thirds, because the title sits on a fade
+  at the bottom.
+- **Prompt:** take each line below and add "in the VOXPLAY style: STYLE, no text".
+
+| Asset name | Prompt |
+|---|---|
+| `african_general` | A glowing holographic map of Africa with landmarks rising from it: pyramids, Kilimanjaro, baobabs |
+| `nigerian_general` | Lagos skyline at dusk with Zuma Rock and green-white light trails |
+| `african_music` | Talking drums, a kora and a glowing microphone on a neon stage |
+| `nigerian_entertainment` | A red carpet with camera flashes, a star-lit stage and a film clapperboard |
+| `african_history` | An ancient West African kingdom courtyard with a royal stool, bronze heads and scrolls, warm torchlight |
+| `current_affairs` | Holographic news screens and a ballot box glowing in a futuristic newsroom |
+| `african_football` | A football bursting into a goal net in a packed floodlit stadium, a trophy gleaming |
+| `animals_nature` | A lion and an elephant on the savannah at golden hour under a glowing sky |
+| `african_food` | A steaming pot of jollof rice, suya skewers and peppers, warm market light |
+| `languages` | Speech bubbles in many scripts floating between two friends talking |
+| `pidgin` | Friends laughing on a Lagos street corner, speech bubbles with emoji, warm evening light |
+| `african_movies` | A cinema screen glowing in the dark, popcorn, film reels, a Nollywood-style dramatic scene |
+| `riddles` | A mysterious violet chamber of floating puzzle cubes and question marks |
+| `word_challenges` | Giant glowing letters tumbling through the air, a pencil and an open book |
+| `everyday` | A cosy home desk with a lamp, a clock and floating light-bulb ideas |
+| `funny` | Friends crying with laughter around a phone, confetti and comedy masks |
+| `hum_afrobeats` | A DJ booth and dancing crowd at an Afrobeats party, neon pink and cyan |
+| `hum_amapiano` | A log-drum and keyboard on a Johannesburg rooftop party at night, dancers |
+| `hum_classics` | A vintage radio and a saxophone, retro highlife band silhouettes, sepia-gold light |
+| `story_lagos` | A yellow danfo bus in Lagos traffic at sunset, an owambe party tent in the background |
+| `story_legends` | A wise tortoise under a baobab tree beneath a giant moon, a talking drum beside it |
+| `story_chaos` | A goat running through a wedding reception, guests shocked, cake flying |
 
 ### 10. Waiting and empty states: `states/<name>.webp`
 

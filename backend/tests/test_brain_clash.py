@@ -596,3 +596,16 @@ async def test_public_stats_are_real_counts(client):
     await signup(client, "statsy")
     after = (await client.get("/stats")).json()
     assert after["players"] == before["players"] + 1
+
+
+@needs_db
+async def test_recent_results_are_public_and_have_no_player_names(client):
+    ada, bayo = await signup(client, "ada"), await signup(client, "bayo")
+    code = (await bc_room(client, ada, mode="quickfire", categories=["everyday"]))["code"]
+    await client.post(f"/brain-clash/rooms/{code}/join", headers=bayo, json={})
+    await client.post(f"/brain-clash/rooms/{code}/start", headers=ada)
+    await send(client, ada, code, 1, said=await cheat_answer(client, code))
+    await client.post(f"/brain-clash/rooms/{code}/end", headers=ada)
+    latest = (await client.get("/results")).json()[0]  # no sign-in needed
+    assert latest["game"] == "brain-clash" and latest["winner"] == "A" and latest["score_a"] >= 10
+    assert "players" not in latest and "ada" not in json.dumps(latest)

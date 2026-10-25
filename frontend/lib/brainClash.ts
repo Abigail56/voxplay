@@ -2,7 +2,7 @@
 // themselves live on the server (backend/app/brain_clash.py); keep this text in step with them.
 
 import type { BcGame, BcMode } from "./api";
-import type { ArtSlot, ModeArt } from "./art";
+import type { ArtSlot } from "./art";
 
 export const BC_MODES: { id: BcMode; icon: string; name: string; blurb: string; rules: string[]; art: ArtSlot }[] = [
   {
@@ -27,7 +27,7 @@ export const BC_MODES: { id: BcMode; icon: string; name: string; blurb: string; 
   },
   {
     id: "namefast",
-    art: "mode-african-knowledge",
+    art: "mode-name-it-fast",
     icon: "📝",
     name: "Name It Fast",
     blurb: "Name five African countries… before the clock runs out.",
@@ -67,7 +67,7 @@ export const ROOM_GAMES: Record<BcGame, RoomGame> = {
     mode: "battle",
     eyebrow: "A VOXPLAY team quiz",
     tagline: "Two teams. One battle. One champion.",
-    lede: "Split into two teams and battle through questions on African and Nigerian knowledge, music, football, food, Pidgin, riddles and more. Shout your answer into your phone or type it. The server keeps score.",
+    lede: "Pick your squad and your categories, then go head to head on African and Nigerian knowledge, music, football, food and Pidgin. Twenty seconds a question, steals, streaks and bragging rights on the line.",
     art: "brainClash",
     howTitle: "Four ways to clash",
     how: BC_MODES,
@@ -81,7 +81,7 @@ export const ROOM_GAMES: Record<BcGame, RoomGame> = {
     mode: "hum",
     eyebrow: "A VOXPLAY music battle",
     tagline: "Hum it. Name it. Before the drop.",
-    lede: "One player secretly gets a song, from Afrobeats bangers to amapiano and Naija classics, and has to hum it. No words allowed: the AI is listening. Their team races to name the tune before the other team steals it.",
+    lede: "One player gets a secret song and hums it: no words allowed, the AI is listening. Their team has 20 seconds to name it before the other side steals it. Afrobeats bangers, amapiano anthems, Naija classics.",
     art: "beatDrop",
     howTitle: "How Beat Drop works",
     how: [
@@ -100,7 +100,7 @@ export const ROOM_GAMES: Record<BcGame, RoomGame> = {
     mode: "story",
     eyebrow: "A VOXPLAY storytelling battle",
     tagline: "One line each. One legend together.",
-    lede: "Two teams build one wild story, a line at a time. Every turn throws in a spark word you must use and a twist to inspire you. Write it or say it out loud, and the other team fires 🔥 at the lines they love.",
+    lede: "Two teams, one wild story. Every turn throws in a spark word and a twist; you have 20 seconds to write the next line, and the other team fires 🔥 at the ones they love.",
     art: "storyForge",
     howTitle: "How Story Forge works",
     how: [
@@ -112,32 +112,6 @@ export const ROOM_GAMES: Record<BcGame, RoomGame> = {
     catsTitle: "Choose your world",
     startLabel: "Start the story",
   },
-};
-
-/** Which game-mode artwork a category's tile shows. */
-export const CATEGORY_ART: Record<string, ModeArt> = {
-  african_general: "african-knowledge",
-  current_affairs: "african-knowledge",
-  nigerian_general: "general-knowledge",
-  everyday: "general-knowledge",
-  animals_nature: "general-knowledge",
-  african_music: "music-challenge",
-  nigerian_entertainment: "music-challenge",
-  african_movies: "music-challenge",
-  hum_afrobeats: "music-challenge",
-  hum_amapiano: "music-challenge",
-  hum_classics: "music-challenge",
-  african_history: "culture-challenge",
-  african_food: "culture-challenge",
-  pidgin: "culture-challenge",
-  languages: "culture-challenge",
-  story_lagos: "culture-challenge",
-  story_legends: "riddles",
-  story_chaos: "word-association",
-  african_football: "team-battle",
-  riddles: "riddles",
-  funny: "riddles",
-  word_challenges: "word-association",
 };
 
 const EXTRA_MODES: Partial<Record<BcMode, string>> = { hum: "Beat Drop", story: "Story Forge" };

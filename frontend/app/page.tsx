@@ -3,13 +3,14 @@ import Link from "next/link";
 import { Art } from "@/components/art/Scenes";
 import { Crew } from "@/components/portal/Crew";
 import { GameCard } from "@/components/portal/GameCard";
+import { LiveResults } from "@/components/portal/LiveResults";
 import { LiveStats } from "@/components/portal/LiveStats";
 import { GAMES } from "@/lib/games";
 
 const STEPS = [
-  { n: "01", title: "Make your player", text: "Pick a name and you're in. Voice games ask you to record a few short clips first." },
-  { n: "02", title: "Open a room", text: "Choose a game and get a room code. Friends join from their own phones with the code or a link." },
-  { n: "03", title: "Play live", text: "Everyone sees every question, answer and score at the same moment. Speak your answers or type them." },
+  { n: "01", title: "Make your player", text: "A name and a password, that's it. (Who's Talking? also asks for three quick voice clips.)" },
+  { n: "02", title: "Open a room", text: "Pick a game, get a code like NOVA-42 and drop it in the group chat. Friends join from their own phones." },
+  { n: "03", title: "Play live", text: "Questions, hums and scores hit every screen at once. Speak your answer or type it: you've got 20 seconds." },
 ];
 
 const FEATURES = [
@@ -21,12 +22,28 @@ const FEATURES = [
 
 const FAQ = [
   {
+    q: "What is VOXPLAY?",
+    a: "VOXPLAY is a home for live party games you play with friends, each of you on your own phone. Four games are live: Brain Clash (the team quiz), Beat Drop (hum the song, your team names it), Story Forge (build a wild story a line at a time) and Who's Talking? (fool the AI that knows your voice). Questions are about African and Nigerian music, movies, football, food, history and Pidgin, and you can speak your answers or type them.",
+  },
+  {
+    q: "Do I need to download anything?",
+    a: "No. VOXPLAY runs in the browser on any phone, tablet or laptop. One person opens a room and shares the code or link (WhatsApp works great), and everyone joins in seconds.",
+  },
+  {
     q: "Is VOXPLAY free?",
     a: "Yes. It runs on open-source models on the server, with no paid services and no adverts.",
   },
   {
     q: "Do I need an account?",
     a: "You can look around without one. To create or join a room you make a player: just a name and a password. Brain Clash doesn't need any voice setup.",
+  },
+  {
+    q: "How long does a game take?",
+    a: "Every round is 20 seconds (the host can change it), so most matches last 5 to 10 minutes. Perfect for a quick rematch, or ten.",
+  },
+  {
+    q: "Can I speak my answers?",
+    a: "Yes. Press the mic, say it, press stop: the server turns your words into text and checks them. Small slips and different spellings are fine. Your browser asks for microphone permission the first time, and a text box is always there if you'd rather type.",
   },
   {
     q: "What happens to my voice?",
@@ -40,6 +57,14 @@ const FAQ = [
     q: "How many people can play?",
     a: "Brain Clash, Beat Drop and Story Forge need two teams, so at least two players, and work best with a full room of friends, family or classmates (up to 20). Who's Talking? takes up to 12.",
   },
+  {
+    q: "Can I turn the music off?",
+    a: "Yes: tap Music in the top bar. It plays a calm track while you browse and a battle theme in the games, and it fades out by itself whenever someone records or a clip plays.",
+  },
+  {
+    q: "Where can I see the results?",
+    a: "Every finished match shows up live under \"Fresh from the arena\" on the home page, with team names and scores (never player names). In the room itself, scores update on every screen the moment points are won.",
+  },
 ];
 
 export default function Landing() {
@@ -49,21 +74,21 @@ export default function Landing() {
       <section className="landing-hero">
         <div className="hero-copy">
           <p className="eyebrow">
-            <span className="on-air" aria-hidden /> Enter the game. Own the moment.
+            <span className="on-air" aria-hidden /> Live party games · Play from your phone · Anywhere, any time
           </p>
           <h1>
             Enter your next <span className="grad">universe.</span>
           </h1>
           <p className="lede">
-            VOXPLAY is a social gaming universe. Open a room, bring your friends and battle it out in team quizzes and
-            voice games, each of you playing from your own phone.
+            Grab your phone, open a room and turn any hangout into a showdown. Quiz battles, hum-offs, story duels and
+            voice games: loud, fast and made for Africa.
           </p>
           <div className="row hero-actions">
             <Link href="/games" className="btn primary big">
-              Explore games
+              Play now
             </Link>
-            <Link href="/brain-clash" className="btn big">
-              Play with friends
+            <Link href="/brain-clash#join" className="btn big">
+              Join with a code
             </Link>
           </div>
           <p className="hint">Your world. Your voice. Your victory.</p>
@@ -71,15 +96,6 @@ export default function Landing() {
         </div>
         <div className="hero-art">
           <Art slot="hero" className="art-fill" priority />
-          <Link href="/brain-clash" className="hero-preview" aria-label="Brain Clash: open the game">
-            <span className="eyebrow">Sample round · Brain Clash</span>
-            <span className="preview-q">The famous jollof rice rivalry is between Nigeria and which country?</span>
-            <span className="preview-score">
-              <span className="team a">Team Nova 40</span>
-              <span className="vs">VS</span>
-              <span className="team b">Team Pulse 30</span>
-            </span>
-          </Link>
         </div>
       </section>
 
@@ -93,6 +109,16 @@ export default function Landing() {
             <GameCard key={g.id} game={g} />
           ))}
         </div>
+      </section>
+
+      <section className="landing-section" aria-labelledby="results-title">
+        <div className="section-title">
+          <p className="eyebrow">
+            <span className="live-dot" aria-hidden /> Live results
+          </p>
+          <h2 id="results-title">Fresh from the arena</h2>
+        </div>
+        <LiveResults />
       </section>
 
       <section className="featured" aria-labelledby="featured">

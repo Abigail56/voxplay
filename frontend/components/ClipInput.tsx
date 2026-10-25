@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import type { Clip } from "@/lib/api";
+import { duckMusic } from "@/lib/music";
 
 // Browsers support different recording formats; pick the first one available.
 const MIME_TYPES = ["audio/webm;codecs=opus", "audio/webm", "audio/ogg;codecs=opus", "audio/mp4"];
@@ -89,6 +90,7 @@ export function ClipInput({ onClip, multiple = false, disabled = false, allowUpl
   useEffect(() => () => stopTracks(), []);
 
   function stopTracks() {
+    duckMusic(false);
     if (timerRef.current) clearInterval(timerRef.current);
     meter.stop();
     recorderRef.current?.stream.getTracks().forEach((t) => t.stop());
@@ -116,6 +118,7 @@ export function ClipInput({ onClip, multiple = false, disabled = false, allowUpl
         onClip(makeClip(blob, `recording-${new Date().toISOString().slice(11, 19)}.${extensionFor(type)}`));
       };
       recorderRef.current = recorder;
+      duckMusic(true); // so the background music never ends up in the recording
       recorder.start();
       meter.start(stream);
       setSeconds(0);

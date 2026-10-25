@@ -3,7 +3,7 @@
 // skies, manga speed lines, sparkles and a glowing portal. Motion comes from CSS classes (art-float,
 // art-spin, art-pulse, art-twinkle), which reduced-motion turns off.
 
-import { ART, artSrc, type ArtSlot } from "@/lib/art";
+import { ART, artSrc, CATEGORY_LOOK, categoryFile, type ArtSlot } from "@/lib/art";
 
 import { Mystery, Nova, Pulse } from "./Characters";
 
@@ -511,40 +511,63 @@ export function DefeatScene({ className }: SceneProps) {
   );
 }
 
-const MODE_LOOK: Record<string, { hue: string; glow: string; icon: string }> = {
-  "african-knowledge": { hue: "#7c3aed", glow: "#fbbf24", icon: "🌍" },
-  "music-challenge": { hue: "#db2777", glow: "#22d3ee", icon: "🎵" },
-  "culture-challenge": { hue: "#b45309", glow: "#f472b6", icon: "🥁" },
-  "word-association": { hue: "#0e7490", glow: "#a78bfa", icon: "🔗" },
-  riddles: { hue: "#4c1d95", glow: "#c084fc", icon: "🧩" },
-  "quick-fire": { hue: "#be123c", glow: "#fde047", icon: "⚡" },
-  "general-knowledge": { hue: "#1d4ed8", glow: "#67e8f9", icon: "💡" },
-  "team-battle": { hue: "#6d28d9", glow: "#38bdf8", icon: "⚔️" },
+const MODE_LOOK: Record<string, { hue: string; glow: string; icon: string; extras: [string, string] }> = {
+  "african-knowledge": { hue: "#7c3aed", glow: "#fbbf24", icon: "🌍", extras: ["📚", "💡"] },
+  "music-challenge": { hue: "#db2777", glow: "#22d3ee", icon: "🎵", extras: ["🎤", "🎧"] },
+  "culture-challenge": { hue: "#b45309", glow: "#f472b6", icon: "🥁", extras: ["👑", "🎭"] },
+  "word-association": { hue: "#0e7490", glow: "#a78bfa", icon: "🔗", extras: ["💬", "🧠"] },
+  riddles: { hue: "#4c1d95", glow: "#c084fc", icon: "🧩", extras: ["❓", "🔮"] },
+  "quick-fire": { hue: "#be123c", glow: "#fde047", icon: "⚡", extras: ["⏱️", "🔥"] },
+  "general-knowledge": { hue: "#1d4ed8", glow: "#67e8f9", icon: "💡", extras: ["📖", "🌐"] },
+  "team-battle": { hue: "#6d28d9", glow: "#38bdf8", icon: "⚔️", extras: ["🛡️", "🏆"] },
+  "name-it-fast": { hue: "#0f766e", glow: "#fde047", icon: "📝", extras: ["⏱️", "✅"] },
 };
 
-/** A game-mode tile's stand-in until its painting arrives: a coloured burst with the mode's symbol. */
-export function ModeScene({ className, mode }: SceneProps & { mode: string }) {
-  const look = MODE_LOOK[mode] ?? MODE_LOOK["general-knowledge"];
+/** A tile's stand-in until its painting arrives: a coloured burst, the big symbol of what the tile is
+ *  about, and two smaller related ones floating around it. */
+function IconScene({ className, id, hue, glow, icon, extras }: SceneProps & { id: string; hue: string; glow: string; icon: string; extras: [string, string] }) {
   const W = 600;
   const H = 400;
   return (
     <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid slice" className={className} aria-hidden>
       <defs>
-        <radialGradient id={`md-${mode}`} cx="0.5" cy="0.45" r="0.7">
-          <stop offset="0" stopColor={look.glow} stopOpacity="0.55" />
-          <stop offset="0.45" stopColor={look.hue} />
+        <radialGradient id={`ic-${id}`} cx="0.5" cy="0.45" r="0.75">
+          <stop offset="0" stopColor={glow} stopOpacity="0.6" />
+          <stop offset="0.42" stopColor={hue} />
           <stop offset="1" stopColor="#0a0819" />
         </radialGradient>
       </defs>
-      <rect width={W} height={H} fill={`url(#md-${mode})`} />
-      <SpeedLines cx={300} cy={180} color="#fff" opacity={0.14} count={30} seed={mode.length * 7} />
-      <text x={300} y={225} textAnchor="middle" fontSize={130} className="art-float">
-        {look.icon}
+      <rect width={W} height={H} fill={`url(#ic-${id})`} />
+      <SpeedLines cx={300} cy={185} color="#fff" opacity={0.14} count={32} seed={id.length * 7} />
+      <circle cx={300} cy={185} r={92} fill="#fff" opacity={0.1} />
+      <circle cx={300} cy={185} r={92} fill="none" stroke={glow} strokeWidth={3} opacity={0.6} strokeDasharray="10 8" className="art-spin" style={{ transformOrigin: "300px 185px" }} />
+      <text x={300} y={226} textAnchor="middle" fontSize={120} className="art-float">
+        {icon}
       </text>
-      <Sparkle x={120} y={90} s={12} color="#fff" twinkle />
-      <Sparkle x={480} y={300} s={10} color={look.glow} twinkle />
+      <text x={150} y={135} textAnchor="middle" fontSize={54} className="art-float slow" opacity={0.95}>
+        {extras[0]}
+      </text>
+      <text x={460} y={290} textAnchor="middle" fontSize={54} className="art-float slow" opacity={0.95}>
+        {extras[1]}
+      </text>
+      <Sparkle x={110} y={300} s={10} color="#fff" twinkle />
+      <Sparkle x={500} y={80} s={12} color={glow} twinkle />
     </svg>
   );
+}
+
+export function ModeScene({ className, mode }: SceneProps & { mode: string }) {
+  const look = MODE_LOOK[mode] ?? MODE_LOOK["general-knowledge"];
+  return <IconScene className={className} id={`m-${mode}`} {...look} />;
+}
+
+/** A category's picture: its painting once categories/<id>.webp exists, otherwise its icon scene. */
+export function CategoryArt({ id, className }: { id: string; className?: string }) {
+  const look = CATEGORY_LOOK[id];
+  const src = artSrc(categoryFile(id));
+  if (src) return <img src={src} alt={look?.alt ?? ""} className={className} loading="lazy" decoding="async" style={{ objectPosition: "50% 35%" }} />;
+  if (!look) return <ModeScene className={className} mode="general-knowledge" />;
+  return <IconScene className={className} id={`c-${id}`} hue={look.hue} glow={look.glow} icon={look.icon} extras={look.extras} />;
 }
 
 const SCENES: Partial<Record<ArtSlot, (props: SceneProps) => React.ReactElement>> = {

@@ -15,7 +15,8 @@ export type ModeArt =
   | "riddles"
   | "quick-fire"
   | "general-knowledge"
-  | "team-battle";
+  | "team-battle"
+  | "name-it-fast";
 export type StateArt = "searching" | "waiting" | "empty-room" | "creating-room" | "no-games" | "reconnecting";
 
 export type ArtSlot =
@@ -45,6 +46,7 @@ const MODES: Record<ModeArt, string> = {
   "quick-fire": "A captain racing a countdown, light streaking past",
   "general-knowledge": "A captain reaching into a cloud of holographic knowledge panels",
   "team-battle": "Two teams charging at each other across a neon arena",
+  "name-it-fast": "A captain racing to fill a glowing list before the clock runs out",
 };
 const STATES: Record<StateArt, string> = {
   searching: "A captain scanning a holographic radar for players",
@@ -132,6 +134,36 @@ export const CREW: CrewMember[] = [
     portrait: `${BASE}/characters/ayo.webp`,
   },
 ];
+
+/** Every category has its own picture slot: categories/<id>.webp (see docs/ART_PROMPTS.md). */
+export const CATEGORY_LOOK: Record<string, { icon: string; extras: [string, string]; hue: string; glow: string; alt: string }> = {
+  african_general: { icon: "🌍", extras: ["🦒", "🏔️"], hue: "#6d28d9", glow: "#fbbf24", alt: "Africa's landmarks and wildlife" },
+  nigerian_general: { icon: "🦅", extras: ["🏙️", "🟢"], hue: "#15803d", glow: "#a3e635", alt: "Nigeria's cities and symbols" },
+  african_music: { icon: "🥁", extras: ["🎶", "🎤"], hue: "#be185d", glow: "#22d3ee", alt: "Drums, mics and African music" },
+  nigerian_entertainment: { icon: "🎬", extras: ["⭐", "🎤"], hue: "#7e22ce", glow: "#f472b6", alt: "Stars and screens of Nigerian entertainment" },
+  african_history: { icon: "🏛️", extras: ["👑", "📜"], hue: "#92400e", glow: "#fde68a", alt: "Ancient kingdoms, crowns and scrolls" },
+  current_affairs: { icon: "📰", extras: ["🗳️", "🌐"], hue: "#1d4ed8", glow: "#67e8f9", alt: "News, votes and the world today" },
+  african_football: { icon: "⚽", extras: ["🏆", "🥅"], hue: "#15803d", glow: "#fde047", alt: "Football, goals and trophies" },
+  animals_nature: { icon: "🦁", extras: ["🐘", "🌿"], hue: "#a16207", glow: "#86efac", alt: "Lions, elephants and the wild" },
+  african_food: { icon: "🍲", extras: ["🌶️", "🍗"], hue: "#c2410c", glow: "#fdba74", alt: "Jollof, pepper soup and spice" },
+  languages: { icon: "🗣️", extras: ["🔤", "💬"], hue: "#0e7490", glow: "#a78bfa", alt: "Languages and words of Africa" },
+  pidgin: { icon: "💬", extras: ["😎", "🔥"], hue: "#166534", glow: "#fde047", alt: "Naija Pidgin chat" },
+  african_movies: { icon: "🎥", extras: ["🍿", "🎞️"], hue: "#be123c", glow: "#fda4af", alt: "Nollywood and African cinema" },
+  riddles: { icon: "🧩", extras: ["❓", "🔮"], hue: "#4c1d95", glow: "#c084fc", alt: "Puzzles and riddles" },
+  word_challenges: { icon: "🔤", extras: ["✏️", "📖"], hue: "#0f766e", glow: "#5eead4", alt: "Letters, words and spelling" },
+  everyday: { icon: "💡", extras: ["🏠", "⏰"], hue: "#1e40af", glow: "#93c5fd", alt: "Everyday knowledge" },
+  funny: { icon: "😂", extras: ["🎭", "🤪"], hue: "#a21caf", glow: "#fde047", alt: "Jokes and funny challenges" },
+  hum_afrobeats: { icon: "🎧", extras: ["🔥", "🎶"], hue: "#9d174d", glow: "#22d3ee", alt: "Afrobeats hits" },
+  hum_amapiano: { icon: "🎹", extras: ["💃", "🪘"], hue: "#6d28d9", glow: "#fde047", alt: "Amapiano and South African hits" },
+  hum_classics: { icon: "📻", extras: ["🎷", "⭐"], hue: "#92400e", glow: "#fbbf24", alt: "Naija classics" },
+  story_lagos: { icon: "🚌", extras: ["🌆", "🍛"], hue: "#c2410c", glow: "#fde047", alt: "Lagos life: danfos, traffic and owambe" },
+  story_legends: { icon: "🐢", extras: ["🌙", "🥁"], hue: "#1e3a8a", glow: "#fde68a", alt: "Myths and legends: tortoises, drums and the moon" },
+  story_chaos: { icon: "🐐", extras: ["💍", "😱"], hue: "#a21caf", glow: "#fda4af", alt: "Comedy chaos: goats at weddings" },
+};
+
+export function categoryFile(id: string): string {
+  return `${BASE}/categories/${id}.webp`;
+}
 
 /** Player portraits: an avatar is picked by name, so the same player always gets the same face. */
 export const AVATARS = Array.from({ length: 12 }, (_, i) => `${BASE}/avatars/avatar-${String(i + 1).padStart(2, "0")}.webp`);

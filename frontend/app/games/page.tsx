@@ -1,7 +1,7 @@
 import { GameCard } from "@/components/portal/GameCard";
 import { GAMES } from "@/lib/games";
 
-export const metadata = { title: "Games", description: "Every VOXPLAY game: Brain Clash, Who's Talking? and what's coming next." };
+export const metadata = { title: "Games", description: "Every VOXPLAY game: Brain Clash, Beat Drop, Story Forge, Who's Talking? and what's dropping next." };
 
 export default function Games() {
   return (
@@ -10,7 +10,7 @@ export default function Games() {
         <div className="section-title">
           <p className="eyebrow">The games</p>
           <h1 className="page-title">Choose your battle</h1>
-          <p className="lede">Pick a game, open a room and send the code to your friends. Games marked Coming soon aren&apos;t playable yet.</p>
+          <p className="lede">Pick a game, open a room and drop the code in the group chat. Everyone plays from their own phone, 20 seconds a round.</p>
         </div>
         <div className="game-grid">
           {GAMES.map((g) => (
