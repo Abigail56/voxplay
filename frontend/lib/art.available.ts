@@ -21,6 +21,10 @@ export const AVAILABLE_ART: readonly string[] = [
   "/images/voxplay/categories/word_challenges.webp",
   "/images/voxplay/characters/nova.webp",
   "/images/voxplay/characters/pulse.webp",
+  "/images/voxplay/game-modes/name-it-fast.webp",
+  "/images/voxplay/game-modes/quick-fire.webp",
+  "/images/voxplay/game-modes/team-battle.webp",
+  "/images/voxplay/game-modes/word-association.webp",
   "/images/voxplay/hero/voxplay-hero.webp",
   "/images/voxplay/story-forge/story-forge.webp",
   "/images/voxplay/whos-talking/whos-talking.webp"

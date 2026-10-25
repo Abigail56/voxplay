@@ -1,4 +1,4 @@
-import type { ArtSlot } from "@/lib/art";
+import { ART, artSrc, type ArtSlot } from "@/lib/art";
 
 import { Art } from "./Scenes";
 
@@ -34,17 +34,19 @@ export function ArtTile({
       </h3>
     </div>
   );
-  // Big tiles lay the title over the bottom of the picture; small ones put it underneath, so the
-  // picture stays whole.
+  // Big tiles lay the title over the bottom of a drawn scene; small ones, and big ones with a painting
+  // (which often has the name painted in), put it underneath, so the picture stays whole.
+  const painted = size === "big" && !media && !!slot && !!artSrc(ART[slot].file);
+  const over = size === "big" && !painted;
   return (
-    <article className={`art-tile ${size}`}>
+    <article className={`art-tile ${size}${painted ? " painted" : ""}`}>
       <div className="art-tile-media">
         {media ?? (slot && <Art slot={slot} className="art-fill" />)}
-        {size === "big" && label}
+        {over && label}
       </div>
-      {(size === "small" || children) && (
+      {(!over || children) && (
         <div className="art-tile-body">
-          {size === "small" && label}
+          {!over && label}
           {children}
         </div>
       )}

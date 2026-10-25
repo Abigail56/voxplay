@@ -979,4 +979,6 @@ picture.art-fill, .game-art picture { display: block; width: 100%; height: 100%;
 .result-score .team { font-weight: 800; color: var(--muted); }
 .result-score .team.won { color: var(--text); }
 .result-score .team.won::after { content: " 🏆"; }
-.art-tile.small .art-tile-label { position: static; padding: 0; background: none; }
+.art-tile.small .art-tile-label, .art-tile.painted .art-tile-label { position: static; padding: 0; background: none; }
+.art-tile.painted .art-tile-media { aspect-ratio: 3 / 2; }
+.art-tile.painted .art-tile-body { display: flex; flex-direction: column; gap: 8px; }
